@@ -3,11 +3,20 @@ using Autodesk.Revit.UI;
 
 namespace RevitMCP.UI
 {
+    internal enum PanelReadOnlyRequestKind
+    {
+        ModelSummary,
+        TypeInventory,
+        HighlightTypeInstances,
+        LocateFirstTypeInstance
+    }
+
     internal sealed class PanelReadOnlyDispatcher : IExternalEventHandler
     {
         private readonly ExternalEvent _externalEvent;
         private Action<UIApplication> _pendingAction;
         private Action<string> _pendingFailure;
+        private PanelReadOnlyRequestKind? _pendingKind;
 
         public PanelReadOnlyDispatcher()
         {
@@ -17,9 +26,13 @@ namespace RevitMCP.UI
         public bool IsBusy { get; private set; }
         public event EventHandler BusyChanged;
 
-        public bool TrySubmit(Action<UIApplication> action, Action<string> failure)
+        public bool TrySubmit(
+            PanelReadOnlyRequestKind kind,
+            Action<UIApplication> action,
+            Action<string> failure)
         {
             if (IsBusy) return false;
+            _pendingKind = kind;
             _pendingAction = action ?? throw new ArgumentNullException(nameof(action));
             _pendingFailure = failure;
             SetBusy(true);
@@ -64,6 +77,7 @@ namespace RevitMCP.UI
         {
             _pendingAction = null;
             _pendingFailure = null;
+            _pendingKind = null;
             SetBusy(false);
         }
 

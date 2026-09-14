@@ -73,6 +73,7 @@ namespace RevitMCP.UI
             try
             {
                 bool accepted = _dispatcher.TrySubmit(
+                    PanelReadOnlyRequestKind.ModelSummary,
                     app => CompleteSuccess(_service.GetSummary(
                         app,
                         new ModelSummaryRequest { CategoryLimit = 10 })),

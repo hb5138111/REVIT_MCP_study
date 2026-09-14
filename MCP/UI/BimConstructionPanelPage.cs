@@ -112,6 +112,7 @@ namespace RevitMCP.UI
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             root.RowDefinitions.Add(new RowDefinition());
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             var title = new TextBlock
             {
@@ -182,9 +183,17 @@ namespace RevitMCP.UI
                 Width = 110
             });
             table.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("TypeInventory.RowsView"));
+            table.SetBinding(DataGrid.SelectedItemProperty, new WpfBinding("TypeInventory.SelectedRow"));
             table.ToolTip = "「未使用候選」表示目前模型中未找到此類型的放置實例，不代表此類型可安全刪除；仍可能存在其他 Revit 相依關係。";
             WpfGrid.SetRow(table, 4);
             root.Children.Add(table);
+
+            var navigation = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+            var highlight = new Button { Content = "亮顯實例", MinWidth = 90, Margin = new Thickness(0, 0, 8, 0) };
+            highlight.SetBinding(Button.CommandProperty, new WpfBinding("TypeInventory.HighlightInstancesCommand"));
+            navigation.Children.Add(highlight);
+            WpfGrid.SetRow(navigation, 5);
+            root.Children.Add(navigation);
 
             return root;
         }

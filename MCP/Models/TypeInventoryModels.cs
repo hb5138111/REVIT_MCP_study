@@ -38,6 +38,7 @@ namespace RevitMCP.Models
     public sealed class TypeInventoryResult
     {
         public SupportedTypeCategory Category { get; set; }
+        public string DocumentIdentity { get; set; }
         public IReadOnlyList<TypeInventoryRow> Rows { get; set; }
         public int LoadedTypeCount { get; set; }
         public int PlacedTypeCount { get; set; }

@@ -35,6 +35,7 @@ namespace RevitMCP.Core
             return new TypeInventoryResult
             {
                 Category = request.Category,
+                DocumentIdentity = TypeInstanceLocatorService.GetDocumentIdentity(document),
                 Rows = rows.OrderBy(row => row.FamilyName).ThenBy(row => row.TypeName).ToList(),
                 LoadedTypeCount = rows.Count,
                 PlacedTypeCount = rows.Count(row => row.IsPlaced),
@@ -44,7 +45,7 @@ namespace RevitMCP.Core
             };
         }
 
-        private static BuiltInCategory ResolveCategory(SupportedTypeCategory category)
+        internal static BuiltInCategory ResolveCategory(SupportedTypeCategory category)
         {
             switch (category)
             {
