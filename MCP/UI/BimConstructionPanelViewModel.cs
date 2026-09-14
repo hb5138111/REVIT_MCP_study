@@ -2,7 +2,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using Autodesk.Revit.UI;
 using RevitMCP.Core;
 using RevitMCP.Models;
 
@@ -10,22 +9,29 @@ namespace RevitMCP.UI
 {
     public sealed class BimConstructionPanelViewModel : INotifyPropertyChanged
     {
-        private readonly ModelSummaryExternalEventHandler _handler;
-        private readonly ExternalEvent _externalEvent;
+        private readonly PanelReadOnlyDispatcher _dispatcher;
+        private readonly ModelSummaryService _service;
         private ModelSummaryResult _result;
         private bool _isRefreshing;
         private string _statusMessage = "就緒。請按「重新整理」讀取目前模型資訊。";
 
         public BimConstructionPanelViewModel()
         {
-            _handler = new ModelSummaryExternalEventHandler(this, new ModelSummaryService());
-            _externalEvent = ExternalEvent.Create(_handler);
-            RefreshCommand = new RelayCommand(RequestRefresh, () => !IsRefreshing);
+            _dispatcher = new PanelReadOnlyDispatcher();
+            _service = new ModelSummaryService();
+            TypeInventory = new TypeInventoryViewModel(_dispatcher, new TypeInventoryService());
+            _dispatcher.BusyChanged += (_, __) =>
+            {
+                IsRefreshing = _dispatcher.IsBusy;
+                CommandManager.InvalidateRequerySuggested();
+            };
+            RefreshCommand = new RelayCommand(RequestRefresh, () => !_dispatcher.IsBusy);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ICommand RefreshCommand { get; }
+        public TypeInventoryViewModel TypeInventory { get; }
 
         public ModelSummaryResult Result
         {
@@ -66,9 +72,13 @@ namespace RevitMCP.UI
             StatusMessage = "正在更新...";
             try
             {
-                ExternalEventRequest request = _externalEvent.Raise();
-                if (request != ExternalEventRequest.Accepted)
-                    CompleteFailure("Revit did not accept the refresh request (" + request + ").");
+                bool accepted = _dispatcher.TrySubmit(
+                    app => CompleteSuccess(_service.GetSummary(
+                        app,
+                        new ModelSummaryRequest { CategoryLimit = 10 })),
+                    CompleteFailure);
+                if (!accepted && _dispatcher.IsBusy)
+                    CompleteFailure("另一項面板更新正在執行。");
             }
             catch (Exception ex)
             {
@@ -82,60 +92,16 @@ namespace RevitMCP.UI
             StatusMessage = result.Warnings != null && result.Warnings.Count > 0
                 ? "更新完成，但有部分資料無法取得。"
                 : "更新完成。";
-            IsRefreshing = false;
         }
 
         internal void CompleteFailure(string message)
         {
             StatusMessage = "更新失敗，請稍後再試。";
-            IsRefreshing = false;
         }
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private sealed class ModelSummaryExternalEventHandler : IExternalEventHandler
-        {
-            private readonly BimConstructionPanelViewModel _viewModel;
-            private readonly ModelSummaryService _service;
-
-            public ModelSummaryExternalEventHandler(
-                BimConstructionPanelViewModel viewModel,
-                ModelSummaryService service)
-            {
-                _viewModel = viewModel;
-                _service = service;
-            }
-
-            public void Execute(UIApplication app)
-            {
-                try
-                {
-                    if (app.ActiveUIDocument == null)
-                        throw new InvalidOperationException("目前沒有開啟的 Revit 文件。");
-
-                    ModelSummaryResult result = _service.GetSummary(
-                        app,
-                        new ModelSummaryRequest { CategoryLimit = 10 });
-                    _viewModel.CompleteSuccess(result);
-                }
-                catch (Exception ex)
-                {
-                    _viewModel.CompleteFailure(ex.Message);
-                }
-                finally
-                {
-                    if (_viewModel.IsRefreshing)
-                        _viewModel.IsRefreshing = false;
-                }
-            }
-
-            public string GetName()
-            {
-                return "BIM Construction Panel Model Summary Refresh";
-            }
         }
 
         private sealed class RelayCommand : ICommand

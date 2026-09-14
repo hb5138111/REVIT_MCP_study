@@ -3,8 +3,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using RevitMCP.Models;
 using Autodesk.Revit.UI;
 using WpfBinding = System.Windows.Data.Binding;
+using WpfComboBox = System.Windows.Controls.ComboBox;
+using WpfGrid = System.Windows.Controls.Grid;
+using WpfTextBox = System.Windows.Controls.TextBox;
 
 namespace RevitMCP.UI
 {
@@ -29,6 +33,14 @@ namespace RevitMCP.UI
         }
 
         private UIElement BuildContent()
+        {
+            var tabs = new TabControl();
+            tabs.Items.Add(new TabItem { Header = "模型摘要", Content = BuildModelSummaryContent() });
+            tabs.Items.Add(new TabItem { Header = "族群／類型檢查", Content = BuildTypeInventoryContent() });
+            return tabs;
+        }
+
+        private UIElement BuildModelSummaryContent()
         {
             var root = new StackPanel { Margin = new Thickness(10) };
             root.Children.Add(new TextBlock
@@ -89,6 +101,101 @@ namespace RevitMCP.UI
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 Content = root
+            };
+        }
+
+        private UIElement BuildTypeInventoryContent()
+        {
+            var root = new WpfGrid { Margin = new Thickness(10) };
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition());
+
+            var title = new TextBlock
+            {
+                Text = "營造 BIM 工具 — 族群／類型檢查",
+                FontSize = 17,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            root.Children.Add(title);
+
+            var controls = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+            controls.Children.Add(new TextBlock { Text = "構件分類：", VerticalAlignment = VerticalAlignment.Center });
+            var category = new WpfComboBox { Width = 150, DisplayMemberPath = "Label", Margin = new Thickness(0, 0, 8, 0) };
+            category.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("TypeInventory.Categories"));
+            category.SetBinding(WpfComboBox.SelectedItemProperty, new WpfBinding("TypeInventory.SelectedCategory"));
+            controls.Children.Add(category);
+            var refresh = new Button { Content = "重新整理", MinWidth = 90 };
+            refresh.SetBinding(Button.CommandProperty, new WpfBinding("TypeInventory.RefreshCommand"));
+            controls.Children.Add(refresh);
+            WpfGrid.SetRow(controls, 1);
+            root.Children.Add(controls);
+
+            var summary = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+            summary.Children.Add(BoundText("載入類型：", "TypeInventory.Result.LoadedTypeCount"));
+            summary.Children.Add(BoundText("　已使用類型：", "TypeInventory.Result.PlacedTypeCount"));
+            summary.Children.Add(BoundText("　未使用候選：", "TypeInventory.Result.UnplacedCandidateCount"));
+            summary.Children.Add(BoundText("　需檢查：", "TypeInventory.Result.ReviewCount"));
+            WpfGrid.SetRow(summary, 2);
+            root.Children.Add(summary);
+
+            var filters = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+            filters.Children.Add(new TextBlock { Text = "搜尋：", VerticalAlignment = VerticalAlignment.Center });
+            var search = new WpfTextBox { Width = 220, Margin = new Thickness(0, 0, 8, 0) };
+            search.SetBinding(WpfTextBox.TextProperty, new WpfBinding("TypeInventory.SearchText")
+            {
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            });
+            filters.Children.Add(search);
+            filters.Children.Add(new TextBlock { Text = "顯示：", VerticalAlignment = VerticalAlignment.Center });
+            var status = new WpfComboBox { Width = 120, DisplayMemberPath = "Label" };
+            status.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("TypeInventory.StatusOptions"));
+            status.SetBinding(WpfComboBox.SelectedItemProperty, new WpfBinding("TypeInventory.SelectedStatus"));
+            filters.Children.Add(status);
+            filters.Children.Add(BoundText("　狀態：", "TypeInventory.StatusMessage"));
+            WpfGrid.SetRow(filters, 3);
+            root.Children.Add(filters);
+
+            var table = new DataGrid
+            {
+                AutoGenerateColumns = false,
+                IsReadOnly = true,
+                CanUserSortColumns = true,
+                EnableRowVirtualization = true,
+                EnableColumnVirtualization = true
+            };
+            table.SetValue(VirtualizingPanel.IsVirtualizingProperty, true);
+            table.SetValue(VirtualizingPanel.VirtualizationModeProperty, VirtualizationMode.Recycling);
+            table.Columns.Add(TextColumn("族群", "FamilyName", 150));
+            table.Columns.Add(TextColumn("類型", "TypeName", 180));
+            table.Columns.Add(TextColumn("類型 ID", "TypeId", 90));
+            table.Columns.Add(TextColumn("使用數量", "InstanceCount", 80));
+            table.Columns.Add(TextColumn("類型標記", "TypeMark", 110));
+            table.Columns.Add(TextColumn("類型備註", "TypeComments", 150));
+            table.Columns.Add(new DataGridTextColumn
+            {
+                Header = "狀態",
+                Binding = new WpfBinding("Status") { Converter = new TypeInventoryStatusConverter() },
+                Width = 110
+            });
+            table.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("TypeInventory.RowsView"));
+            table.ToolTip = "「未使用候選」表示目前模型中未找到此類型的放置實例，不代表此類型可安全刪除；仍可能存在其他 Revit 相依關係。";
+            WpfGrid.SetRow(table, 4);
+            root.Children.Add(table);
+
+            return root;
+        }
+
+        private static DataGridTextColumn TextColumn(string header, string path, double width)
+        {
+            return new DataGridTextColumn
+            {
+                Header = header,
+                Binding = new WpfBinding(path),
+                Width = width
             };
         }
 
@@ -217,6 +324,26 @@ namespace RevitMCP.UI
                 return collection != null && collection.Count == 0
                     ? System.Windows.Visibility.Visible
                     : System.Windows.Visibility.Collapsed;
+            }
+
+            public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        private sealed class TypeInventoryStatusConverter : IValueConverter
+        {
+            public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
+            {
+                if (!(value is TypeInventoryStatus status)) return string.Empty;
+                switch (status)
+                {
+                    case TypeInventoryStatus.Normal: return "正常";
+                    case TypeInventoryStatus.UnplacedCandidate: return "未使用候選";
+                    case TypeInventoryStatus.ReviewRequired: return "需檢查";
+                    default: return string.Empty;
+                }
             }
 
             public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
