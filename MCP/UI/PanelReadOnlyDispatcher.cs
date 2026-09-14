@@ -8,7 +8,8 @@ namespace RevitMCP.UI
         ModelSummary,
         TypeInventory,
         HighlightTypeInstances,
-        LocateFirstTypeInstance
+        NavigationPrevious,
+        NavigationNext
     }
 
     internal sealed class PanelReadOnlyDispatcher : IExternalEventHandler

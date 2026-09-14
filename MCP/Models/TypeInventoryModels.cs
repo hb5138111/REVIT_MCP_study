@@ -13,11 +13,19 @@ namespace RevitMCP.Models
         Mullions
     }
 
-    public enum TypeInventoryStatus
+    public enum TypeUsageState
     {
+        Placed,
+        UnplacedCandidate
+    }
+
+    public enum TypeInventoryFilter
+    {
+        All,
         Normal,
         UnplacedCandidate,
-        ReviewRequired
+        ReviewRequired,
+        DataReminder
     }
 
     public enum TypeInventoryWarningCode
@@ -43,7 +51,8 @@ namespace RevitMCP.Models
         public int LoadedTypeCount { get; set; }
         public int PlacedTypeCount { get; set; }
         public int UnplacedCandidateCount { get; set; }
-        public int ReviewCount { get; set; }
+        public int ReviewRequiredCount { get; set; }
+        public int DataReminderCount { get; set; }
         public IReadOnlyList<TypeInventoryWarningCode> Warnings { get; set; }
     }
 
@@ -56,9 +65,11 @@ namespace RevitMCP.Models
         public long TypeId { get; set; }
         public int InstanceCount { get; set; }
         public bool IsPlaced { get; set; }
+        public TypeUsageState UsageState { get; set; }
+        public bool HasReviewRequired { get; set; }
+        public bool HasDataReminder { get; set; }
         public string TypeMark { get; set; }
         public string TypeComments { get; set; }
-        public TypeInventoryStatus Status { get; set; }
         public IReadOnlyList<TypeInventoryWarningCode> WarningCodes { get; set; }
     }
 }

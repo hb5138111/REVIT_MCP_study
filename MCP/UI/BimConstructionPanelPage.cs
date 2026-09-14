@@ -139,7 +139,9 @@ namespace RevitMCP.UI
             summary.Children.Add(BoundText("載入類型：", "TypeInventory.Result.LoadedTypeCount"));
             summary.Children.Add(BoundText("　已使用類型：", "TypeInventory.Result.PlacedTypeCount"));
             summary.Children.Add(BoundText("　未使用候選：", "TypeInventory.Result.UnplacedCandidateCount"));
-            summary.Children.Add(BoundText("　需檢查：", "TypeInventory.Result.ReviewCount"));
+            summary.Children.Add(BoundText("　需檢查：", "TypeInventory.Result.ReviewRequiredCount"));
+            summary.Children.Add(BoundText("　資料提醒：", "TypeInventory.Result.DataReminderCount"));
+            summary.ToolTip = "未使用候選、需檢查與資料提醒可能重疊，不需加總等於載入類型。";
             WpfGrid.SetRow(summary, 2);
             root.Children.Add(summary);
 
@@ -153,8 +155,8 @@ namespace RevitMCP.UI
             filters.Children.Add(search);
             filters.Children.Add(new TextBlock { Text = "顯示：", VerticalAlignment = VerticalAlignment.Center });
             var status = new WpfComboBox { Width = 120, DisplayMemberPath = "Label" };
-            status.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("TypeInventory.StatusOptions"));
-            status.SetBinding(WpfComboBox.SelectedItemProperty, new WpfBinding("TypeInventory.SelectedStatus"));
+            status.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("TypeInventory.FilterOptions"));
+            status.SetBinding(WpfComboBox.SelectedItemProperty, new WpfBinding("TypeInventory.SelectedFilter"));
             filters.Children.Add(status);
             filters.Children.Add(BoundText("　狀態：", "TypeInventory.StatusMessage"));
             WpfGrid.SetRow(filters, 3);
@@ -178,9 +180,21 @@ namespace RevitMCP.UI
             table.Columns.Add(TextColumn("類型備註", "TypeComments", 150));
             table.Columns.Add(new DataGridTextColumn
             {
-                Header = "狀態",
-                Binding = new WpfBinding("Status") { Converter = new TypeInventoryStatusConverter() },
-                Width = 110
+                Header = "使用狀態",
+                Binding = new WpfBinding("UsageState") { Converter = new TypeUsageStateConverter() },
+                Width = 100
+            });
+            table.Columns.Add(new DataGridTextColumn
+            {
+                Header = "需檢查",
+                Binding = new WpfBinding("WarningCodes") { Converter = new ReviewRequiredConverter() },
+                Width = 90
+            });
+            table.Columns.Add(new DataGridTextColumn
+            {
+                Header = "資料提醒",
+                Binding = new WpfBinding("WarningCodes") { Converter = new DataReminderConverter() },
+                Width = 120
             });
             table.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("TypeInventory.RowsView"));
             table.SetBinding(DataGrid.SelectedItemProperty, new WpfBinding("TypeInventory.SelectedRow"));
@@ -192,6 +206,20 @@ namespace RevitMCP.UI
             var highlight = new Button { Content = "亮顯實例", MinWidth = 90, Margin = new Thickness(0, 0, 8, 0) };
             highlight.SetBinding(Button.CommandProperty, new WpfBinding("TypeInventory.HighlightInstancesCommand"));
             navigation.Children.Add(highlight);
+            navigation.Children.Add(new TextBlock
+            {
+                Text = "實例巡覽：",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 4, 0),
+                ToolTip = "巡覽順序為穩定技術排序，不代表樓層、施工或空間順序。"
+            });
+            var previous = new Button { Content = "上一個", MinWidth = 70, Margin = new Thickness(0, 0, 6, 0) };
+            previous.SetBinding(Button.CommandProperty, new WpfBinding("TypeInventory.PreviousInstanceCommand"));
+            navigation.Children.Add(previous);
+            navigation.Children.Add(BoundText(string.Empty, "TypeInventory.NavigationPosition"));
+            var next = new Button { Content = "下一個", MinWidth = 70, Margin = new Thickness(6, 0, 0, 0) };
+            next.SetBinding(Button.CommandProperty, new WpfBinding("TypeInventory.NextInstanceCommand"));
+            navigation.Children.Add(next);
             WpfGrid.SetRow(navigation, 5);
             root.Children.Add(navigation);
 
@@ -341,24 +369,57 @@ namespace RevitMCP.UI
             }
         }
 
-        private sealed class TypeInventoryStatusConverter : IValueConverter
+        private sealed class TypeUsageStateConverter : IValueConverter
+        {
+            public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) =>
+                value is TypeUsageState state && state == TypeUsageState.UnplacedCandidate
+                    ? "未使用候選"
+                    : string.Empty;
+
+            public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) =>
+                throw new NotSupportedException();
+        }
+
+        private sealed class ReviewRequiredConverter : IValueConverter
         {
             public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
             {
-                if (!(value is TypeInventoryStatus status)) return string.Empty;
-                switch (status)
+                if (!(value is System.Collections.Generic.IEnumerable<TypeInventoryWarningCode> codes))
+                    return string.Empty;
+                foreach (TypeInventoryWarningCode code in codes)
                 {
-                    case TypeInventoryStatus.Normal: return "正常";
-                    case TypeInventoryStatus.UnplacedCandidate: return "未使用候選";
-                    case TypeInventoryStatus.ReviewRequired: return "需檢查";
-                    default: return string.Empty;
+                    if (code == TypeInventoryWarningCode.TypeNameMissing)
+                        return "類型名稱空白";
+                    if (code == TypeInventoryWarningCode.DuplicateNameCandidate)
+                        return "疑似重複名稱";
                 }
+                return string.Empty;
             }
 
-            public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
-            {
+            public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) =>
                 throw new NotSupportedException();
-            }
         }
+
+        private sealed class DataReminderConverter : IValueConverter
+        {
+            public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
+            {
+                if (!(value is System.Collections.Generic.IEnumerable<TypeInventoryWarningCode> codes))
+                    return string.Empty;
+                var labels = new System.Collections.Generic.List<string>();
+                foreach (TypeInventoryWarningCode code in codes)
+                {
+                    if (code == TypeInventoryWarningCode.TypeMarkMissing)
+                        labels.Add("類型標記空白");
+                    else if (code == TypeInventoryWarningCode.TypeCommentsMissing)
+                        labels.Add("類型備註空白");
+                }
+                return string.Join("、", labels);
+            }
+
+            public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) =>
+                throw new NotSupportedException();
+        }
+
     }
 }

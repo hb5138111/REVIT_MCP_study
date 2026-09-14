@@ -18,10 +18,11 @@ namespace RevitMCP.UI
         private readonly TypeInstanceLocatorService _locatorService;
         private TypeInventoryResult _result;
         private CategoryOption _selectedCategory;
-        private StatusOption _selectedStatus;
+        private FilterOption _selectedFilter;
         private string _searchText = string.Empty;
         private string _statusMessage = "就緒。請選擇構件分類後按「重新整理」。";
         private TypeInventoryRow _selectedRow;
+        private NavigationSession _navigationSession;
 
         internal TypeInventoryViewModel(PanelReadOnlyDispatcher dispatcher, TypeInventoryService service)
         {
@@ -29,12 +30,13 @@ namespace RevitMCP.UI
             _service = service;
             _locatorService = new TypeInstanceLocatorService();
             Categories = CreateCategories();
-            StatusOptions = CreateStatusOptions();
+            FilterOptions = CreateFilterOptions();
             _selectedCategory = Categories[0];
-            _selectedStatus = StatusOptions[0];
+            _selectedFilter = FilterOptions[0];
             RefreshCommand = new RelayCommand(RequestRefresh, () => !_dispatcher.IsBusy);
             HighlightInstancesCommand = new RelayCommand(HighlightInstances, CanNavigateToSelectedRow);
-            LocateFirstInstanceCommand = new RelayCommand(LocateFirstInstance, CanNavigateToSelectedRow);
+            PreviousInstanceCommand = new RelayCommand(NavigatePrevious, CanNavigatePrevious);
+            NextInstanceCommand = new RelayCommand(NavigateNext, CanNavigateNext);
             _dispatcher.BusyChanged += (_, __) =>
             {
                 OnPropertyChanged(nameof(IsBusy));
@@ -44,10 +46,11 @@ namespace RevitMCP.UI
 
         public event PropertyChangedEventHandler PropertyChanged;
         public IReadOnlyList<CategoryOption> Categories { get; }
-        public IReadOnlyList<StatusOption> StatusOptions { get; }
+        public IReadOnlyList<FilterOption> FilterOptions { get; }
         public ICommand RefreshCommand { get; }
         public ICommand HighlightInstancesCommand { get; }
-        public ICommand LocateFirstInstanceCommand { get; }
+        public ICommand PreviousInstanceCommand { get; }
+        public ICommand NextInstanceCommand { get; }
         public bool IsBusy => _dispatcher.IsBusy;
 
         public TypeInventoryRow SelectedRow
@@ -55,10 +58,12 @@ namespace RevitMCP.UI
             get => _selectedRow;
             set
             {
+                if (ReferenceEquals(_selectedRow, value)) return;
                 _selectedRow = value;
+                ResetNavigationSession();
                 OnPropertyChanged();
                 if (value != null && value.InstanceCount == 0)
-                    StatusMessage = "此類型目前沒有放置實例可供定位。";
+                    StatusMessage = "此類型目前沒有放置實例可供巡覽。";
                 CommandManager.InvalidateRequerySuggested();
             }
         }
@@ -66,13 +71,19 @@ namespace RevitMCP.UI
         public CategoryOption SelectedCategory
         {
             get => _selectedCategory;
-            set { _selectedCategory = value; OnPropertyChanged(); }
+            set
+            {
+                if (ReferenceEquals(_selectedCategory, value)) return;
+                _selectedCategory = value;
+                ResetNavigationSession();
+                OnPropertyChanged();
+            }
         }
 
-        public StatusOption SelectedStatus
+        public FilterOption SelectedFilter
         {
-            get => _selectedStatus;
-            set { _selectedStatus = value; OnPropertyChanged(); RowsView?.Refresh(); }
+            get => _selectedFilter;
+            set { _selectedFilter = value; OnPropertyChanged(); RowsView?.Refresh(); }
         }
 
         public string SearchText
@@ -96,6 +107,9 @@ namespace RevitMCP.UI
         }
 
         public ICollectionView RowsView { get; private set; }
+        public string NavigationPosition => _navigationSession == null
+            ? "— / —"
+            : (_navigationSession.CurrentIndex + 1) + " / " + _navigationSession.InstanceIds.Count;
 
         public string StatusMessage
         {
@@ -106,6 +120,7 @@ namespace RevitMCP.UI
         private void RequestRefresh()
         {
             if (_dispatcher.IsBusy) return;
+            ResetNavigationSession();
             StatusMessage = "正在更新...";
             var request = new TypeInventoryRequest
             {
@@ -132,15 +147,40 @@ namespace RevitMCP.UI
 
         private void HighlightInstances()
         {
-            SubmitNavigationRequest(PanelReadOnlyRequestKind.HighlightTypeInstances, false);
+            TypeInventoryRow row = SelectedRow;
+            TypeInventoryResult result = Result;
+            if (row == null || result == null || row.InstanceCount == 0) return;
+
+            SubmitReadOnlyRequest(
+                PanelReadOnlyRequestKind.HighlightTypeInstances,
+                row,
+                result,
+                (uiDocument, instanceIds) =>
+                {
+                    uiDocument.Selection.SetElementIds(instanceIds.Select(id => id.ToElementId()).ToList());
+                    StatusMessage = "已亮顯 " + instanceIds.Count + " 個實例。";
+                });
         }
 
-        private void LocateFirstInstance()
+        private bool CanNavigatePrevious() =>
+            _navigationSession != null && _navigationSession.CurrentIndex > 0 && !_dispatcher.IsBusy;
+
+        private bool CanNavigateNext() =>
+            CanNavigateToSelectedRow() &&
+            (_navigationSession == null ||
+             _navigationSession.CurrentIndex < _navigationSession.InstanceIds.Count - 1);
+
+        private void NavigatePrevious()
         {
-            SubmitNavigationRequest(PanelReadOnlyRequestKind.LocateFirstTypeInstance, true);
+            Navigate(PanelReadOnlyRequestKind.NavigationPrevious, -1);
         }
 
-        private void SubmitNavigationRequest(PanelReadOnlyRequestKind kind, bool locateFirst)
+        private void NavigateNext()
+        {
+            Navigate(PanelReadOnlyRequestKind.NavigationNext, 1);
+        }
+
+        private void Navigate(PanelReadOnlyRequestKind kind, int direction)
         {
             TypeInventoryRow row = SelectedRow;
             TypeInventoryResult result = Result;
@@ -150,40 +190,59 @@ namespace RevitMCP.UI
                 kind,
                 app =>
                 {
-                    var uiDocument = app.ActiveUIDocument;
-                    if (uiDocument == null)
-                        throw new InvalidOperationException("目前沒有開啟的 Revit 文件。");
-                    if (!string.Equals(
-                        TypeInstanceLocatorService.GetDocumentIdentity(uiDocument.Document),
-                        result.DocumentIdentity,
-                        StringComparison.Ordinal))
+                    if (!ReferenceEquals(SelectedRow, row) || !ReferenceEquals(Result, result))
                     {
-                        StatusMessage = "目前模型已切換，請重新整理族群／類型資料後再定位。";
+                        ResetNavigationSession();
                         return;
                     }
+                    var uiDocument = RequireMatchingDocument(app, result);
+                    if (uiDocument == null) return;
 
-                    IReadOnlyList<long> instanceIds = _locatorService.FindInstanceIds(
-                        uiDocument.Document,
-                        row.Category,
-                        row.TypeId);
-                    if (instanceIds.Count == 0)
+                    IReadOnlyList<long> freshIds = _locatorService.FindInstanceIds(
+                        uiDocument.Document, row.Category, row.TypeId);
+                    if (_navigationSession == null)
                     {
+                        if (freshIds.Count == 0)
+                        {
+                            ResetNavigationSession();
+                            StatusMessage = "此類型目前沒有放置實例可供巡覽。";
+                            return;
+                        }
+                        if (freshIds.Count != row.InstanceCount)
+                        {
+                            ResetNavigationSession();
+                            StatusMessage = "模型內容已變更，請重新整理族群／類型資料。";
+                            return;
+                        }
+                        _navigationSession = new NavigationSession(
+                            result.DocumentIdentity, row.Category, row.TypeId, freshIds, 0);
+                    }
+                    else
+                    {
+                        if (!freshIds.SequenceEqual(_navigationSession.InstanceIds))
+                        {
+                            ResetNavigationSession();
+                            StatusMessage = "模型內容已變更，請重新整理族群／類型資料。";
+                            return;
+                        }
+                        _navigationSession.CurrentIndex += direction;
+                    }
+
+                    Element element = ValidateCurrentElement(uiDocument.Document, _navigationSession);
+                    if (element == null)
+                    {
+                        ResetNavigationSession();
                         StatusMessage = "模型內容已變更，請重新整理族群／類型資料。";
                         return;
                     }
 
-                    if (locateFirst)
-                    {
-                        var firstId = new List<ElementId> { instanceIds[0].ToElementId() };
-                        uiDocument.Selection.SetElementIds(firstId);
-                        uiDocument.ShowElements(firstId);
-                        StatusMessage = "已定位至第一個實例。";
-                    }
-                    else
-                    {
-                        uiDocument.Selection.SetElementIds(instanceIds.Select(id => id.ToElementId()).ToList());
-                        StatusMessage = "已亮顯 " + instanceIds.Count + " 個實例。";
-                    }
+                    var single = new List<ElementId> { element.Id };
+                    uiDocument.Selection.SetElementIds(single);
+                    uiDocument.ShowElements(single);
+                    OnPropertyChanged(nameof(NavigationPosition));
+                    StatusMessage = "目前巡覽：" + (_navigationSession.CurrentIndex + 1) +
+                                    " / " + _navigationSession.InstanceIds.Count + "。";
+                    CommandManager.InvalidateRequerySuggested();
                 },
                 message => StatusMessage = "操作失敗：" + message);
 
@@ -191,10 +250,77 @@ namespace RevitMCP.UI
                 StatusMessage = "另一項面板更新正在執行。";
         }
 
+        private void SubmitReadOnlyRequest(
+            PanelReadOnlyRequestKind kind,
+            TypeInventoryRow row,
+            TypeInventoryResult result,
+            Action<Autodesk.Revit.UI.UIDocument, IReadOnlyList<long>> action)
+        {
+            bool accepted = _dispatcher.TrySubmit(
+                kind,
+                app =>
+                {
+                    if (!ReferenceEquals(SelectedRow, row) || !ReferenceEquals(Result, result)) return;
+                    var uiDocument = RequireMatchingDocument(app, result);
+                    if (uiDocument == null) return;
+                    IReadOnlyList<long> ids = _locatorService.FindInstanceIds(
+                        uiDocument.Document, row.Category, row.TypeId);
+                    if (ids.Count == 0 || ids.Count != row.InstanceCount)
+                    {
+                        ResetNavigationSession();
+                        StatusMessage = "模型內容已變更，請重新整理族群／類型資料。";
+                        return;
+                    }
+                    action(uiDocument, ids);
+                },
+                message => StatusMessage = "操作失敗：" + message);
+
+            if (!accepted && _dispatcher.IsBusy)
+                StatusMessage = "另一項面板更新正在執行。";
+        }
+
+        private Autodesk.Revit.UI.UIDocument RequireMatchingDocument(
+            Autodesk.Revit.UI.UIApplication app,
+            TypeInventoryResult result)
+        {
+            var uiDocument = app.ActiveUIDocument;
+            if (uiDocument == null)
+                throw new InvalidOperationException("目前沒有開啟的 Revit 文件。");
+            if (string.Equals(
+                TypeInstanceLocatorService.GetDocumentIdentity(uiDocument.Document),
+                result.DocumentIdentity,
+                StringComparison.Ordinal)) return uiDocument;
+
+            ResetNavigationSession();
+            StatusMessage = "目前模型已切換，請重新整理族群／類型資料後再操作。";
+            return null;
+        }
+
+        private static Element ValidateCurrentElement(Document document, NavigationSession session)
+        {
+            long id = session.InstanceIds[session.CurrentIndex];
+            Element element = document.GetElement(id.ToElementId());
+            if (element == null || element.Category == null) return null;
+            if (element.Category.Id.GetIdValue() != (long)TypeInventoryService.ResolveCategory(session.Category))
+                return null;
+            return element.GetTypeId() != ElementId.InvalidElementId &&
+                   element.GetTypeId().GetIdValue() == session.TypeId
+                ? element
+                : null;
+        }
+
+        private void ResetNavigationSession()
+        {
+            if (_navigationSession == null) return;
+            _navigationSession = null;
+            OnPropertyChanged(nameof(NavigationPosition));
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         private bool MatchesFilter(object item)
         {
             if (!(item is TypeInventoryRow row)) return false;
-            if (SelectedStatus.Value.HasValue && row.Status != SelectedStatus.Value.Value) return false;
+            if (!MatchesSelectedFilter(row)) return false;
             if (string.IsNullOrWhiteSpace(SearchText)) return true;
             return Contains(row.FamilyName, SearchText) ||
                    Contains(row.TypeName, SearchText) ||
@@ -215,12 +341,26 @@ namespace RevitMCP.UI
             new CategoryOption(SupportedTypeCategory.Mullions, "帷幕牆豎框")
         };
 
-        private static IReadOnlyList<StatusOption> CreateStatusOptions() => new[]
+        private bool MatchesSelectedFilter(TypeInventoryRow row)
         {
-            new StatusOption(null, "全部"),
-            new StatusOption(TypeInventoryStatus.Normal, "正常"),
-            new StatusOption(TypeInventoryStatus.UnplacedCandidate, "未使用候選"),
-            new StatusOption(TypeInventoryStatus.ReviewRequired, "需檢查")
+            switch (SelectedFilter.Value)
+            {
+                case TypeInventoryFilter.Normal:
+                    return row.InstanceCount > 0 && !row.HasReviewRequired && !row.HasDataReminder;
+                case TypeInventoryFilter.UnplacedCandidate: return row.InstanceCount == 0;
+                case TypeInventoryFilter.ReviewRequired: return row.HasReviewRequired;
+                case TypeInventoryFilter.DataReminder: return row.HasDataReminder;
+                default: return true;
+            }
+        }
+
+        private static IReadOnlyList<FilterOption> CreateFilterOptions() => new[]
+        {
+            new FilterOption(TypeInventoryFilter.All, "全部"),
+            new FilterOption(TypeInventoryFilter.Normal, "正常"),
+            new FilterOption(TypeInventoryFilter.UnplacedCandidate, "未使用候選"),
+            new FilterOption(TypeInventoryFilter.ReviewRequired, "需檢查"),
+            new FilterOption(TypeInventoryFilter.DataReminder, "資料提醒")
         };
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
@@ -233,11 +373,34 @@ namespace RevitMCP.UI
             public string Label { get; }
         }
 
-        public sealed class StatusOption
+        public sealed class FilterOption
         {
-            public StatusOption(TypeInventoryStatus? value, string label) { Value = value; Label = label; }
-            public TypeInventoryStatus? Value { get; }
+            public FilterOption(TypeInventoryFilter value, string label) { Value = value; Label = label; }
+            public TypeInventoryFilter Value { get; }
             public string Label { get; }
+        }
+
+        private sealed class NavigationSession
+        {
+            public NavigationSession(
+                string documentIdentity,
+                SupportedTypeCategory category,
+                long typeId,
+                IReadOnlyList<long> instanceIds,
+                int currentIndex)
+            {
+                DocumentIdentity = documentIdentity;
+                Category = category;
+                TypeId = typeId;
+                InstanceIds = instanceIds;
+                CurrentIndex = currentIndex;
+            }
+
+            public string DocumentIdentity { get; }
+            public SupportedTypeCategory Category { get; }
+            public long TypeId { get; }
+            public IReadOnlyList<long> InstanceIds { get; }
+            public int CurrentIndex { get; set; }
         }
 
         private sealed class RelayCommand : ICommand

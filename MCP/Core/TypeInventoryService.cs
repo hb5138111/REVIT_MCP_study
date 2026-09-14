@@ -28,9 +28,6 @@ namespace RevitMCP.Core
                 .ToDictionary(group => group.Key, group => group.Count());
 
             var rows = types.Select(type => CreateRow(type, request, builtInCategory, instanceCounts)).ToList();
-            AddDuplicateNameWarnings(rows);
-            foreach (TypeInventoryRow row in rows)
-                row.Status = ResolveStatus(row);
 
             return new TypeInventoryResult
             {
@@ -40,7 +37,8 @@ namespace RevitMCP.Core
                 LoadedTypeCount = rows.Count,
                 PlacedTypeCount = rows.Count(row => row.IsPlaced),
                 UnplacedCandidateCount = rows.Count(row => !row.IsPlaced),
-                ReviewCount = rows.Count(row => row.WarningCodes.Count > 0),
+                ReviewRequiredCount = rows.Count(row => row.HasReviewRequired),
+                DataReminderCount = rows.Count(row => row.HasDataReminder),
                 Warnings = rows.SelectMany(row => row.WarningCodes).Distinct().ToList()
             };
         }
@@ -115,6 +113,9 @@ namespace RevitMCP.Core
                 TypeId = typeId,
                 InstanceCount = instanceCount,
                 IsPlaced = instanceCount > 0,
+                UsageState = instanceCount > 0 ? TypeUsageState.Placed : TypeUsageState.UnplacedCandidate,
+                HasReviewRequired = warningCodes.Any(IsReviewRequired),
+                HasDataReminder = warningCodes.Any(IsDataReminder),
                 TypeMark = typeMark,
                 TypeComments = typeComments,
                 WarningCodes = warningCodes
@@ -139,24 +140,12 @@ namespace RevitMCP.Core
             return parameter?.AsString() ?? parameter?.AsValueString() ?? string.Empty;
         }
 
-        private static void AddDuplicateNameWarnings(IReadOnlyList<TypeInventoryRow> rows)
-        {
-            var duplicateGroups = rows
-                .Where(row => !string.IsNullOrWhiteSpace(row.TypeName))
-                .GroupBy(row => row.TypeName.Trim(), StringComparer.OrdinalIgnoreCase)
-                .Where(group => group.Count() > 1);
+        private static bool IsReviewRequired(TypeInventoryWarningCode code) =>
+            code == TypeInventoryWarningCode.TypeNameMissing ||
+            code == TypeInventoryWarningCode.DuplicateNameCandidate;
 
-            foreach (var group in duplicateGroups)
-            foreach (TypeInventoryRow row in group)
-                ((List<TypeInventoryWarningCode>)row.WarningCodes).Add(TypeInventoryWarningCode.DuplicateNameCandidate);
-        }
-
-        private static TypeInventoryStatus ResolveStatus(TypeInventoryRow row)
-        {
-            if (!row.IsPlaced) return TypeInventoryStatus.UnplacedCandidate;
-            return row.WarningCodes.Count > 0
-                ? TypeInventoryStatus.ReviewRequired
-                : TypeInventoryStatus.Normal;
-        }
+        private static bool IsDataReminder(TypeInventoryWarningCode code) =>
+            code == TypeInventoryWarningCode.TypeMarkMissing ||
+            code == TypeInventoryWarningCode.TypeCommentsMissing;
     }
 }
