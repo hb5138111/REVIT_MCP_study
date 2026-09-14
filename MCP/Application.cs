@@ -72,15 +72,15 @@ namespace RevitMCP
                 _bimConstructionPanelPage = new BimConstructionPanelPage(panelViewModel);
                 application.RegisterDockablePane(
                     BimConstructionPanelPage.PaneId,
-                    "BIM Construction",
+                    "營造 BIM 工具",
                     _bimConstructionPanelPage);
 
                 PushButtonData constructionPanelButtonData = new PushButtonData(
                     "BimConstructionPanel",
-                    "BIM\nConstruction",
+                    "營造 BIM\n工具",
                     assemblyPath,
                     "RevitMCP.Commands.ShowBimConstructionPanelCommand");
-                constructionPanelButtonData.ToolTip = "顯示或隱藏 BIM Construction Model Summary 面板";
+                constructionPanelButtonData.ToolTip = "顯示或隱藏營造 BIM 工具的模型摘要面板";
                 panel.AddItem(constructionPanelButtonData);
 
                 // 初始化 ExternalEventManager (必須在 UI 執行緒建立)

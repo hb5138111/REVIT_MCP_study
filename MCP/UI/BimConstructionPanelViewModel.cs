@@ -14,7 +14,7 @@ namespace RevitMCP.UI
         private readonly ExternalEvent _externalEvent;
         private ModelSummaryResult _result;
         private bool _isRefreshing;
-        private string _statusMessage = "Ready. Click Refresh to read the active Revit context.";
+        private string _statusMessage = "就緒。請按「重新整理」讀取目前模型資訊。";
 
         public BimConstructionPanelViewModel()
         {
@@ -63,7 +63,7 @@ namespace RevitMCP.UI
             if (IsRefreshing) return;
 
             IsRefreshing = true;
-            StatusMessage = "Refreshing model summary...";
+            StatusMessage = "正在更新...";
             try
             {
                 ExternalEventRequest request = _externalEvent.Raise();
@@ -80,14 +80,14 @@ namespace RevitMCP.UI
         {
             Result = result;
             StatusMessage = result.Warnings != null && result.Warnings.Count > 0
-                ? "Refreshed with warning: " + string.Join(" | ", result.Warnings)
-                : "Refresh complete.";
+                ? "更新完成，但有部分資料無法取得。"
+                : "更新完成。";
             IsRefreshing = false;
         }
 
         internal void CompleteFailure(string message)
         {
-            StatusMessage = "Refresh failed: " + message;
+            StatusMessage = "更新失敗，請稍後再試。";
             IsRefreshing = false;
         }
 
