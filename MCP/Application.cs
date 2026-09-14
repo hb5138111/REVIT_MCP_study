@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using System.Reflection;
 using RevitMCP.Core;
 using RevitMCP.Configuration;
+using RevitMCP.UI;
 
 namespace RevitMCP
 {
@@ -10,6 +11,7 @@ namespace RevitMCP
     {
         private static SocketService _socketService;
         private static UIApplication _uiApp;
+        private static BimConstructionPanelPage _bimConstructionPanelPage;
 
         public static SocketService SocketService => _socketService;
         public static UIApplication UIApp => _uiApp;
@@ -64,6 +66,22 @@ namespace RevitMCP
                     "RevitMCP.Commands.SwitchConnectionCommand");
                 switchButtonData.ToolTip = "關閉目前連線，讓下一個重新連線的 MCP 客戶端取得連線（無法指定特定客戶端）";
                 panel.AddItem(switchButtonData);
+
+                // 5. BIM Construction Panel（原生 DockablePane；不經 MCP/WebSocket）
+                var panelViewModel = new BimConstructionPanelViewModel();
+                _bimConstructionPanelPage = new BimConstructionPanelPage(panelViewModel);
+                application.RegisterDockablePane(
+                    BimConstructionPanelPage.PaneId,
+                    "BIM Construction",
+                    _bimConstructionPanelPage);
+
+                PushButtonData constructionPanelButtonData = new PushButtonData(
+                    "BimConstructionPanel",
+                    "BIM\nConstruction",
+                    assemblyPath,
+                    "RevitMCP.Commands.ShowBimConstructionPanelCommand");
+                constructionPanelButtonData.ToolTip = "顯示或隱藏 BIM Construction Model Summary 面板";
+                panel.AddItem(constructionPanelButtonData);
 
                 // 初始化 ExternalEventManager (必須在 UI 執行緒建立)
                 _ = ExternalEventManager.Instance;

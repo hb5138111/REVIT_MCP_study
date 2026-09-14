@@ -4,6 +4,7 @@ using System.Linq;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json.Linq;
+using RevitMCP.Models;
 
 // Revit 2025+ ElementId: int → long
 #if REVIT2025_OR_GREATER
@@ -34,45 +35,48 @@ namespace RevitMCP.Core
         /// </summary>
         public object GetLinkedModels()
         {
-            Document doc = _uiApp.ActiveUIDocument.Document;
-
-            var linkInstances = new FilteredElementCollector(doc)
-                .OfClass(typeof(RevitLinkInstance))
-                .Cast<RevitLinkInstance>()
-                .ToList();
-
-            var results = new List<object>();
-            foreach (var link in linkInstances)
-            {
-                var linkDoc = link.GetLinkDocument();
-                var transform = link.GetTotalTransform();
-
-                // 嘗試取得連結類型名稱
-                var linkType = doc.GetElement(link.GetTypeId());
-                string linkTypeName = linkType?.Name ?? "Unknown";
-
-                results.Add(new
-                {
-                    LinkInstanceId = link.Id.GetIdValue(),
-                    LinkTypeName = linkTypeName,
-                    FileName = linkDoc?.Title ?? "(未載入)",
-                    FilePath = linkDoc?.PathName ?? "(無法取得路徑)",
-                    IsLoaded = linkDoc != null,
-                    Transform = new
-                    {
-                        OriginX = Math.Round(transform.Origin.X * 304.8, 2),
-                        OriginY = Math.Round(transform.Origin.Y * 304.8, 2),
-                        OriginZ = Math.Round(transform.Origin.Z * 304.8, 2),
-                        IsIdentity = transform.IsIdentity
-                    }
-                });
-            }
+            IReadOnlyList<LinkSummary> results = GetLinkSummaries();
 
             return new
             {
                 Count = results.Count,
                 LinkedModels = results
             };
+        }
+
+        /// <summary>
+        /// 取得 typed、唯讀的連結模型摘要，供 native UI 與 legacy MCP listing 共用。
+        /// </summary>
+        public IReadOnlyList<LinkSummary> GetLinkSummaries()
+        {
+            Document doc = _uiApp.ActiveUIDocument.Document;
+
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(RevitLinkInstance))
+                .Cast<RevitLinkInstance>()
+                .Select(link =>
+                {
+                    Document linkDoc = link.GetLinkDocument();
+                    Transform transform = link.GetTotalTransform();
+                    Element linkType = doc.GetElement(link.GetTypeId());
+
+                    return new LinkSummary
+                    {
+                        LinkInstanceId = Convert.ToInt64(link.Id.GetIdValue()),
+                        LinkTypeName = linkType?.Name ?? "Unknown",
+                        FileName = linkDoc?.Title ?? "(未載入)",
+                        FilePath = linkDoc?.PathName ?? "(無法取得路徑)",
+                        IsLoaded = linkDoc != null,
+                        Transform = new LinkTransformSummary
+                        {
+                            OriginX = Math.Round(transform.Origin.X * 304.8, 2),
+                            OriginY = Math.Round(transform.Origin.Y * 304.8, 2),
+                            OriginZ = Math.Round(transform.Origin.Z * 304.8, 2),
+                            IsIdentity = transform.IsIdentity
+                        }
+                    };
+                })
+                .ToList();
         }
 
         /// <summary>
