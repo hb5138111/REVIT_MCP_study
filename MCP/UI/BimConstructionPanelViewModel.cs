@@ -20,6 +20,8 @@ namespace RevitMCP.UI
             _dispatcher = new PanelReadOnlyDispatcher();
             _service = new ModelSummaryService();
             TypeInventory = new TypeInventoryViewModel(_dispatcher, new TypeInventoryService());
+            LevelConstraintAudit = new LevelConstraintAuditViewModel(
+                _dispatcher, new LevelConstraintAuditService());
             _dispatcher.BusyChanged += (_, __) =>
             {
                 IsRefreshing = _dispatcher.IsBusy;
@@ -32,6 +34,7 @@ namespace RevitMCP.UI
 
         public ICommand RefreshCommand { get; }
         public TypeInventoryViewModel TypeInventory { get; }
+        public LevelConstraintAuditViewModel LevelConstraintAudit { get; }
 
         public ModelSummaryResult Result
         {

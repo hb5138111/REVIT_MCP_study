@@ -37,6 +37,7 @@ namespace RevitMCP.UI
             var tabs = new TabControl();
             tabs.Items.Add(new TabItem { Header = "模型摘要", Content = BuildModelSummaryContent() });
             tabs.Items.Add(new TabItem { Header = "族群／類型檢查", Content = BuildTypeInventoryContent() });
+            tabs.Items.Add(new TabItem { Header = "樓層／約束檢查", Content = BuildLevelConstraintAuditContent() });
             return tabs;
         }
 
@@ -221,6 +222,148 @@ namespace RevitMCP.UI
             next.SetBinding(Button.CommandProperty, new WpfBinding("TypeInventory.NextInstanceCommand"));
             navigation.Children.Add(next);
             WpfGrid.SetRow(navigation, 5);
+            root.Children.Add(navigation);
+
+            return root;
+        }
+
+        private UIElement BuildLevelConstraintAuditContent()
+        {
+            var root = new WpfGrid { Margin = new Thickness(10) };
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition());
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            root.Children.Add(new TextBlock
+            {
+                Text = "營造 BIM 工具 — 樓層／約束檢查",
+                FontSize = 17,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 8)
+            });
+
+            var controls = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+            controls.Children.Add(new TextBlock { Text = "構件分類：", VerticalAlignment = VerticalAlignment.Center });
+            var category = new WpfComboBox
+            {
+                Width = 130,
+                DisplayMemberPath = "Label",
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            category.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("LevelConstraintAudit.Categories"));
+            category.SetBinding(WpfComboBox.SelectedItemProperty, new WpfBinding("LevelConstraintAudit.SelectedCategory"));
+            controls.Children.Add(category);
+
+            controls.Children.Add(new TextBlock
+            {
+                Text = "樓層：",
+                VerticalAlignment = VerticalAlignment.Center,
+                ToolTip = "樓層篩選以構件基準樓層為準。"
+            });
+            var level = new WpfComboBox
+            {
+                Width = 190,
+                DisplayMemberPath = "Label",
+                Margin = new Thickness(0, 0, 8, 0),
+                ToolTip = "樓層篩選以構件基準樓層為準。"
+            };
+            level.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("LevelConstraintAudit.Levels"));
+            level.SetBinding(WpfComboBox.SelectedItemProperty, new WpfBinding("LevelConstraintAudit.SelectedLevel"));
+            controls.Children.Add(level);
+
+            controls.Children.Add(new TextBlock { Text = "顯示：", VerticalAlignment = VerticalAlignment.Center });
+            var filter = new WpfComboBox
+            {
+                Width = 110,
+                DisplayMemberPath = "Label",
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            filter.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("LevelConstraintAudit.FilterOptions"));
+            filter.SetBinding(WpfComboBox.SelectedItemProperty, new WpfBinding("LevelConstraintAudit.SelectedFilter"));
+            controls.Children.Add(filter);
+
+            var refresh = new Button { Content = "重新整理", MinWidth = 90 };
+            refresh.SetBinding(Button.CommandProperty, new WpfBinding("LevelConstraintAudit.RefreshCommand"));
+            controls.Children.Add(refresh);
+            WpfGrid.SetRow(controls, 1);
+            root.Children.Add(controls);
+
+            var summary = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+            summary.Children.Add(BoundText("構件數：", "LevelConstraintAudit.Result.TotalMatchedCount"));
+            summary.Children.Add(BoundText("　正常：", "LevelConstraintAudit.Result.NormalCount"));
+            summary.Children.Add(BoundText("　資料提醒：", "LevelConstraintAudit.Result.DataReminderCount"));
+            summary.Children.Add(BoundText("　需檢查：", "LevelConstraintAudit.Result.ReviewRequiredCount"));
+            summary.ToolTip = "資料提醒與需檢查可能重疊，不需加總等於構件數。";
+            WpfGrid.SetRow(summary, 2);
+            root.Children.Add(summary);
+
+            var state = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
+            state.Children.Add(BoundText("狀態：", "LevelConstraintAudit.StatusMessage"));
+            state.Children.Add(BoundText(string.Empty, "LevelConstraintAudit.TruncationMessage"));
+            state.Children.Add(BoundText(string.Empty, "LevelConstraintAudit.NavigationScopeMessage"));
+            WpfGrid.SetRow(state, 3);
+            root.Children.Add(state);
+
+            var scopeNote = new TextBlock
+            {
+                Text = "範圍：主模型；樓層篩選以構件基準樓層為準。約束標高為參數資料計算，不代表實際幾何高度。",
+                Foreground = Brushes.DimGray,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            WpfGrid.SetRow(scopeNote, 4);
+            root.Children.Add(scopeNote);
+
+            var table = new DataGrid
+            {
+                AutoGenerateColumns = false,
+                IsReadOnly = true,
+                CanUserSortColumns = true,
+                EnableRowVirtualization = true,
+                EnableColumnVirtualization = true
+            };
+            table.SetValue(VirtualizingPanel.IsVirtualizingProperty, true);
+            table.SetValue(VirtualizingPanel.VirtualizationModeProperty, VirtualizationMode.Recycling);
+            table.Columns.Add(TextColumn("元素 ID", "ElementId", 95));
+            table.Columns.Add(TextColumn("族群", "FamilyName", 140));
+            table.Columns.Add(TextColumn("類型", "TypeName", 170));
+            table.Columns.Add(TextColumn("關聯樓層", "AssociatedLevelName", 110));
+            table.Columns.Add(TextColumn("基準樓層", "BaseLevelName", 110));
+            table.Columns.Add(TextColumn("頂部樓層", "TopLevelName", 110));
+            table.Columns.Add(TextColumn("基準偏移", "BaseOffsetDisplay", 105));
+            table.Columns.Add(TextColumn("頂部偏移", "TopOffsetDisplay", 105));
+            table.Columns.Add(TextColumn("未約束高度", "UnconnectedHeightDisplay", 115));
+            table.Columns.Add(TextColumn("約束方式", "ConstraintModeDisplay", 115));
+            table.Columns.Add(TextColumn("檢查結果", "StatusDisplay", 90));
+            table.Columns.Add(TextColumn("說明", "Description", 240));
+            table.SetBinding(ItemsControl.ItemsSourceProperty, new WpfBinding("LevelConstraintAudit.RowsView"));
+            table.SetBinding(DataGrid.SelectedItemProperty, new WpfBinding("LevelConstraintAudit.SelectedRow"));
+            WpfGrid.SetRow(table, 5);
+            root.Children.Add(table);
+
+            var navigation = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+            var highlight = new Button { Content = "亮顯元素", MinWidth = 90, Margin = new Thickness(0, 0, 8, 0) };
+            highlight.SetBinding(Button.CommandProperty, new WpfBinding("LevelConstraintAudit.HighlightCommand"));
+            navigation.Children.Add(highlight);
+            navigation.Children.Add(new TextBlock
+            {
+                Text = "實例巡覽：",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 4, 0),
+                ToolTip = "巡覽順序為 Element ID 穩定技術排序，不代表施工順序。"
+            });
+            var previous = new Button { Content = "上一個", MinWidth = 70, Margin = new Thickness(0, 0, 6, 0) };
+            previous.SetBinding(Button.CommandProperty, new WpfBinding("LevelConstraintAudit.PreviousCommand"));
+            navigation.Children.Add(previous);
+            navigation.Children.Add(BoundText(string.Empty, "LevelConstraintAudit.NavigationPosition"));
+            var next = new Button { Content = "下一個", MinWidth = 70, Margin = new Thickness(6, 0, 0, 0) };
+            next.SetBinding(Button.CommandProperty, new WpfBinding("LevelConstraintAudit.NextCommand"));
+            navigation.Children.Add(next);
+            WpfGrid.SetRow(navigation, 6);
             root.Children.Add(navigation);
 
             return root;

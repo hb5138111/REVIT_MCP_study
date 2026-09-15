@@ -9,7 +9,11 @@ namespace RevitMCP.UI
         TypeInventory,
         HighlightTypeInstances,
         NavigationPrevious,
-        NavigationNext
+        NavigationNext,
+        LevelConstraintAudit,
+        LevelConstraintHighlight,
+        LevelConstraintPrevious,
+        LevelConstraintNext
     }
 
     internal sealed class PanelReadOnlyDispatcher : IExternalEventHandler
