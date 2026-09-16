@@ -20,6 +20,33 @@ namespace RevitMCP
         {
             try
             {
+                string? selfTestDirectory = Environment.GetEnvironmentVariable("REVIT_MCP_SELFTEST_DIR");
+                if (!string.IsNullOrWhiteSpace(selfTestDirectory))
+                {
+                    application.ControlledApplication.ApplicationInitialized += (sender, args) =>
+                    {
+                        if (sender is Autodesk.Revit.ApplicationServices.Application app)
+                        {
+                            // Only the isolated, document-free test session may exit automatically.
+                            bool isolated = app.Documents.Size == 0;
+                            try { CoordinationSelfTest.Run(app, selfTestDirectory); }
+                            catch (Exception ex)
+                            {
+                                System.IO.File.WriteAllText(System.IO.Path.Combine(selfTestDirectory, "startup-error.txt"), ex.ToString());
+                            }
+                            finally
+                            {
+                                if (isolated && app.Documents.Size == 0)
+                                {
+                                    var ui = new UIApplication(app);
+                                    var exit = RevitCommandId.LookupPostableCommandId(PostableCommand.ExitRevit);
+                                    if (ui.CanPostCommand(exit)) ui.PostCommand(exit);
+                                }
+                            }
+                        }
+                    };
+                    return Result.Succeeded;
+                }
                 // 初始化配置管理器
                 _ = ConfigManager.Instance;
                 

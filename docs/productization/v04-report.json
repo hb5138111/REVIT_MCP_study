@@ -1,0 +1,430 @@
+{
+  "TestRunId": "revit-selftest-02386310ad7d4938884ad97922c4dffd",
+  "Timestamp": "2026-09-15T09:19:58.827184+00:00",
+  "RevitVersion": "2026",
+  "BuildHash": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+  "FixtureVersion": "coordination-1",
+  "GateA": "PASS",
+  "GateB": "PASS",
+  "GateC": "PASS",
+  "GateD": "N/A — enabled production workflows are read-only; fixture element read-back passed",
+  "Build": "PASS",
+  "QAQC": {
+    "PASS": 72,
+    "FAIL": 0,
+    "WARN": 4,
+    "SKIP": 1
+  },
+  "SupplementalStaticAudit": {
+    "Gate": "Static semantic capability mapping",
+    "Status": "PASS",
+    "Passed": 204,
+    "Failed": 0,
+    "SourceHash": "2b13f668a628e3de9a3f9124803c9fe8c1563c13d390a0b97b41a79707794711"
+  },
+  "Passed": 705,
+  "Failed": 0,
+  "Skipped": 1,
+  "TemporaryTestStatus": "GATE_C_PASS_ROLLBACK_PASS",
+  "Rollback": "PASS",
+  "ReleaseStatus": "READY_FOR_OPTIONAL_UAT",
+  "ReleaseDecision": "Static capability mapping completed for every domain, including explicit backend/API gaps. Only the read-only coordination subset is enabled; other domains are not claimed runtime certified.",
+  "ProductizationCounts": {
+    "NATIVE_READY": 0,
+    "ADAPTER_READY": 18,
+    "RULE_READY": 3,
+    "PROJECT_CONFIG_REQUIRED": 18,
+    "REVIEW_ONLY": 17,
+    "BLOCKED": 15,
+    "META_ONLY": 13
+  },
+  "PriorityOne": [
+    {
+      "Domain": "auto-dimension-workflow",
+      "Status": "ADAPTER_READY"
+    },
+    {
+      "Domain": "beam-penetration-algorithm",
+      "Status": "REVIEW_ONLY"
+    },
+    {
+      "Domain": "beam-penetration-base",
+      "Status": "REVIEW_ONLY"
+    },
+    {
+      "Domain": "beam-penetration-rc",
+      "Status": "REVIEW_ONLY"
+    },
+    {
+      "Domain": "beam-penetration-sc",
+      "Status": "REVIEW_ONLY"
+    },
+    {
+      "Domain": "beam-penetration-src",
+      "Status": "REVIEW_ONLY"
+    },
+    {
+      "Domain": "curtain-wall-elevation-workflow",
+      "Status": "ADAPTER_READY"
+    },
+    {
+      "Domain": "door-window-legend-workflow",
+      "Status": "BLOCKED"
+    },
+    {
+      "Domain": "exterior-wall-opening-check",
+      "Status": "REVIEW_ONLY"
+    },
+    {
+      "Domain": "finish-legend-creation",
+      "Status": "ADAPTER_READY"
+    },
+    {
+      "Domain": "mep-csa-clash-detection",
+      "Status": "ADAPTER_READY"
+    },
+    {
+      "Domain": "mep-opening-candidate-scan",
+      "Status": "PROJECT_CONFIG_REQUIRED"
+    },
+    {
+      "Domain": "quantity-takeoff-excel",
+      "Status": "PROJECT_CONFIG_REQUIRED"
+    },
+    {
+      "Domain": "rc-filled-region-workflow",
+      "Status": "RULE_READY"
+    },
+    {
+      "Domain": "revit-partition-takeoff",
+      "Status": "PROJECT_CONFIG_REQUIRED"
+    },
+    {
+      "Domain": "scaffold-takeoff",
+      "Status": "PROJECT_CONFIG_REQUIRED"
+    },
+    {
+      "Domain": "sheet-viewport-management",
+      "Status": "ADAPTER_READY"
+    },
+    {
+      "Domain": "sleeve-classification-protocol",
+      "Status": "REVIEW_ONLY"
+    },
+    {
+      "Domain": "threshold-opening-takeoff",
+      "Status": "PROJECT_CONFIG_REQUIRED"
+    },
+    {
+      "Domain": "viewport-type-scale-sync",
+      "Status": "BLOCKED"
+    }
+  ],
+  "Assertions": [
+    {
+      "TestName": "pipe_wall_count",
+      "Expected": "1",
+      "Actual": "1",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Fixture wall and crossing pipe"
+    },
+    {
+      "TestName": "opening_diameter",
+      "Expected": "150",
+      "Actual": "150",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "100 mm + 2 * 25 mm"
+    },
+    {
+      "TestName": "element_readback",
+      "Expected": "True",
+      "Actual": "True",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "UniqueId read-back"
+    },
+    {
+      "TestName": "review_honesty",
+      "Expected": "True",
+      "Actual": "True",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Unknown solid edge and opening bottom remain warnings"
+    },
+    {
+      "TestName": "pipe_beam_count",
+      "Expected": "1",
+      "Actual": "1",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Generated structural-category family"
+    },
+    {
+      "TestName": "beam_review",
+      "Expected": "True",
+      "Actual": "True",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Beam review code required"
+    },
+    {
+      "TestName": "duct_floor_count",
+      "Expected": "1",
+      "Actual": "1",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Vertical duct through slab"
+    },
+    {
+      "TestName": "conduit_no_clash",
+      "Expected": "0",
+      "Actual": "0",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Remote conduit"
+    },
+    {
+      "TestName": "level_scope",
+      "Expected": "0",
+      "Actual": "0",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Pre-geometry MEP reference-level filter"
+    },
+    {
+      "TestName": "clash_scan",
+      "Expected": "1",
+      "Actual": "1",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Clash workflow does not require clearance"
+    },
+    {
+      "TestName": "oblique_review",
+      "Expected": "True",
+      "Actual": "True",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Non-orthogonal pipe through wall"
+    },
+    {
+      "TestName": "explicit_truncation",
+      "Expected": "total=2, returned=1, truncated=true",
+      "Actual": "2/1/True",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Total includes matches beyond display cap"
+    },
+    {
+      "TestName": "translated_link",
+      "Expected": "1",
+      "Actual": "1",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "MEP link translated +100 ft; pipe center resolves to host origin"
+    },
+    {
+      "TestName": "translated_point",
+      "Expected": "0",
+      "Actual": "0",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Host-coordinate center mm"
+    },
+    {
+      "TestName": "fixture_saved",
+      "Expected": "True",
+      "Actual": "True",
+      "Passed": true,
+      "AffectedDomain": "mep-opening-candidate-scan",
+      "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+      "AffectedBackend": "MCP/Core/CoordinationService.cs",
+      "Evidence": "Disposable artifact only"
+    }
+  ],
+  "RuntimeFailures": [],
+  "OriginalSHA256": "ECA3CBE0D835F69E45B6D4579224756E62397F80B85E63DBB4F6F9F79991D9DE",
+  "TemporarySHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+  "RestoredSHA256": "ECA3CBE0D835F69E45B6D4579224756E62397F80B85E63DBB4F6F9F79991D9DE",
+  "Manifest": {
+    "Count": 1,
+    "Assembly": "RevitMCP\\RevitMCP.dll",
+    "FullClassName": "RevitMCP.Application"
+  },
+  "DeploymentFileSetMatch": true,
+  "ProductionDeploymentPerformed": true,
+  "FormalDeployment": {
+    "Status": "PASS",
+    "Kind": "FORMAL_V04_RELEASE",
+    "Timestamp": "2026-09-16T00:31:59.6241446+00:00",
+    "BuildSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+    "DeployedSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+    "HashMatch": true,
+    "RequiredDllCount": 8,
+    "DeployedDllCount": 8,
+    "RequiredDllSet": "PASS",
+    "ManifestExists": true,
+    "ManifestCount": 1,
+    "Assembly": "RevitMCP\\RevitMCP.dll",
+    "FullClassName": "RevitMCP.Application",
+    "Files": [
+      {
+        "File": "ClosedXML.dll",
+        "BuildSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C",
+        "DeployedSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C"
+      },
+      {
+        "File": "DocumentFormat.OpenXml.dll",
+        "BuildSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974",
+        "DeployedSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974"
+      },
+      {
+        "File": "ExcelNumberFormat.dll",
+        "BuildSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507",
+        "DeployedSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507"
+      },
+      {
+        "File": "Irony.dll",
+        "BuildSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD",
+        "DeployedSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD"
+      },
+      {
+        "File": "Newtonsoft.Json.dll",
+        "BuildSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07",
+        "DeployedSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07"
+      },
+      {
+        "File": "RevitMCP.dll",
+        "BuildSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+        "DeployedSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D"
+      },
+      {
+        "File": "SixLabors.Fonts.dll",
+        "BuildSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F",
+        "DeployedSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F"
+      },
+      {
+        "File": "XLParser.dll",
+        "BuildSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C",
+        "DeployedSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C"
+      }
+    ],
+    "Rollback": "NOT_NEEDED",
+    "Backup": "test-artifacts/formal-release/attempt2/v03-snapshot"
+  },
+  "PostDeploymentQAQC": {
+    "PASS": 72,
+    "FAIL": 0,
+    "WARN": 2,
+    "SKIP": 3
+  },
+  "V04CommitStatus": "SCOPED_CHECKPOINTS; resolve final hash from the commit containing development-state.json or local final receipt",
+  "DeploymentStatus": "PASS",
+  "Evidence": {
+    "Verification": "test-artifacts/verification-1fac6210ae544d1d827969ad7d47f265/report.json",
+    "Contracts": "test-artifacts/source-audit/contracts.json",
+    "Logic": "test-artifacts/verification-1fac6210ae544d1d827969ad7d47f265/logic.json",
+    "QAQC": "test-artifacts/verification-1fac6210ae544d1d827969ad7d47f265/qaqc.log",
+    "Runtime": "test-artifacts\\revit-selftest-02386310ad7d4938884ad97922c4dffd\\runtime.json",
+    "Reversible": "test-artifacts/reversible-86c37c008ba0473e9d101816c0cd94b3/reversible.json",
+    "SemanticAudit": "test-artifacts/source-audit/tests.json",
+    "FormalDeployment": "test-artifacts/formal-release/deployment.json",
+    "PostDeploymentQAQC": "test-artifacts/formal-release/qaqc.log"
+  },
+  "Warnings": [
+    "Unsigned add-in prompt required user Load Once; subsequently Revit exited normally.",
+    "Grazing geometry is outside the enabled centerline backend capability.",
+    "CoreFixture, TakeoffFixture and DrawingFixture are planned only; this run executed CoordinationFixture.",
+    "Native panel interaction is not covered by this service-level fixture."
+  ],
+  "NextGate": "Optional short Native UI UAT after restart; stop here and do not start another productization batch.",
+  "Commits": [
+    {
+      "Scope": "A",
+      "Hash": "bb50035168fbdd11d1f6e03f25cc9a1f807bcdc6",
+      "Message": "feat: add domain productization framework and self-test lab",
+      "Files": [
+        "MCP/Models/WorkflowDefinition.cs",
+        "scripts/audit-productization.cjs",
+        "scripts/complete-productization-audit.cjs",
+        "scripts/run-productization-audit.ps1",
+        "scripts/test-productization-audit.cjs",
+        "tests/SourceAudit/Program.cs",
+        "tests/SourceAudit/SourceAudit.csproj",
+        "docs/productization/matrix.json",
+        "docs/productization/matrix.md",
+        "docs/productization/README.md",
+        "docs/DOCUMENT_AUDIENCE_INVENTORY.md"
+      ]
+    },
+    {
+      "Scope": "B",
+      "Hash": "0aa5bd7fcfa177fba5c08db8917c55972adad89a",
+      "Message": "feat: add construction coordination center",
+      "Files": [
+        "MCP/Core/ClashDetector.cs",
+        "MCP/Core/CoordinationService.cs",
+        "MCP/Models/CoordinationModels.cs",
+        "MCP/UI/CoordinationViewModel.cs",
+        "MCP/UI/DetectReviewWorkflowControl.cs",
+        "MCP/UI/BimConstructionPanelPage.cs",
+        "MCP/UI/BimConstructionPanelViewModel.cs",
+        "MCP/UI/PanelReadOnlyDispatcher.cs"
+      ]
+    },
+    {
+      "Scope": "C",
+      "Hash": "SELF_COMMIT",
+      "Message": "test: add Revit coordination fixtures",
+      "Files": [
+        "MCP/Application.cs",
+        "MCP/Commands/RunCoordinationSelfTestCommand.cs",
+        "MCP/Core/CoordinationSelfTest.cs",
+        "tests/WorkflowLogic/Program.cs",
+        "tests/WorkflowLogic/WorkflowLogic.csproj",
+        "scripts/run-revit-selftest.ps1",
+        "scripts/test-reversible-gate-c.ps1",
+        "scripts/test-workflow-contracts.cjs",
+        "scripts/verify-v04.ps1",
+        "scripts/write-v04-report.cjs",
+        ".gitignore",
+        "docs/productization/v04-report.json",
+        "docs/productization/v04-report.md",
+        "docs/productization/development-state.json",
+        "docs/productization/staging-plan.md",
+        "docs/productization/release-checkpoints.md",
+        "log/2026-09.md"
+      ]
+    }
+  ]
+}

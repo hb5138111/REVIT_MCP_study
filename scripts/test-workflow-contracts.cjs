@@ -1,0 +1,47 @@
+const fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'..');const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const matrix=JSON.parse(read('docs/productization/matrix.json'));const tests=[];const contractWarnings=[];
+const check=(TestName,Expected,Actual,pass,Evidence)=>tests.push({TestName,Expected,Actual,Passed:pass,AffectedDomain:'productization',AffectedTool:'runtime registry',AffectedBackend:'MCP/Core/CommandExecutor.cs',Evidence});
+const source=read('MCP/Core/CoordinationService.cs'),vm=read('MCP/UI/CoordinationViewModel.cs'),registry=read('MCP/Models/WorkflowDefinition.cs');
+check('scope_required',true,/CoordinationRules.Validate\(request\)/.test(source),/CoordinationRules.Validate\(request\)/.test(source),'Typed request validation before collectors');
+check('native_no_transport',false,/JObject|WebSocket|CommandExecutor|\.md"/.test(source),!/JObject|WebSocket|CommandExecutor|\.md"/.test(source),'Typed service dependencies');
+check('native_readonly',false,/new Transaction\(/.test(source),!/new Transaction\(/.test(source),'Service has no model transaction');
+check('settings_input',true,vm.includes('UnitFormatUtils.TryParse')&&vm.includes('OpeningClearanceMm'),vm.includes('UnitFormatUtils.TryParse')&&vm.includes('OpeningClearanceMm'),'Project-units input and typed versioned settings');
+check('runtime_no_markdown',false,/ReadAllText|ReadAllLines|EnumerateFiles/.test(registry),!/ReadAllText|ReadAllLines|EnumerateFiles/.test(registry),'Compiled registration');
+check('shared_geometry',true,source.includes('ClashDetector.IntersectCenterline'),source.includes('ClashDetector.IntersectCenterline'),'Same curve-to-solid API wrapper as legacy detector');
+for(const label of ['ModelSummary','TypeInventory','HighlightTypeInstances','NavigationPrevious','NavigationNext','LevelConstraintAudit','LevelConstraintHighlight','LevelConstraintPrevious','LevelConstraintNext','CoordinationScan'])
+ check('dispatcher_'+label,true,read('MCP/UI/PanelReadOnlyDispatcher.cs').includes(label),read('MCP/UI/PanelReadOnlyDispatcher.cs').includes(label),'Existing dispatcher requests preserved');
+for(const label of ['BuildModelSummaryContent','BuildTypeInventoryContent','BuildLevelConstraintAuditContent','BuildCoordinationContent'])
+ check('ui_'+label,true,read('MCP/UI/BimConstructionPanelPage.cs').includes('Content = '+label+'()'),read('MCP/UI/BimConstructionPanelPage.cs').includes('Content = '+label+'()'),'Existing tabs remain wired');
+const seen=new Set();
+for(const tool of matrix.RuntimeTools){
+ const quarantine=tool.Command==='check_sanitary_fixture_requirements';
+ check('runtime_registry_'+tool.Name,true,tool.Dispatcher.length>0||quarantine,tool.Dispatcher.length>0||quarantine,tool.SchemaFile);
+ for(const field of tool.Required){
+   const evidence=tool.Dispatcher.map(e=>read(e.File)).join('\n');
+   // File-level field presence is deliberately only a basic contract check.
+   // A forwarded parameter is traced in the selected helper files below.
+   const helpers=matrix.Domains.filter(d=>d.Tools.includes(tool.Name)).flatMap(d=>d.BackendFiles);
+   const hasField=[evidence,...helpers.map(read)].some(t=>t.includes('"'+field+'"'));
+   if(!hasField&&!quarantine) contractWarnings.push({TestName:'field_review_'+tool.Name+'_'+field,Expected:'Backend field evidence',Actual:'Not resolved by basic file scan',Severity:'WARNING',AffectedTool:tool.Name,Evidence:tool.SchemaFile});
+ }
+}
+for(const domain of matrix.Domains){
+ if(domain.ReadOnly===true&&domain.BackendFileContainsTransaction)
+  contractWarnings.push({TestName:'readonly_transaction_review_'+domain.DomainId,Expected:'Read-only reachable backend',Actual:'Referenced file contains Transaction; method-level reachability needs review',Severity:'WARNING',Evidence:domain.BackendFiles});
+ for(const schema of domain.TypeScriptSchemas){if(seen.has(schema.Tool))continue;seen.add(schema.Tool);
+  const cmd=schema.Tool==='query_elements_with_filter'?'query_elements':schema.Tool;
+  const evidence=domain.CommandEvidence.filter(e=>e.Command===cmd);
+  const quarantine=cmd==='check_sanitary_fixture_requirements';
+  check('dispatcher_'+schema.Tool,'Dispatcher or named repository quarantine',evidence.length?evidence[0].File:quarantine?'QUARANTINED':'MISSING',evidence.length>0||quarantine,schema.File);
+ }
+ for(const skill of domain.SkillPath)check('reference_'+domain.DomainId+'_'+path.basename(path.dirname(skill)),true,fs.existsSync(path.join(root,skill)),fs.existsSync(path.join(root,skill)),domain.DomainPath);
+}
+// Fail enabled coordination workflows if their mandatory schema fields drift.
+const openings=matrix.Domains.find(d=>d.DomainId==='mep-opening-candidate-scan').TypeScriptSchemas.find(t=>t.Tool==='scan_opening_candidates');
+for(const field of ['mepSource','structureSource','clearanceMm'])check('opening_required_'+field,true,openings.Required.includes(field),openings.Required.includes(field),openings.File);
+const report={TestRunId:crypto.randomUUID(),Timestamp:new Date().toISOString(),GateA:tests.every(t=>t.Passed)?'PASS':'FAIL',Passed:tests.filter(t=>t.Passed).length,Failed:tests.filter(t=>!t.Passed).length,
+ Warnings:['File-level transaction evidence is not a complete call graph.','Existing sanitary fixture command remains quarantined by repository QA/QC.','Generic backend required-field matching is a basic schema/dispatcher check, not semantic equivalence.',...contractWarnings],Assertions:tests};
+const out=path.resolve(process.argv[2]||path.join(root,'test-artifacts'));fs.mkdirSync(out,{recursive:true});fs.writeFileSync(path.join(out,'contracts.json'),JSON.stringify(report,null,2));
+fs.writeFileSync(path.join(out,'contracts.md'),'# Static contracts\n\nGate A: '+report.GateA+'\n\n'+tests.map(t=>`- ${t.Passed?'PASS':'FAIL'} ${t.TestName}`).join('\n'));
+console.log(JSON.stringify({GateA:report.GateA,Passed:report.Passed,Failed:report.Failed}));process.exitCode=report.Failed?1:0;

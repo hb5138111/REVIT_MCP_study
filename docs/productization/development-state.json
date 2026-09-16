@@ -1,0 +1,660 @@
+{
+  "SchemaVersion": 1,
+  "UpdatedAt": "2026-09-16T00:35:03.545Z",
+  "Task": "v0.4 Master Task",
+  "Branch": "bim-custom",
+  "Status": "READY_FOR_OPTIONAL_UAT",
+  "Completed": [
+    "Gate 0 v0.3 checkpoint/push",
+    "Global static capability mapping",
+    "Native read-only coordination framework/service/UI",
+    "Gate A",
+    "Supplemental audit",
+    "Gate B",
+    "Release.R26 build",
+    "Repository QAQC",
+    "CoordinationFixture Gate C",
+    "Gate D N/A",
+    "Mandatory full v0.3 rollback",
+    "Formal v0.4 deployment integrity"
+  ],
+  "Gates": {
+    "A": {
+      "Status": "PASS",
+      "Passed": 466
+    },
+    "SupplementalAudit": {
+      "Status": "PASS",
+      "Passed": 204
+    },
+    "B": {
+      "Status": "PASS",
+      "Passed": 20
+    },
+    "C": {
+      "Status": "PASS",
+      "Passed": 15,
+      "Fixture": "coordination-1"
+    },
+    "D": {
+      "Status": "N/A",
+      "Reason": "Read-only production workflows"
+    },
+    "Build": "PASS",
+    "Rollback": "PASS"
+  },
+  "BuildSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+  "InstalledVersion": "v0.4",
+  "InstalledSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+  "ProductionDeployment": "PASS — FORMAL_V04_RELEASE",
+  "V04Git": "Three authorized checkpoints; actual commit IDs / push / sync / clean verification recorded after push in local final receipt",
+  "NextAction": "Optional Native UI UAT after reopening Revit; do not start next productization batch.",
+  "ResumeRules": [
+    "Inspect current branch/status and compare these fingerprints before reusing gates.",
+    "Do not repeat v0.3 work.",
+    "Do not rebuild/retest unchanged passed runtime inputs.",
+    "Do not overwrite DLLs while Revit.exe is running.",
+    "No upstream/main/force/reset/clean."
+  ],
+  "SourceFingerprints": [
+    {
+      "Path": "MCP/Application.cs",
+      "SHA256": "c157380c4710d3ddf97d86e1d8cf36d1b26dfc19d2200c3b7abfadfa1858faa5"
+    },
+    {
+      "Path": "MCP/Commands/MCPCommands.cs",
+      "SHA256": "2709a6d55e92153fb15e4af3b424a39f0881cd48cbe1d63735761c3184d8470f"
+    },
+    {
+      "Path": "MCP/Commands/OpenLogCommand.cs",
+      "SHA256": "d834ff2758b9571043bf57a0ae760d10c15fe087a6d4fa545fd4e30beb22c482"
+    },
+    {
+      "Path": "MCP/Commands/RunCoordinationSelfTestCommand.cs",
+      "SHA256": "7fd194979beb0662830180743d3a57c72d0f622d8270b84ce1e1cdcd05ec0b39"
+    },
+    {
+      "Path": "MCP/Commands/ShowBimConstructionPanelCommand.cs",
+      "SHA256": "8717437b2c18f02219e00fc82829293993a69d148d32ea6a58828092a2dd53c5"
+    },
+    {
+      "Path": "MCP/Configuration/ConfigManager.cs",
+      "SHA256": "3916c31d9a0297c55629532f951a753a4151b4c75eefb064c06a087cc4bc3950"
+    },
+    {
+      "Path": "MCP/Configuration/ServiceSettings.cs",
+      "SHA256": "bb2f62fad2ea7230c93c1039daacaf1f9dde872761bae7b97d522058f506eb79"
+    },
+    {
+      "Path": "MCP/ConnectCommand.cs",
+      "SHA256": "169aebd6205e1870a7cd7be60dd9787fc8efa7f794919f3cae2bb899e46f0793"
+    },
+    {
+      "Path": "MCP/Core/CadBlockPlacementExecutor.cs",
+      "SHA256": "41b3a76f708a783bc5356e28d6e19300b50967da7415e6fe8abf728bc7fd6408"
+    },
+    {
+      "Path": "MCP/Core/CadLinkExecutor.cs",
+      "SHA256": "227680fd3f2729fb55ee7b0e5dc67584b580fcb6cd70603fd709e945395b26a8"
+    },
+    {
+      "Path": "MCP/Core/ClashDetector.cs",
+      "SHA256": "293d105befb2a0bab308ccc3f45ccb9307d3ef877d210e42049a932647fe79af"
+    },
+    {
+      "Path": "MCP/Core/CommandExecutor.cs",
+      "SHA256": "7771db03582e43835f8d0336777413bfedc8a182285f569d17af30632ad3cc67"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.BeamPenetration.cs",
+      "SHA256": "75bc7921baa532dbe27a42455757511e7725e8b9b2b2f1bee5fb8f6216e122d3"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.Categories.cs",
+      "SHA256": "a9b25bf9d841c66a6d0ffa3b89066655a095441f1028f1d551e13ff00b992d40"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ColumnJoins.cs",
+      "SHA256": "7684ce015025eac645ee1cbc15fb77c611a97b58c82fe089c4fd03fb720fab17"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.CrossDocument.cs",
+      "SHA256": "2df074b593514e28c1ec4cc8d639d1fb6021b64d4fbf4f3764ab92ce7328f534"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.CurtainWall.cs",
+      "SHA256": "2e7a4caca88230bf4980001e2a3ea8faf85bea16440c149d02c71e6745c59d8c"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.CurtainWallDimensions.cs",
+      "SHA256": "2f95ab852c1ca1a4e16855fe6358a1ee1dadf0e4e53555ff02761ee2c1819bbd"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.DependentView.cs",
+      "SHA256": "1585a627cf1b74ad2a9080994a8521842fe398972ab540999f87328125c75ef7"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.DetailComponent.cs",
+      "SHA256": "b2a14cc0fcc192c53755ddf784f8473e2810a79c9cd3b7c9936d9846bf626deb"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.DetailCopy.cs",
+      "SHA256": "41839beaab99954b1593845ac98db468376853961b2d376efc53960619dcebad"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.DetailDedup.cs",
+      "SHA256": "fad823c67db3e074476219dcd60522a73401020e693167bebb245aae375cf2ec"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.Dimension.cs",
+      "SHA256": "86f1a0455940bc7c5cd07889356d255011d385b5a8c204d9848ff200fe5a51a7"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.DoorWindowLegend.cs",
+      "SHA256": "c97981bbeed394cd4c3d15eedca12c7b0658a2bdde56892f2a54c07d96a5ba99"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.DuctSystem.cs",
+      "SHA256": "7deb119cd832236058df1f135508ea4c96a8f963384c5e5ae78d0f53a6f4ce5d"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ElementOps.cs",
+      "SHA256": "9c82fb561d8cb8c20e01a2b27103eb74c4a9bbd3cab52c827f7b28cf032eda60"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.FamilyExport.cs",
+      "SHA256": "ba58160493d44e0750f8bab8c3f10c0da1c29d125ce52b0ddd899e05977b30bd"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.FamilyPlacement.cs",
+      "SHA256": "bfec09766ad2de9a0d7b9ec43ac9a2a277e9046e389d3c1897740ab59fe42efa"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.FillPatterns.cs",
+      "SHA256": "c7e1dc97ce8e4344645f97a293265ed8da3feeec56e3d9e951714188c591adff"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.FinishLegend.cs",
+      "SHA256": "7aafbf9f8c29c8febcf3deec09142e4c81b2924a9304650020574314ab8110e4"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.GM_GreenMaterial.cs",
+      "SHA256": "910df7e64d32923109849fdb2671ad9e7aa4bf2f798c88e8792da1d0a9f111ec"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.GM_RfaFamilyInjection.cs",
+      "SHA256": "6393a42e341cf571a1742fae1eeff852c3c9b876f6d463fb45ffbf558d05b0c6"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.IfcStructuralSync.cs",
+      "SHA256": "bb52ef861ee7cb05062a0416bef548ce7313f47db933872b236427d30232a5d5"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.Legend.cs",
+      "SHA256": "a5b719504aba3ab3e98805c53666f969fa2290afc5612be460ad0d564da066f7"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.Level.cs",
+      "SHA256": "0d13ff539c0d22ce8ce6fe721fe73e929e8cc3e31f751d3c3e96842ce19067de"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.Material.cs",
+      "SHA256": "a4f63909347e0161a803cf178f7273d8663ecbbc34e4bdaba54b86b2abc1eeaa"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.MepSettings.cs",
+      "SHA256": "ed84123b3d8c8d5443eb588de08eef647c1e4a9427e0232796ff565e1b0128df"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.MepSizeCuration.cs",
+      "SHA256": "4a8ab615d6b45c5fb7ef88781da992e2760cd7e280d514af25af3fe8f4b594fd"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ParallelSection.cs",
+      "SHA256": "feb030d487777addae641a8b92e87444f987663351a3b5fa99b21951bbda6cb3"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.PartitionTakeoff.cs",
+      "SHA256": "6a332672fed57f96a5d1accf5d9a69df481bc485994ab22d247dfe4c58086949"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ProjectUnits.cs",
+      "SHA256": "ff3a3c705fafd86460c0ea391d5eb79aa622b1cef2e96a21cf3d2b6af23aa331"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ReclaimedHelpers.cs",
+      "SHA256": "edfcfe0ac4901f006a78e69cd723847deefeebd0457de6c0590260a249f740db"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.RoomDoorCounts.cs",
+      "SHA256": "49e1d3e80bc296650e7f3056001038d86e4d0e415c29001c5b23e558b6aaee32"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.RoomFilledRegions.cs",
+      "SHA256": "11f08a2d6c3018c0fa173e20c4c0a0576edf9e88e08c9bdc500c5af57f55213d"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.RoomFinish.cs",
+      "SHA256": "b28e93121acef68ded8799dd107bca798ed5dc687d3ae746ba368730ec018bb1"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.RoomModification.cs",
+      "SHA256": "f7632c2053463ce77318ce2dc18f35395313499e6956ab3a8517dbd3867624ca"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.RoomRenumber.cs",
+      "SHA256": "0eceaa61f6fb3f3ff450bc1c10e0d57835e2cd83612574b97eebb65aa2a2bfab"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.RoomSurface.cs",
+      "SHA256": "ca1a02edcb61a3c460d864edb19bcf77871ae425b496f8287f59bd3ed521e400"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.RoomWindowCounts.cs",
+      "SHA256": "c3f79e310eb6192abea8bbc2eae951cdcfdc05fbcde5e333db1006a174f66981"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ScaffoldTakeoff.cs",
+      "SHA256": "64c300e94d026a2a257ad8420976fa297f21106e8de47c56d96cbd230c3eca2c"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.Schedule.cs",
+      "SHA256": "6e7b8a274c0a382750c5e85450ed9601122fa4b8dd2aaf06f7db38c237f789f6"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ScopeBox.cs",
+      "SHA256": "51ce523376af11520e24840925dda05c9d71c646619a226624acb3f0890c60b3"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.Sheet.cs",
+      "SHA256": "16d8d4ec79f664340c34cebd24c42240f135602f92060cf352e27fddfa8ecc5f"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.SmokeDetector.cs",
+      "SHA256": "c81a07ec75b21e5aeca7ea9415ecd88b224881999a89dbe5948bc67d1f5ebb34"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.SmokeExhaust.cs",
+      "SHA256": "dc065f72a3c1afd7e03e4bda8f785d98663db631e360175a9b90550bffcf656b"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.SpaceGeometry.cs",
+      "SHA256": "d266f0f2e9f5ca5b15115a76f6f1b5a9f9675d418201663af31ad607645ab6fb"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.StairCompliance.cs",
+      "SHA256": "4e772e428ed25103972187c0f606bcbe35bed1e946dfae2ab2d96b8907d7c637"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.TextNote.cs",
+      "SHA256": "135b6b628b7007f8aae951eb20291f9eb5296e7c0d47749bb53cfbff118a6e8d"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.TitleblockAlign.cs",
+      "SHA256": "60fd604b5334377b2ba26a273f3dff147bee39e99f80203551894fff6ae2e4e5"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ToposolidGrading.cs",
+      "SHA256": "8039203f20e2a66a583d8aa1a618bfde873b6207d4504dc6ff9c4c0abbdbf028"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ViewCreation.cs",
+      "SHA256": "1e8e693b50ee797c1a62c19461a47abc595914a9157caeb63be8206a24140ba7"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ViewCropBox.cs",
+      "SHA256": "64834e7151d30778f47e319e0df95e661a94268b2e51e49af47cbd1547c0fb8b"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ViewDuplicate.cs",
+      "SHA256": "dd0f595119d886a493dc80b7b4d801eb6d669465187605ca87d21c7d626ab0c5"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ViewOps.cs",
+      "SHA256": "1bc02d080a3cded6f8d00535b816d9fa3899c2de632b48336a3710613eb32b06"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ViewportDebug.cs",
+      "SHA256": "55c3432aa77552888a78fb2ac387f4e3b7ae768b63841acb5dcde7ce813208e3"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ViewportPosition.cs",
+      "SHA256": "46075b41022ac795c5b0ccdbdf849c7bb189cfc61ef6b7e5ebc8aee4ba089d8d"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.ViewVisibility.cs",
+      "SHA256": "6f321f3a22fb5feccb14f16b801158d9cb424f2aaf48d18167cb01c6ede0e933"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.WallTopJoin.cs",
+      "SHA256": "6449192c1712629036d6fec30f26b45cdd6fba9e31764f3dfa925b8b9b2ab2ac"
+    },
+    {
+      "Path": "MCP/Core/Commands/CommandExecutor.WallType.cs",
+      "SHA256": "41ea7295326639e62b7c2685963994fa3bd553322edb2be224c8c638a0242b90"
+    },
+    {
+      "Path": "MCP/Core/Commands/ConflictTrackingHandler.cs",
+      "SHA256": "e6508d11ea12f8bfd367edb43318e3f4cf924e1a8629e37d75e62f5d18e412ad"
+    },
+    {
+      "Path": "MCP/Core/CoordinationSelfTest.cs",
+      "SHA256": "3c2669b78104080b394ecc97d0b7855a86b4d66debd34c82547cae79217b1b46"
+    },
+    {
+      "Path": "MCP/Core/CoordinationService.cs",
+      "SHA256": "dc427aec7a485f71bb5f549ca680d52c01f90c09874576a135446090d8114a08"
+    },
+    {
+      "Path": "MCP/Core/DwgBeamExecutor.cs",
+      "SHA256": "932a58a99c09e8bad15e57d9a689d4daabb74cf39d9bc12fb73664af1ce1a075"
+    },
+    {
+      "Path": "MCP/Core/DwgColumnExecutor.cs",
+      "SHA256": "1a182a293c2151f7d33adbbac581277bc2befd56374152e4e514c13ff471ed16"
+    },
+    {
+      "Path": "MCP/Core/ExteriorWallOpeningChecker.cs",
+      "SHA256": "4a5535ee1219d41251f6f6abb56a42f56b5cf1843adb0faec09f2bbb7ad2c974"
+    },
+    {
+      "Path": "MCP/Core/ExternalEventManager.cs",
+      "SHA256": "1ad0325d3504630ec24d3ecf999a37332032d2bfb93f937c0d0b89e69e296bcb"
+    },
+    {
+      "Path": "MCP/Core/FloorSlopeAnalyzer.cs",
+      "SHA256": "5a3ea962f675555b103cfb54dd48abe047605e05fc49818891d4adbdb7033ba2"
+    },
+    {
+      "Path": "MCP/Core/Grading/GradingModels.cs",
+      "SHA256": "9071b0daca6fb615170bbab89e63a96d1063164d207871a21d5e9fa5483c4dae"
+    },
+    {
+      "Path": "MCP/Core/Grading/Polygon2D.cs",
+      "SHA256": "368c3c47ec32241575cbe391de1d364ba8f0a8a778106fffe4fc0f45b117f0df"
+    },
+    {
+      "Path": "MCP/Core/Grading/RevitToposolidGradingAdapter.cs",
+      "SHA256": "222dff0f463f774fc973a153d45510d72fd809b34f69aba343336899234d5a46"
+    },
+    {
+      "Path": "MCP/Core/LevelConstraintAuditService.cs",
+      "SHA256": "8a928e2ba8b1e4d5bf7a8dad163fc43cbcf32428c9800a99c9c18d330aba086e"
+    },
+    {
+      "Path": "MCP/Core/LinkedModelHelper.cs",
+      "SHA256": "15deda5fa44e5cf9e8f3b0859f8bb3a0ffe77258c3788aab3946ef0ac0a54ab0"
+    },
+    {
+      "Path": "MCP/Core/Logger.cs",
+      "SHA256": "361a00dec93c6fc392752de7a8b76ec1ad03b6fa37cb04a0c7921e4219f8b44b"
+    },
+    {
+      "Path": "MCP/Core/LogViewerWindow.cs",
+      "SHA256": "4cf47b8292b3c7560212cb2a877d001a395e65fb185fd5dcfb025792508f28f3"
+    },
+    {
+      "Path": "MCP/Core/ModelSummaryService.cs",
+      "SHA256": "4e8336725a9d13cf6dcecf9129aa6e9834fc58b8a9278c2aee874ed28b3e1029"
+    },
+    {
+      "Path": "MCP/Core/OpeningCandidateScanner.cs",
+      "SHA256": "dce4c59942a4b8effc0d63d938528ba6f281bdce7789dcbc1d0ed48880d04c2f"
+    },
+    {
+      "Path": "MCP/Core/RevitCompatibility.cs",
+      "SHA256": "2e5e9ea22e1da38e3af6776de701d3d9070ef7d3f62b23f7886a9d7f2f74946e"
+    },
+    {
+      "Path": "MCP/Core/SilentFailuresPreprocessor.cs",
+      "SHA256": "c05dd90559c8a875c6d5b6e79e5cb3296955ad8d3b363df0b9f79ea7cfaadd88"
+    },
+    {
+      "Path": "MCP/Core/SocketService.cs",
+      "SHA256": "fdb983b8a92b0bdb6e3c59a6cfbb62ee33bbf5831847aaefb7551e806293681c"
+    },
+    {
+      "Path": "MCP/Core/TransactionHelper.cs",
+      "SHA256": "b7c0393cf1b4b7a91292d11fb7e2422f0c72cc9db824fc229b51836c03ab0e82"
+    },
+    {
+      "Path": "MCP/Core/TypeInstanceLocatorService.cs",
+      "SHA256": "24019296b3ba262aaf18f76ea81b2a8394761882bd80a12d1b1b43ee02fb3909"
+    },
+    {
+      "Path": "MCP/Core/TypeInventoryService.cs",
+      "SHA256": "cca3e4f8c14be94b0a8dcfe96f56d8fbba5f9a187fca0e18e782224984c8a226"
+    },
+    {
+      "Path": "MCP/Core/WarningSwallower.cs",
+      "SHA256": "ec90bf522e0e1b37a762549bc24044db20e58faf4561ff2a11f23d20b3cf4840"
+    },
+    {
+      "Path": "MCP/Models/CommandModels.cs",
+      "SHA256": "27a6b1a7f10f0049b592bf177ed7e561b3ebbd7d0601456bb88641b1ca4564e9"
+    },
+    {
+      "Path": "MCP/Models/CoordinationModels.cs",
+      "SHA256": "3d99b9a13c40efc81cf711d71652f60ad59429dc78d6ac999ee14ede67452e38"
+    },
+    {
+      "Path": "MCP/Models/LevelConstraintAuditModels.cs",
+      "SHA256": "0c717d1bc2329294b4ec48eed6878180fe68723e194376d05fc8a10a04e4ad3f"
+    },
+    {
+      "Path": "MCP/Models/ModelSummaryModels.cs",
+      "SHA256": "592e19ac3834efa8effb2a7438a7fd7ff992151aa2d25f45b8ddd4410aeb5cb6"
+    },
+    {
+      "Path": "MCP/Models/TypeInventoryModels.cs",
+      "SHA256": "1f4cd363598ea39ff33d5fbf5d40f0f44d19bd4ea1031276c05fa27b35e98208"
+    },
+    {
+      "Path": "MCP/Models/WorkflowDefinition.cs",
+      "SHA256": "e3f97726b92645bd1ad2770ec3978662053f614d6f448a5bc5ba094df6f08160"
+    },
+    {
+      "Path": "MCP/Properties/AssemblyInfo.cs",
+      "SHA256": "de334fc476abba432b4f0709c5ac2d755df111d896ec7a1a89f7a461f8d1fdff"
+    },
+    {
+      "Path": "MCP/UI/BimConstructionPanelPage.cs",
+      "SHA256": "020621a377786056bc528f8f2ba6141d8b002489a9156953d3da99e59dffc2de"
+    },
+    {
+      "Path": "MCP/UI/BimConstructionPanelViewModel.cs",
+      "SHA256": "524369f1cc8c7d603ad2414578eecf0eb0e7915cebaf48c14f812b2db8cbb9d6"
+    },
+    {
+      "Path": "MCP/UI/CoordinationViewModel.cs",
+      "SHA256": "a1e3cb6ff99acad3bd2a9e25fea25121506ea26a2622130a40046bc9f019cea5"
+    },
+    {
+      "Path": "MCP/UI/DetectReviewWorkflowControl.cs",
+      "SHA256": "524454be478900b04ee29c582cf62231e03302eba250796ff71ede546b7ad92b"
+    },
+    {
+      "Path": "MCP/UI/LevelConstraintAuditViewModel.cs",
+      "SHA256": "4e06043c5b0eb1959c48bedf3e5418e54db44b69dfb68f391cc9c8556aeaa4ac"
+    },
+    {
+      "Path": "MCP/UI/PanelReadOnlyDispatcher.cs",
+      "SHA256": "e897d00b0bd8300757749835e1cc759c9d82b42346f06ec43156ee0384e13a7e"
+    },
+    {
+      "Path": "MCP/UI/TypeInventoryViewModel.cs",
+      "SHA256": "504f6e27fbcde3a8f31a17b9093e2f7f492884677b3dddc66f076d06772a1cfc"
+    },
+    {
+      "Path": "MCP/RevitMCP.csproj",
+      "SHA256": "2e6ebcf88ad8897205467a8b45587cb9e19fe1cc28890027d21392062a4aafb0"
+    },
+    {
+      "Path": "MCP/RevitMCP.addin",
+      "SHA256": "4cac1043c06607725d0eb43ba7ab4be6b4724131a07a35ddeee3e8622b4e0d40"
+    }
+  ],
+  "Evidence": {
+    "Verification": "test-artifacts/verification-1fac6210ae544d1d827969ad7d47f265/report.json",
+    "Contracts": "test-artifacts/source-audit/contracts.json",
+    "Logic": "test-artifacts/verification-1fac6210ae544d1d827969ad7d47f265/logic.json",
+    "QAQC": "test-artifacts/verification-1fac6210ae544d1d827969ad7d47f265/qaqc.log",
+    "Runtime": "test-artifacts\\revit-selftest-02386310ad7d4938884ad97922c4dffd\\runtime.json",
+    "Reversible": "test-artifacts/reversible-86c37c008ba0473e9d101816c0cd94b3/reversible.json",
+    "SemanticAudit": "test-artifacts/source-audit/tests.json",
+    "FormalDeployment": "test-artifacts/formal-release/deployment.json",
+    "PostDeploymentQAQC": "test-artifacts/formal-release/qaqc.log"
+  },
+  "ReleasePlan": "docs/productization/release-checkpoints.md",
+  "Report": "docs/productization/v04-report.json",
+  "MatrixCounts": {
+    "NATIVE_READY": 0,
+    "ADAPTER_READY": 18,
+    "RULE_READY": 3,
+    "PROJECT_CONFIG_REQUIRED": 18,
+    "REVIEW_ONLY": 17,
+    "BLOCKED": 15,
+    "META_ONLY": 13
+  },
+  "BaseCheckpoint": "8447acb232f00617a3ae44b747f2ad263487dfb1",
+  "ReleaseVersion": "v0.4",
+  "DeploymentVerification": {
+    "Status": "PASS",
+    "Kind": "FORMAL_V04_RELEASE",
+    "Timestamp": "2026-09-16T00:31:59.6241446+00:00",
+    "BuildSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+    "DeployedSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+    "HashMatch": true,
+    "RequiredDllCount": 8,
+    "DeployedDllCount": 8,
+    "RequiredDllSet": "PASS",
+    "ManifestExists": true,
+    "ManifestCount": 1,
+    "Assembly": "RevitMCP\\RevitMCP.dll",
+    "FullClassName": "RevitMCP.Application",
+    "Files": [
+      {
+        "File": "ClosedXML.dll",
+        "BuildSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C",
+        "DeployedSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C"
+      },
+      {
+        "File": "DocumentFormat.OpenXml.dll",
+        "BuildSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974",
+        "DeployedSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974"
+      },
+      {
+        "File": "ExcelNumberFormat.dll",
+        "BuildSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507",
+        "DeployedSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507"
+      },
+      {
+        "File": "Irony.dll",
+        "BuildSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD",
+        "DeployedSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD"
+      },
+      {
+        "File": "Newtonsoft.Json.dll",
+        "BuildSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07",
+        "DeployedSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07"
+      },
+      {
+        "File": "RevitMCP.dll",
+        "BuildSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D",
+        "DeployedSHA256": "F7D3F914D095AB2DB80FB9D867467E6FDF4BC9A31FE91F37868B0796E558443D"
+      },
+      {
+        "File": "SixLabors.Fonts.dll",
+        "BuildSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F",
+        "DeployedSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F"
+      },
+      {
+        "File": "XLParser.dll",
+        "BuildSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C",
+        "DeployedSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C"
+      }
+    ],
+    "Rollback": "NOT_NEEDED",
+    "Backup": "test-artifacts/formal-release/attempt2/v03-snapshot"
+  },
+  "QAQC": {
+    "BuildRun": {
+      "PASS": 72,
+      "FAIL": 0,
+      "WARN": 4,
+      "SKIP": 1
+    },
+    "PostDeployment": {
+      "PASS": 72,
+      "FAIL": 0,
+      "WARN": 2,
+      "SKIP": 3
+    }
+  },
+  "FinalCommit": {
+    "Kind": "SELF_COMMIT",
+    "ResolveCommand": "git log -1 --format=%H -- docs/productization/development-state.json",
+    "LiteralHashReceipt": "test-artifacts/formal-release/development-state.json"
+  },
+  "NextRecommendedBatch": "Select a P1 ADAPTER_READY domain from matrix for a separately authorized batch; none started.",
+  "FinalReceipt": "test-artifacts/formal-release/final.json",
+  "CheckpointCommits": [
+    {
+      "Scope": "A",
+      "Hash": "bb50035168fbdd11d1f6e03f25cc9a1f807bcdc6",
+      "Message": "feat: add domain productization framework and self-test lab",
+      "Files": [
+        "MCP/Models/WorkflowDefinition.cs",
+        "scripts/audit-productization.cjs",
+        "scripts/complete-productization-audit.cjs",
+        "scripts/run-productization-audit.ps1",
+        "scripts/test-productization-audit.cjs",
+        "tests/SourceAudit/Program.cs",
+        "tests/SourceAudit/SourceAudit.csproj",
+        "docs/productization/matrix.json",
+        "docs/productization/matrix.md",
+        "docs/productization/README.md",
+        "docs/DOCUMENT_AUDIENCE_INVENTORY.md"
+      ]
+    },
+    {
+      "Scope": "B",
+      "Hash": "0aa5bd7fcfa177fba5c08db8917c55972adad89a",
+      "Message": "feat: add construction coordination center",
+      "Files": [
+        "MCP/Core/ClashDetector.cs",
+        "MCP/Core/CoordinationService.cs",
+        "MCP/Models/CoordinationModels.cs",
+        "MCP/UI/CoordinationViewModel.cs",
+        "MCP/UI/DetectReviewWorkflowControl.cs",
+        "MCP/UI/BimConstructionPanelPage.cs",
+        "MCP/UI/BimConstructionPanelViewModel.cs",
+        "MCP/UI/PanelReadOnlyDispatcher.cs"
+      ]
+    },
+    {
+      "Scope": "C",
+      "Hash": "SELF_COMMIT",
+      "Message": "test: add Revit coordination fixtures",
+      "Files": [
+        "MCP/Application.cs",
+        "MCP/Commands/RunCoordinationSelfTestCommand.cs",
+        "MCP/Core/CoordinationSelfTest.cs",
+        "tests/WorkflowLogic/Program.cs",
+        "tests/WorkflowLogic/WorkflowLogic.csproj",
+        "scripts/run-revit-selftest.ps1",
+        "scripts/test-reversible-gate-c.ps1",
+        "scripts/test-workflow-contracts.cjs",
+        "scripts/verify-v04.ps1",
+        "scripts/write-v04-report.cjs",
+        ".gitignore",
+        "docs/productization/v04-report.json",
+        "docs/productization/v04-report.md",
+        "docs/productization/development-state.json",
+        "docs/productization/staging-plan.md",
+        "docs/productization/release-checkpoints.md",
+        "log/2026-09.md"
+      ]
+    }
+  ]
+}
