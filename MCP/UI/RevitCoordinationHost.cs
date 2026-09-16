@@ -39,16 +39,11 @@ namespace RevitMCP.UI
                 return feet * 304.8;
             }
             public CoordinationResult Scan(CoordinationRequest request) => service.Scan(document, request);
-            public void Highlight(CoordinationRow row, bool mep, bool host)
-            {
-                var ids = new List<ElementId>();
-                if (mep) ids.Add(CoordinationService.ResolveNavigation(document, row.Mep).Id);
-                if (host) ids.Add(CoordinationService.ResolveNavigation(document, row.Host).Id);
-                ids = ids.Distinct().ToList(); ui.Selection.SetElementIds(ids);
-                if (!ui.Selection.GetElementIds().OrderBy(id => id.GetIdValue()).SequenceEqual(ids.OrderBy(id => id.GetIdValue())))
-                    throw new InvalidOperationException("選取 read-back 不一致，請重新整理後再試。");
-                ui.ShowElements(ids);
-            }
+            private readonly CoordinationNavigationService navigation = new CoordinationNavigationService();
+            public bool NavigationAvailable(CoordinationNavigationSession session) => navigation.IsAvailable(ui, session);
+            public CoordinationNavigationResult Locate(CoordinationRow row, bool mep, bool host, CoordinationNavigationSession session, bool keepSession)
+                => navigation.Locate(ui, row, mep, host, session, keepSession);
+            public string ReturnPrevious(CoordinationNavigationSession session) => navigation.Return(ui, session);
         }
     }
 }

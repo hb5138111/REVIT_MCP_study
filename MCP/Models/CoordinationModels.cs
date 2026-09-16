@@ -5,6 +5,37 @@ using System.Linq;
 
 namespace RevitMCP.Models
 {
+    public sealed class CoordinationNavigationSession
+    {
+        public long? CoordinationViewId { get; set; }
+        public long? PreviousViewId { get; set; }
+        public void Clear() { CoordinationViewId = null; PreviousViewId = null; }
+    }
+    public sealed class CoordinationViewOption
+    {
+        public long Id { get; set; }
+        public bool Usable { get; set; }
+        public bool Perspective { get; set; }
+    }
+    public static class CoordinationViewPolicy
+    {
+        // Resolve lazily: normal next/previous never enumerate all document views.
+        public static long? Resolve(long current, long? session, bool keepSession,
+            Func<long, CoordinationViewOption?> lookup, Func<IEnumerable<CoordinationViewOption>> candidates)
+        {
+            bool Valid(long? id) => id.HasValue && lookup(id.Value)?.Usable == true;
+            if (keepSession && Valid(session)) return session;
+            if (Valid(current)) return current;
+            if (Valid(session)) return session;
+            return candidates().Where(v => v.Usable).OrderBy(v => v.Perspective).ThenBy(v => v.Id).Select(v => (long?)v.Id).FirstOrDefault();
+        }
+    }
+    public sealed class CoordinationNavigationResult
+    {
+        public bool FocusVerified { get; set; }
+        public bool ThreeDAvailable { get; set; }
+        public string Message { get; set; } = "";
+    }
     public enum CoordinationKind { Clash, OpeningCandidate, BeamPenetration, ReviewRequired }
     public sealed class CoordinationLevel
     {
@@ -53,8 +84,9 @@ namespace RevitMCP.Models
         public string MepLabel { get; set; } = string.Empty;
         public string HostLabel { get; set; } = string.Empty;
         public string KindDisplay => ResultKind == CoordinationKind.OpeningCandidate ? "開孔候選" : ResultKind == CoordinationKind.BeamPenetration ? "穿梁候選" : ResultKind == CoordinationKind.ReviewRequired ? "需人工複核" : "一般碰撞";
-        public string Explanation => KindDisplay + "；" + Warnings;
-        public string Detail => $"MEP {MepSource} [{Mep}]；主體 {HostSource} [{Host}]；交點 {PointDisplay}";
+        public string Explanation => KindDisplay + "，仍需人工確認；不代表結構或法規核准。";
+        public string Detail => $"MEP：{MepLabel}（{MepCategoryDisplay}）\n來源：{MepSource}；Element ID：{Mep}\n主體：{HostLabel}（{HostCategoryDisplay}）\n來源：{HostSource}；Element ID：{Host}\n系統：{System}；樓層：{Level}\nMEP 尺寸：{NominalSizeDisplay}；建議孔尺寸：{SizeDisplay}\n交點：{PointDisplay}；穿透長度：{IntersectionLengthMm:F1} mm；孔下緣：{OpeningBottomDisplay}\n提醒：{Warnings}\n{Explanation}";
+        public string TechnicalDetail => Detail + "\nWarningCodes: " + string.Join(", ", WarningCodes);
         public CoordinationLookup Mep { get; set; } = new CoordinationLookup();
         public CoordinationLookup Host { get; set; } = new CoordinationLookup();
         public string MepCategory { get; set; } = string.Empty;
@@ -158,7 +190,7 @@ namespace RevitMCP.Models
                 case "short_intersection": return "交集小於 10 mm，可能擦邊";
                 case "size_data_missing": return "必要標稱尺寸缺失";
                 case "opening_bottom_unresolved": return "開孔下緣尚無可靠量測";
-                case "solid_edge_unknown": return "中心線法未檢驗實體邊距";
+                case "solid_edge_unknown": return "此結果依中心線穿越判定，未包含保溫、管件與實體邊緣擦碰。";
                 case "multiple_intersections": return "同一對元素有多段交集；表列長度與交點為第一段，需逐段複核";
                 default: return "幾何資料不完整，請人工複核";
             }

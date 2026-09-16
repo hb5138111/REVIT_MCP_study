@@ -16,7 +16,9 @@ namespace RevitMCP.UI
         IReadOnlyList<string> GetMepCategories(long linkId);
         double ParseClearance(string text);
         CoordinationResult Scan(CoordinationRequest request);
-        void Highlight(CoordinationRow row, bool mep, bool host);
+        bool NavigationAvailable(CoordinationNavigationSession session);
+        CoordinationNavigationResult Locate(CoordinationRow row, bool mep, bool host, CoordinationNavigationSession session, bool keepSession);
+        string ReturnPrevious(CoordinationNavigationSession session);
     }
     public interface ICoordinationHost
     {
@@ -42,6 +44,21 @@ namespace RevitMCP.UI
         private readonly Dictionary<string, CoordinationProjectSettings> settings = new Dictionary<string, CoordinationProjectSettings>();
         private bool refreshPending, initialized, sourcesReady, publishing, documentSwitched;
         private int generation;
+        private readonly CoordinationNavigationSession navigation = new CoordinationNavigationSession();
+        private bool autoLocateEnabled = true;
+        public bool AutoLocateEnabled { get => autoLocateEnabled; set { if (publishing) return; autoLocateEnabled = value; Notify(); } }
+        public bool ThreeDNavigationAvailable { get; private set; }
+        public bool LastFocusVerified { get; private set; }
+        public long? CoordinationViewId => navigation.CoordinationViewId;
+        public long? PreviousViewId => navigation.PreviousViewId;
+        public string NavigationPosition => $"{(SelectedRow == null ? 0 : RowsView.IndexOf(SelectedRow) + 1)} / {RowsView.Count}";
+        public string Detail => SelectedRow?.Detail ?? "選取問題查看構件、交點與複核資訊。";
+        public string EmptyState => Result == null ? "選擇協調範圍後開始掃描。" : Result.TotalIssues == 0 ? "目前範圍未發現協調問題。" : RowsView.Count == 0 ? "沒有符合目前篩選條件的結果。" : "";
+        public string TotalLabel => $"問題總數 {Result?.TotalIssues ?? 0}";
+        public string OpeningLabel => $"開孔候選 {Count(CoordinationKind.OpeningCandidate)}";
+        public string BeamLabel => $"穿梁候選 {Count(CoordinationKind.BeamPenetration)}";
+        public string ClashLabel => $"一般碰撞 {Count(CoordinationKind.Clash)}";
+        public string ReviewLabel => $"需人工複核 {(Result != null && Result.CountsByStatus.TryGetValue("需人工複核", out int count) ? count : 0)}";
         private CoordinationSource? mepSource, hostSource;
         private CoordinationLevel? level;
         private string mepCategory = "", hostCategory = "", system = "", search = "", filter = "全部", clearanceText = "";
@@ -57,6 +74,12 @@ namespace RevitMCP.UI
             HighlightMepCommand = Command(() => Navigate(true, false), () => CanNavigate);
             HighlightHostCommand = Command(() => Navigate(false, true), () => CanNavigate);
             HighlightBothCommand = Command(() => Navigate(true, true), () => CanNavigate);
+            ReturnPreviousCommand = Command(ReturnPrevious, () => !IsBusy && PreviousViewId.HasValue);
+            FilterAllCommand = Command(() => SelectedFilter = "全部", () => !IsBusy && Result != null);
+            FilterOpeningCommand = Command(() => SelectedFilter = "開孔候選", () => !IsBusy && Result != null);
+            FilterBeamCommand = Command(() => SelectedFilter = "穿梁候選", () => !IsBusy && Result != null);
+            FilterClashCommand = Command(() => SelectedFilter = "一般碰撞", () => !IsBusy && Result != null);
+            FilterReviewCommand = Command(() => SelectedFilter = "需人工複核", () => !IsBusy && Result != null);
             PreviousCommand = Command(() => Move(-1), () => CanNavigate && RowsView.IndexOf(SelectedRow!) > 0);
             NextCommand = Command(() => Move(1), () => CanNavigate && RowsView.IndexOf(SelectedRow!) < RowsView.Count - 1);
             ExportCommand = Command(() => ExportRequested?.Invoke(this, EventArgs.Empty), () => !IsBusy && Result != null && Result.DocumentIdentity == DocumentIdentity);
@@ -74,6 +97,13 @@ namespace RevitMCP.UI
         public ICommand PreviousCommand { get; }
         public ICommand NextCommand { get; }
         public ICommand ExportCommand { get; }
+        public ICommand Locate3DCommand => HighlightBothCommand;
+        public ICommand ReturnPreviousCommand { get; }
+        public ICommand FilterAllCommand { get; }
+        public ICommand FilterOpeningCommand { get; }
+        public ICommand FilterBeamCommand { get; }
+        public ICommand FilterClashCommand { get; }
+        public ICommand FilterReviewCommand { get; }
         public bool IsBusy => host.IsBusy;
         public string DocumentIdentity { get; private set; } = "";
         public string StatusMessage { get; private set; } = "正在準備模型來源。";
@@ -100,7 +130,7 @@ namespace RevitMCP.UI
         public CoordinationResult? Result { get; private set; }
         public CoordinationRequest? LastRequest { get; private set; }
         public List<CoordinationRow> RowsView { get; private set; } = new List<CoordinationRow>();
-        public CoordinationRow? SelectedRow { get => selectedRow; set { if (publishing) return; selectedRow = value != null && RowsView.Contains(value) ? value : null; Notify(); } }
+        public CoordinationRow? SelectedRow { get => selectedRow; set { if (publishing) return; if (selectedRow != value) LastFocusVerified = false; selectedRow = value != null && RowsView.Contains(value) ? value : null; Notify(); } }
         public string Search { get => search; set { if (publishing) return; search = value ?? ""; FilterRows(); } }
         public string SelectedFilter { get => filter; set { if (publishing) return; filter = value ?? "全部"; FilterRows(); } }
         public double? ClearanceMm => settings.TryGetValue(DocumentIdentity, out var value) ? value.OpeningClearanceMm : null;
@@ -124,6 +154,7 @@ namespace RevitMCP.UI
             bool switched = identity != DocumentIdentity;
             documentSwitched |= switched;
             if (switched) { mepSource = null; hostSource = null; hostCategory = ""; system = ""; clearanceText = ""; }
+            navigation.Clear(); ThreeDNavigationAvailable = false; LastFocusVerified = false;
             sourcesReady = false; DocumentIdentity = identity; Invalidate(); ScheduleRefresh();
         }
         private void ScheduleRefresh() { refreshPending = true; if (!IsBusy) RefreshSources(); else Notify(); }
@@ -138,7 +169,9 @@ namespace RevitMCP.UI
                 bool same = DocumentIdentity == context.DocumentIdentity;
                 long mepId = same ? mepSource?.LinkInstanceId ?? 0 : 0;
                 long hostId = same ? hostSource?.LinkInstanceId ?? 0 : 0;
+                if (!same) navigation.Clear();
                 DocumentIdentity = context.DocumentIdentity;
+                ThreeDNavigationAvailable = context.NavigationAvailable(navigation);
                 Sources = context.GetSources();
                 mepSource = Sources.FirstOrDefault(s => s.LinkInstanceId == mepId) ?? Sources.FirstOrDefault(s => s.LinkInstanceId == 0);
                 hostSource = Sources.FirstOrDefault(s => s.LinkInstanceId == hostId) ?? Sources.FirstOrDefault(s => s.LinkInstanceId == 0);
@@ -180,8 +213,10 @@ namespace RevitMCP.UI
             if (!CanScan) return;
             var request = BuildRequest(); int revision = generation;
             Result = null; RowsView.Clear(); selectedRow = null; LastRequest = request;
+            StatusMessage = "掃描中…"; Notify();
             Submit(context => { Anchor(context); if (revision != generation) return;
                 var result = context.Scan(request); if (revision != generation || result.DocumentIdentity != DocumentIdentity) return;
+                ThreeDNavigationAvailable = context.NavigationAvailable(navigation);
                 Result = result; StatusMessage = "協調掃描完成。"; FilterRows(); });
         }
         private void Submit(Action<ICoordinationContext> action)
@@ -196,13 +231,23 @@ namespace RevitMCP.UI
             if (selectedRow == null || !RowsView.Contains(selectedRow)) selectedRow = RowsView.FirstOrDefault();
             Notify();
         }
-        private void Move(int direction) { int next = RowsView.IndexOf(selectedRow!) + direction; if (next < 0 || next >= RowsView.Count) return; SelectedRow = RowsView[next]; Navigate(true, true); }
-        private void Navigate(bool mep, bool structure)
+        private void Move(int direction) { int next = RowsView.IndexOf(selectedRow!) + direction; if (next < 0 || next >= RowsView.Count) return; SelectedRow = RowsView[next]; if (AutoLocateEnabled) Navigate(true, true, true); }
+        private void Navigate(bool mep, bool structure, bool keepSession = false)
         {
             if (!CanNavigate) return; var row = SelectedRow!; int revision = generation;
-            Submit(context => { Anchor(context); if (revision != generation) return; context.Highlight(row, mep, structure);
-                StatusMessage = "已亮顯。" + ((mep && row.Mep.LinkInstanceId != 0) || (structure && row.Host.LinkInstanceId != 0) ? "連結元素以 Link instance 定位；明細保留原元素 ID。" : ""); Notify(); });
+            LastFocusVerified = false;
+            Submit(context => { Anchor(context); if (revision != generation) return;
+                var outcome = context.Locate(row, mep, structure, navigation, keepSession);
+                ThreeDNavigationAvailable = outcome.ThreeDAvailable; LastFocusVerified = outcome.FocusVerified;
+                StatusMessage = outcome.Message; Notify(); });
         }
+        private void ReturnPrevious()
+        {
+            int revision = generation;
+            Submit(context => { Anchor(context); if (revision != generation) return;
+                StatusMessage = context.ReturnPrevious(navigation); LastFocusVerified = false; Notify(); });
+        }
+
         public string ExportCsv()
         {
             if (Result == null || Result.DocumentIdentity != DocumentIdentity) throw new InvalidOperationException("請先重新掃描。");
