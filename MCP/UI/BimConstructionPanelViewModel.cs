@@ -7,9 +7,17 @@ namespace RevitMCP.UI
     public sealed class BimConstructionPanelViewModel
     {
         public CoordinationViewModel Coordination { get; }
+#if REVIT2026
+        public SiteTerrainViewModel Site { get; }
+        private readonly RevitSiteHost siteHost;
+#endif
         public BimConstructionPanelViewModel()
         {
             Coordination = new CoordinationViewModel(new RevitCoordinationHost(new PanelReadOnlyDispatcher()));
+#if REVIT2026
+            siteHost = new RevitSiteHost();
+            Site = new SiteTerrainViewModel(siteHost);
+#endif
         }
         public void Initialize() => Coordination.Initialize();
         internal void AttachLifecycle(UIControlledApplication application)
@@ -18,9 +26,16 @@ namespace RevitMCP.UI
             {
                 var doc = e.CurrentActiveView?.Document;
                 Coordination.DocumentChanged(doc != null && doc.IsValidObject ? DocumentSessionIdentity.GetDocumentIdentity(doc) : "");
+#if REVIT2026
+                Site.DocumentChanged(doc != null && doc.IsValidObject ? DocumentSessionIdentity.GetDocumentIdentity(doc) : "");
+#endif
             };
             application.ControlledApplication.DocumentChanged += (_, e) => Coordination.DocumentChanged(Coordination.DocumentIdentity, true);
             application.ControlledApplication.DocumentClosed += (_, e) => Coordination.DocumentChanged("", true);
+#if REVIT2026
+            application.ControlledApplication.DocumentChanged += (_, e) => { siteHost.ModelChanged(); Site.DocumentChanged(DocumentSessionIdentity.GetDocumentIdentity(e.GetDocument()), true); };
+            application.ControlledApplication.DocumentClosed += (_, e) => { siteHost.ModelChanged(); Site.DocumentChanged("", true); };
+#endif
         }
     }
 }

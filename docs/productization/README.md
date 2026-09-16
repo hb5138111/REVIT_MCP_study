@@ -1,6 +1,6 @@
-# 施工協調工作台與 Self-Test Lab（v0.4.2）
+# 營造 BIM 工具與 Self-Test Lab（v0.5）
 
-「營造 BIM 工具」直接開啟單一施工協調工作台。模型摘要、族群／類型檢查、樓層／約束檢查已退休；相關 Domain 與 MCP 工具保留。
+「營造 BIM 工具」提供「施工協調」與「基地／土方」兩個工作台。模型摘要、族群／類型檢查、樓層／約束檢查已退休；相關 Domain 與 MCP 工具保留。
 
 ## 使用流程
 
@@ -54,3 +54,13 @@ Revit 不採用子程序 APPDATA 覆寫來隔離 add-in discovery。因此 rever
 正式部署由 `publish-v042.ps1` 驗證每個 gate、來源 fingerprint 與 Gate C/C3 DLL SHA256，呼叫既有 `install-addon.ps1 -Version 2026`，核對全部 DLL 與 user／machine Addins 中唯一 manifest。失敗則沿用已驗證 snapshot rollback。
 
 目前結果見 [v0.4.2 report](v042-report.md)、[navigation analysis](v042-navigation-analysis.md) 與 [checkpoint scopes](v042-release-checkpoints.md)。歷史 v0.4 報告保留，不代表本版 UI 測試。其他 Productization 批次未啟動。
+
+## 基地／土方（v0.5）
+
+依 [site-terrain-earthwork SOP](../../domain/site-terrain-earthwork.md)：選 CSV/TXT，指定 delimiter/header/欄位索引/units，分析 QA；檢查模型座標後選 Shared / Control Point / Local。Control Point 每組六個數值全部為 m，scale 固定 1。Preview 不建立模型元素；tool tolerance 不是測量規範。
+
+選 Toposolid Type/Level、減點模式並複核診斷。明確勾選本次確認後才可建立；超過 20k 點須減點或明確覆核 override。XY 高程衝突、控制 residual 過大、缺少 Type/Level 均阻擋。任何設定／文件變動會清除 Preview 與確認。資料處理在背景執行，畫面點雲最多 2000 個明示樣本，診斷最多 500 列，完整資料留在報告。
+
+地形建立回讀頂面 bounds、Type/Level、Area/Volume。土方可指定 Terrain/Cutter ElementId，先 Revit rollback 試算，再確認執行開挖；或輸入 internal m 的凸 boundary 與 target elevation 作唯讀 TIN 積分。結果依 Project Units 顯示，稽核使用明確 SI units。JSON/CSV/Markdown 自動保存於「文件/RevitMCP/SiteReports」。
+
+能力界線：points-only convex hull 不是法定基地界；Code 點保留但不推定 breakline connectivity；減點誤差為保守 cell elevation envelope，不冒充最終 TIN 插值認證。Existing/Proposed 標為 experimental、未開放正式量。沒有 building auto-move、ProjectLocation 寫入或 Revit.ini 修改。

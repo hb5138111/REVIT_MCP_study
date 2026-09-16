@@ -12,7 +12,14 @@ namespace RevitMCP.UI
         {
             DataContext = viewModel;
             Background = Brushes.White;
+#if REVIT2026
+            var tabs = new TabControl();
+            tabs.Items.Add(new TabItem { Header = "施工協調", Content = new DetectReviewWorkflowControl { DataContext = viewModel.Coordination } });
+            tabs.Items.Add(new TabItem { Header = "基地／土方", Content = new SiteTerrainControl(viewModel.Site) });
+            Content = tabs;
+#else
             Content = new DetectReviewWorkflowControl { DataContext = viewModel.Coordination };
+#endif
             Loaded += (_, __) => viewModel.Initialize();
         }
         public void SetupDockablePane(DockablePaneProviderData data)
