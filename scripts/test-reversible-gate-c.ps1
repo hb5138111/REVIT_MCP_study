@@ -32,7 +32,7 @@ if($RecoveryDirectory){
     New-Item -ItemType Directory -Path $run | Out-Null
     $info=ManifestInfo
     if($info.Count -ne 1 -or $info.Assembly -ne 'RevitMCP\RevitMCP.dll' -or $info.FullClassName -ne 'RevitMCP.Application'){throw 'Canonical manifest preflight failed'}
-    $report=[ordered]@{Snapshot='PENDING';OriginalSHA256=(Get-FileHash -LiteralPath (Join-Path $deployment 'RevitMCP.dll')).Hash;OriginalFiles=(Inventory $deployment);OriginalDirectories=@(Get-ChildItem -LiteralPath $deployment -Directory -Recurse | ForEach-Object {[IO.Path]::GetRelativePath($deployment,$_.FullName)});ManifestBefore=$info;ManifestSHA256=(Get-FileHash -LiteralPath $manifest).Hash;WorkerExisted=(Test-Path -LiteralPath $worker);BuildSHA256=(Get-FileHash (Join-Path $repo 'MCP\bin\Release.R26\RevitMCP.dll')).Hash;TemporaryHashMatch=$false;GateC='SKIPPED';FixtureVersion='coordination-1';RuntimeFailures=@();Rollback='NOT_NEEDED';Status='PREFLIGHT'}
+    $report=[ordered]@{Snapshot='PENDING';OriginalSHA256=(Get-FileHash -LiteralPath (Join-Path $deployment 'RevitMCP.dll')).Hash;OriginalFiles=(Inventory $deployment);OriginalDirectories=@(Get-ChildItem -LiteralPath $deployment -Directory -Recurse | ForEach-Object {[IO.Path]::GetRelativePath($deployment,$_.FullName)});ManifestBefore=$info;ManifestSHA256=(Get-FileHash -LiteralPath $manifest).Hash;WorkerExisted=(Test-Path -LiteralPath $worker);BuildSHA256=(Get-FileHash (Join-Path $repo 'MCP\bin\Release.R26\RevitMCP.dll')).Hash;TemporaryHashMatch=$false;GateC='SKIPPED';FixtureVersion='coordination-2';GateC3='SKIPPED';RuntimeFailures=@();Rollback='NOT_NEEDED';Status='PREFLIGHT'}
     Copy-Item -LiteralPath $deployment -Destination (Join-Path $run 'snapshot') -Recurse
     Copy-Item -LiteralPath $manifest -Destination (Join-Path $run 'RevitMCP.addin')
     if($report.WorkerExisted){Copy-Item -LiteralPath $worker -Destination (Join-Path $run 'ezdxf_worker.py');$report.WorkerSHA256=(Get-FileHash -LiteralPath $worker).Hash}
@@ -63,6 +63,12 @@ try {
             $result=Get-Content -LiteralPath $runtime -Raw | ConvertFrom-Json
             $report.GateC=$result.GateC;$report.Assertions=$result.Assertions;$report.Passed=$result.Passed;$report.Failed=$result.Failed
             if($result.BuildHash -ne $report.BuildSHA256){$report.GateC='FAIL';throw 'Runtime loaded hash mismatch'}
+            $workflowPath=Join-Path $report.RuntimeDirectory 'workflow-runtime.json'
+            if(Test-Path -LiteralPath $workflowPath){
+                $workflow=Get-Content -LiteralPath $workflowPath -Raw | ConvertFrom-Json
+                $report.GateC3=$workflow.GateC3;$report.WorkflowAssertions=$workflow.Assertions
+                if($workflow.BuildHash -ne $report.BuildSHA256){$report.GateC3='FAIL';throw 'Workflow runtime loaded hash mismatch'}
+            }else{throw 'Workflow runtime report missing'}
         }else{throw 'Runtime report missing; inspect journal / startup-error.txt'}
     }
 }catch{$report.RuntimeFailures+= $_.Exception.Message}

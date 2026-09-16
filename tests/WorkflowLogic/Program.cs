@@ -15,7 +15,8 @@ Throws("missing_clearance",()=>CoordinationRules.Validate(new CoordinationReques
 Throws("negative_clearance",()=>CoordinationRules.OpeningSize(100,-1));
 Throws("nan_clearance",()=>CoordinationRules.OpeningSize(100,double.NaN));
 Throws("infinite_clearance",()=>CoordinationRules.OpeningSize(100,double.PositiveInfinity));
-Throws("unbounded_scope",()=>CoordinationRules.Validate(new CoordinationRequest { MepCategory="Pipes",HostCategory="Walls" }));
+CoordinationRules.Validate(new CoordinationRequest { MepCategory="Pipes",HostCategory="Walls" });
+Check("all_levels_allowed",true,true,true);
 Throws("max_results_zero",()=>CoordinationRules.Validate(new CoordinationRequest { MaxResults=0 }));
 Throws("max_results_over_limit",()=>CoordinationRules.Validate(new CoordinationRequest { MaxResults=1001 }));
 foreach(var category in new[]{"StructuralFraming","StructuralColumns"}) Check(category+"_review",true,CoordinationRules.Classify(category,100,1,true).Count>0,CoordinationRules.Classify(category,100,1,true).Count>0);

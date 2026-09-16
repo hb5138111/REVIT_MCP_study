@@ -13,6 +13,9 @@ const buildPath='MCP/bin/Release.R26/RevitMCP.dll';
 const buildHash=fs.existsSync(path.join(root,buildPath))?hash(buildPath).toUpperCase():null;
 const runtimeCandidates=fs.existsSync(path.join(root,'test-artifacts'))?fs.readdirSync(path.join(root,'test-artifacts')).filter(n=>n.startsWith('revit-selftest-')).map(n=>'test-artifacts/'+n+'/runtime.json').filter(p=>fs.existsSync(path.join(root,p))).map(p=>({Path:p,Report:JSON.parse(read(p))})):[];
 const runtime=runtimeCandidates.filter(x=>x.Report.GateC==='PASS'&&x.Report.Failed===0&&x.Report.BuildHash===buildHash).sort((a,b)=>b.Report.Timestamp.localeCompare(a.Report.Timestamp))[0];
+const workflowPath=runtime?.Path.replace(/runtime\.json$/,'workflow-runtime.json');
+const workflowRuntime=workflowPath&&fs.existsSync(path.join(root,workflowPath))?JSON.parse(read(workflowPath)):null;
+const workflowPassed=workflowRuntime?.GateC3==='PASS'&&workflowRuntime?.Failed===0&&workflowRuntime?.BuildHash===buildHash;
 const review=new Set(['beam-penetration-algorithm','beam-penetration-base','beam-penetration-rc','beam-penetration-sc','beam-penetration-src','sleeve-classification-protocol','corridor-analysis-protocol','daylight-area-check','exterior-wall-opening-check','fire-rating-check','floor-area-review','parking-clearance-check','parking-space-review','smoke-detector-check','smoke-exhaust-review','stair-compliance-check','wall-check','building-code-tw']);
 const settings={
  'GM_parameter-schema':['MaterialSlotAssignment','LicenseValidity','TargetTypes'],
@@ -103,17 +106,25 @@ for(const d of matrix.Domains){
   d.NativeWorkflowReadOnly=true;d.NativeBackendFiles=['MCP/Core/CoordinationService.cs','MCP/Models/CoordinationModels.cs','MCP/Core/ClashDetector.cs'];
   d.FixtureTestStatus=runtime?'PASS: '+runtime.Report.FixtureVersion+', '+runtime.Report.Passed+' assertions (native scan subset only)':'NOT_TESTED: no matching build runtime report';
   d.FixtureEvidence=runtime?.Path||null;
+  d.NativeWorkflowTestStatus=workflowPassed?'PASS: real ActiveUIDocument / controller / ExternalEvent':'NOT_TESTED';
+  d.NativeWorkflowEvidence=workflowPassed?workflowPath:null;
   d.NativeScope={Host:true,Link:runtime?'Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested':'Source mapping only; runtime not verified',Mutation:'ReadOnly',TransactionRequired:false,UI:'DetectReviewPattern',Limits:['Centerline crossing; no solid-edge grazing certification','No opening/sleeve creation','Candidate/review only','Session-scoped project settings']};
   d.RecommendedUiPattern='DetectReviewPattern';d.LargeModelRisk='Explicit MEP category/level; pair and time budgets; totals and truncation reported';
  }
 }
 const allSource=[...matrix.Inventory,...backend.SourceFiles.map(f=>({...f,Bytes:Buffer.byteLength(read(f.Path))}))];
 matrix.Inventory=[...new Map(allSource.map(f=>[f.Path,f])).values()].sort((a,b)=>a.Path.localeCompare(b.Path));
-matrix.SchemaVersion=2;
+matrix.SchemaVersion=3;
+matrix.NativeFeatures=[
+ {Id:'model-summary',Status:'RETIRED_NATIVE_UI',Reason:'Removed low-value Native workflow; Domain and runtime tools retained'},
+ {Id:'type-inventory',Status:'RETIRED_NATIVE_UI',Reason:'Removed Native inventory and navigation; generic link DTO and identity extracted'},
+ {Id:'level-constraint-audit',Status:'RETIRED_NATIVE_UI',Reason:'Removed Native audit; Domain and runtime tools retained'},
+ {Id:'coordination',Status:workflowPassed?'RUNTIME_VERIFIED':'RELEASE_GATED',Workflow:'One DetectReview workbench',Kinds:['Clash','OpeningCandidate','BeamPenetration','ReviewRequired'],RequiredGates:['A','B','C','C2','C3'],Limitations:['No automatic sleeve or structural approval','Centerline crossing only']}
+];
 matrix.Audit={Status:'COMPLETE_STATIC_CAPABILITY_MAPPING',CompilerDiagnostics:0,DomainCoverage:matrix.Domains.length,RuntimeToolCoverage:matrix.RuntimeTools.length,MethodCount:backend.Methods.length,Limitations:['Branch union is conservative, not runtime proof.','Unbound external invocations are retained in backend evidence.','Domain-only tools absent from registry are blockers, not invented capabilities.','Only CoordinationFixture has runtime evidence for this release.']};
 matrix.Counts=Object.fromEntries(['NATIVE_READY','ADAPTER_READY','RULE_READY','PROJECT_CONFIG_REQUIRED','REVIEW_ONLY','BLOCKED','META_ONLY'].map(s=>[s,matrix.Domains.filter(d=>d.ProductizationStatus===s).length]));
 fs.writeFileSync(path.join(root,'docs/productization/matrix.json'),JSON.stringify(matrix,null,2)+'\n');
 const safe=x=>String(x).replace(/\|/g,'/').replace(/\r?\n/g,' ');
-const md='# Domain 產品化矩陣\n\n全域靜態能力稽核完成：逐 Domain 保留 SOP 證據與行號，對應 Skill、Tool/schema、dispatcher、method/helper、Revit API、Transaction 與 Link 證據。這是產品化能力盤點，不是所有 Domain 的 runtime 或法規認證。未註冊工具、既知缺陷與不可達 API 均明列 BLOCKED；不可據檔名或 tool 存在就啟用功能。\n\n'+Object.entries(matrix.Counts).map(([s,n])=>'- '+s+': '+n).join('\n')+'\n\n協調 Native 子流程已通過 coordination-1 fixture；完整 Domain 的上色、外部輸出、後續開孔/結構核准仍按各自 scope 管理。完整證據見 [JSON](matrix.json)。\n\n| Domain | Skill | Tools | Backend | Status | Priority | Blocker | UI Pattern |\n|---|---|---|---|---|---|---|---|\n'+matrix.Domains.map(d=>'| '+[d.DomainId,d.SkillPath.join(', '),d.DomainTools.join(', '),d.BackendFiles.join(', '),d.ProductizationStatus,d.Priority,d.Blockers.join('; '),d.RecommendedUiPattern].map(safe).join(' | ')+' |').join('\n')+'\n';
+const md='# Domain 產品化矩陣\n\n全域靜態能力稽核完成：逐 Domain 保留 SOP 證據與行號，對應 Skill、Tool/schema、dispatcher、method/helper、Revit API、Transaction 與 Link 證據。這是產品化能力盤點，不是所有 Domain 的 runtime 或法規認證。未註冊工具、既知缺陷與不可達 API 均明列 BLOCKED；不可據檔名或 tool 存在就啟用功能。\n\n'+Object.entries(matrix.Counts).map(([s,n])=>'- '+s+': '+n).join('\n')+'\n\n協調 Native runtime 證據以目前 DLL hash 對應 JSON 為準；C2/C3 必須另外通過。Model Summary、Type Inventory、Level Constraint Audit 已標記 RETIRED_NATIVE_UI。完整 Domain 的上色、外部輸出、後續開孔/結構核准仍按各自 scope 管理。完整證據見 [JSON](matrix.json)。\n\n| Domain | Skill | Tools | Backend | Status | Priority | Blocker | UI Pattern |\n|---|---|---|---|---|---|---|---|\n'+matrix.Domains.map(d=>'| '+[d.DomainId,d.SkillPath.join(', '),d.DomainTools.join(', '),d.BackendFiles.join(', '),d.ProductizationStatus,d.Priority,d.Blockers.join('; '),d.RecommendedUiPattern].map(safe).join(' | ')+' |').join('\n')+'\n';
 fs.writeFileSync(path.join(root,'docs/productization/matrix.md'),md);
 console.log(JSON.stringify({Audit:matrix.Audit.Status,Counts:matrix.Counts}));

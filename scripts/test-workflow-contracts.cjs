@@ -6,13 +6,20 @@ const source=read('MCP/Core/CoordinationService.cs'),vm=read('MCP/UI/Coordinatio
 check('scope_required',true,/CoordinationRules.Validate\(request\)/.test(source),/CoordinationRules.Validate\(request\)/.test(source),'Typed request validation before collectors');
 check('native_no_transport',false,/JObject|WebSocket|CommandExecutor|\.md"/.test(source),!/JObject|WebSocket|CommandExecutor|\.md"/.test(source),'Typed service dependencies');
 check('native_readonly',false,/new Transaction\(/.test(source),!/new Transaction\(/.test(source),'Service has no model transaction');
-check('settings_input',true,vm.includes('UnitFormatUtils.TryParse')&&vm.includes('OpeningClearanceMm'),vm.includes('UnitFormatUtils.TryParse')&&vm.includes('OpeningClearanceMm'),'Project-units input and typed versioned settings');
+check('settings_input',true,read('MCP/UI/RevitCoordinationHost.cs').includes('UnitFormatUtils.TryParse')&&vm.includes('OpeningClearanceMm'),read('MCP/UI/RevitCoordinationHost.cs').includes('UnitFormatUtils.TryParse')&&vm.includes('OpeningClearanceMm'),'Project-units input and typed versioned settings');
 check('runtime_no_markdown',false,/ReadAllText|ReadAllLines|EnumerateFiles/.test(registry),!/ReadAllText|ReadAllLines|EnumerateFiles/.test(registry),'Compiled registration');
 check('shared_geometry',true,source.includes('ClashDetector.IntersectCenterline'),source.includes('ClashDetector.IntersectCenterline'),'Same curve-to-solid API wrapper as legacy detector');
-for(const label of ['ModelSummary','TypeInventory','HighlightTypeInstances','NavigationPrevious','NavigationNext','LevelConstraintAudit','LevelConstraintHighlight','LevelConstraintPrevious','LevelConstraintNext','CoordinationScan'])
- check('dispatcher_'+label,true,read('MCP/UI/PanelReadOnlyDispatcher.cs').includes(label),read('MCP/UI/PanelReadOnlyDispatcher.cs').includes(label),'Existing dispatcher requests preserved');
-for(const label of ['BuildModelSummaryContent','BuildTypeInventoryContent','BuildLevelConstraintAuditContent','BuildCoordinationContent'])
- check('ui_'+label,true,read('MCP/UI/BimConstructionPanelPage.cs').includes('Content = '+label+'()'),read('MCP/UI/BimConstructionPanelPage.cs').includes('Content = '+label+'()'),'Existing tabs remain wired');
+for(const label of ['RefreshSources','ProjectSettings','Navigation','CoordinationScan'])
+ check('dispatcher_'+label,true,read('MCP/UI/PanelReadOnlyDispatcher.cs').includes(label),read('MCP/UI/PanelReadOnlyDispatcher.cs').includes(label),'Shared dispatcher requests');
+for(const label of ['ModelSummary','TypeInventory','LevelConstraintAudit','TypeInstanceLocator']) {
+ const production=['MCP/UI/BimConstructionPanelPage.cs','MCP/UI/BimConstructionPanelViewModel.cs','MCP/UI/PanelReadOnlyDispatcher.cs','MCP/UI/CoordinationViewModel.cs','MCP/Core/CoordinationService.cs'].map(read).join('\n');
+ check('retired_'+label,false,production.includes(label),!production.includes(label),'Retired Native wiring removed');
+}
+check('single_workbench',false,read('MCP/UI/BimConstructionPanelPage.cs').includes('TabControl'),!read('MCP/UI/BimConstructionPanelPage.cs').includes('TabControl'),'Single coordination workbench');
+check('session_identity_native_equality',true,read('MCP/Core/DocumentSessionIdentity.cs').includes('.Equals(document)'),read('MCP/Core/DocumentSessionIdentity.cs').includes('.Equals(document)'),'Native identity, no managed ReferenceEquals');
+check('ui_logic_testable',false,/Autodesk.Revit|System.Windows.Controls|System.Windows.Data/.test(vm),!/Autodesk.Revit|System.Windows.Controls|System.Windows.Data/.test(vm),'Production controller links into Gate C2');
+check('legacy_link_dto_preserved',true,read('MCP/Models/LinkSummary.cs').includes('class LinkSummary'),read('MCP/Models/LinkSummary.cs').includes('class LinkSummary'),'Shared legacy MCP shape survives retirement');
+check('runtime_workflow_real_dispatcher',true,read('MCP/Core/CoordinationWorkflowSelfTest.cs').includes('Vm.ScanCommand.Execute')&&read('MCP/UI/RevitCoordinationHost.cs').includes('dispatcher.TrySubmit'),read('MCP/Core/CoordinationWorkflowSelfTest.cs').includes('Vm.ScanCommand.Execute')&&read('MCP/UI/RevitCoordinationHost.cs').includes('dispatcher.TrySubmit'),'Runtime Gate C3 exercises production workflow');
 const seen=new Set();
 for(const tool of matrix.RuntimeTools){
  const quarantine=tool.Command==='check_sanitary_fixture_requirements';
