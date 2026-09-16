@@ -588,8 +588,8 @@
     },
     {
       "Path": "domain/README.md",
-      "Sha256": "2275e7ece21de7b4666ad41339628017ac483c108f35981b6b69cd07b7da6a7d",
-      "Bytes": 5576
+      "Sha256": "aa3a37f0f7df13039952008cb90171f1d7ec004860168f78c9be5f5ce47a5c10",
+      "Bytes": 5818
     },
     {
       "Path": "domain/references/building-code-tw.md",
@@ -655,6 +655,11 @@
       "Path": "domain/sheet-viewport-management.md",
       "Sha256": "04c831ebcd7f7749fee720bef6061d3203dbf93868f57c9abcd8994deea4f89b",
       "Bytes": 8877
+    },
+    {
+      "Path": "domain/site-terrain-earthwork.md",
+      "Sha256": "076e4d9d5f5efd84395e9873bc82088dd2803387cbb16cde3e63cb69e73da07d",
+      "Bytes": 4936
     },
     {
       "Path": "domain/skill-authoring-standard.md",
@@ -943,8 +948,8 @@
     },
     {
       "Path": "MCP/Application.cs",
-      "Sha256": "9b314d02303c99141f9f1d89926ebfeb2d588d8daf6354ae63db14fa6bc44a6a",
-      "Bytes": 10596
+      "Sha256": "2ed1f8aef6856565c709000590978ace404d12b60bd17ed95430ee6fdf6f5f26",
+      "Bytes": 10736
     },
     {
       "Path": "MCP/Commands/MCPCommands.cs",
@@ -1387,6 +1392,21 @@
       "Bytes": 2262
     },
     {
+      "Path": "MCP/Core/Site/RevitTerrainService.cs",
+      "Sha256": "1970be3fc8b519e17f01c289aa6ef863befac9f5f57c0a21e8674ec09b96521f",
+      "Bytes": 11099
+    },
+    {
+      "Path": "MCP/Core/Site/TerrainEngine.cs",
+      "Sha256": "e9d056406a6dda1b2f2b52e1055aa47a608cc552a480bf675e863f2de2cdc48c",
+      "Bytes": 17117
+    },
+    {
+      "Path": "MCP/Core/Site/TerrainSelfTest.cs",
+      "Sha256": "9a9381884f98c07e0d774bb44832adcff5e4d2f6eb96f7e3eae4233efea436f1",
+      "Bytes": 10808
+    },
+    {
       "Path": "MCP/Core/SocketService.cs",
       "Sha256": "fdb983b8a92b0bdb6e3c59a6cfbb62ee33bbf5831847aaefb7551e806293681c",
       "Bytes": 28981
@@ -1428,13 +1448,13 @@
     },
     {
       "Path": "MCP/UI/BimConstructionPanelPage.cs",
-      "Sha256": "62ca8c11c89b01ac174e86ccd31af036cb6aff8d756f7cdbcf9b385209db5384",
-      "Bytes": 940
+      "Sha256": "6e4534ccc376ca359fda2be08f79e0cef5285d44519cca9cc066c72a23499684",
+      "Bytes": 1311
     },
     {
       "Path": "MCP/UI/BimConstructionPanelViewModel.cs",
-      "Sha256": "4f5e41f197a361482c51968ef850e9279e049f56e6be357ef6a63a3e3282d05b",
-      "Bytes": 1079
+      "Sha256": "d529e274cac2c80b41529d0b95cf7be80078938149120c4ec068db36697f9798",
+      "Bytes": 1820
     },
     {
       "Path": "MCP/UI/CoordinationViewModel.cs",
@@ -1455,6 +1475,21 @@
       "Path": "MCP/UI/RevitCoordinationHost.cs",
       "Sha256": "2724ce29386c08855b15ba6e5dce91827c97c48a479e00d557f419e3e248f9a4",
       "Bytes": 3025
+    },
+    {
+      "Path": "MCP/UI/RevitSiteHost.cs",
+      "Sha256": "b5589b6cfe990408557d89ee86b363f832624616f4c6ba296e026de7c8c5598a",
+      "Bytes": 6797
+    },
+    {
+      "Path": "MCP/UI/SiteTerrainControl.cs",
+      "Sha256": "ec16e379f8f717630ac5c7c68808f8db2dbd57929491cd0c5a3b51cc6b9e51a8",
+      "Bytes": 6735
+    },
+    {
+      "Path": "MCP/UI/SiteTerrainViewModel.cs",
+      "Sha256": "67cf17fcb50cd487e9e141a21e41da08618aec066d3f3cf0d2c8c9703e3c4112",
+      "Bytes": 13892
     }
   ],
   "RuntimeTools": [
@@ -40382,7 +40417,7 @@
   "Counts": {
     "NATIVE_READY": 0,
     "ADAPTER_READY": 18,
-    "RULE_READY": 3,
+    "RULE_READY": 4,
     "PROJECT_CONFIG_REQUIRED": 18,
     "REVIEW_ONLY": 17,
     "BLOCKED": 15,
@@ -44766,6 +44801,7 @@
         "domain/room-surface-area-review.md",
         "domain/session-context-guard.md",
         "domain/sheet-viewport-management.md",
+        "domain/site-terrain-earthwork.md",
         "domain/skill-authoring-standard.md",
         "domain/smoke-exhaust-review.md",
         "domain/stair-compliance-check.md",
@@ -45591,12 +45627,16 @@
         {
           "Line": 62,
           "Text": "## 貢獻新 Domain"
+        },
+        {
+          "Line": 70,
+          "Text": "## Native 基地／土方"
         }
       ],
       "SourceReview": {
         "Status": "ASSESSED",
         "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
-        "DomainSha256": "2275e7ece21de7b4666ad41339628017ac483c108f35981b6b69cd07b7da6a7d",
+        "DomainSha256": "aa3a37f0f7df13039952008cb90171f1d7ec004860168f78c9be5f5ce47a5c10",
         "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
       }
     },
@@ -70292,9 +70332,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-4addbcf0d1e741ebaea1eaf024572f1c/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-3bd528a3f0214cc197bf10b46baec787/runtime.json",
       "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-4addbcf0d1e741ebaea1eaf024572f1c/workflow-runtime.json",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-3bd528a3f0214cc197bf10b46baec787/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -72131,9 +72171,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-4addbcf0d1e741ebaea1eaf024572f1c/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-3bd528a3f0214cc197bf10b46baec787/runtime.json",
       "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-4addbcf0d1e741ebaea1eaf024572f1c/workflow-runtime.json",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-3bd528a3f0214cc197bf10b46baec787/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -82223,6 +82263,129 @@
         "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
         "DomainSha256": "04c831ebcd7f7749fee720bef6061d3203dbf93868f57c9abcd8994deea4f89b",
         "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
+      }
+    },
+    {
+      "DomainId": "site-terrain-earthwork",
+      "DomainPath": "domain/site-terrain-earthwork.md",
+      "Description": "基地測量點匯入、座標定位、Toposolid 與土方計算 SOP；適用 survey terrain import、coordinate alignment、excavation、cut/fill。",
+      "Tags": [
+        "terrain",
+        "survey",
+        "coordinates",
+        "earthwork",
+        "QAQC"
+      ],
+      "RelatedDomains": [
+        "domain/cad-block-point-placement.md",
+        "domain/dwg-column-import.md"
+      ],
+      "SkillPath": [],
+      "Tools": [],
+      "CommandNames": [],
+      "TypeScriptSchemas": [],
+      "BackendFiles": [],
+      "CommandEvidence": [],
+      "RevitApiEvidence": [],
+      "MutationLevel": "UnresolvedImplementation",
+      "ReadOnly": null,
+      "TransactionRequired": null,
+      "NativeWorkflowReadOnly": false,
+      "BackendFileContainsTransaction": false,
+      "HostSupport": "No complete runtime mapping",
+      "LinkSupport": "No reachable Link-document/transform evidence; host-only assumption for product design",
+      "RequiresProjectSettings": false,
+      "RequiredSettings": [],
+      "RuntimeCapability": "Typed Native C# workflow; no additional MCP interface",
+      "NativeUiStatus": "Implemented: v0.5 site step workflow; confirmed writes and read-back",
+      "FixtureTestStatus": "PASS: terrain-1; 31 assertions (explicit supported subset)",
+      "ProductizationStatus": "RULE_READY",
+      "Priority": "P3",
+      "Blockers": [
+        "Full domain is not certified: existing/proposed experimental, inferred breakline connectivity unsupported"
+      ],
+      "RecommendedUiPattern": "PreviewApplyPattern",
+      "LargeModelRisk": "Background parser/QA/reduction; explicit 20k create guard and display sample counts",
+      "Testability": "Contract inspection; domain-specific fixtures pending",
+      "DomainTools": [],
+      "SkillSupportTools": [],
+      "DocumentedToolCandidates": [],
+      "UnregisteredToolReferences": [],
+      "ReachableMethods": [],
+      "MutationAssessmentScope": "Skill tool chain (no direct domain tool references)",
+      "TransactionEvidence": [],
+      "LinkMethodEvidence": [],
+      "RuleEvidence": [
+        {
+          "Line": 3,
+          "Text": "description: \"基地測量點匯入、座標定位、Toposolid 與土方計算 SOP；適用 survey terrain import、coordinate alignment、excavation、cut/fill。\""
+        },
+        {
+          "Line": 13,
+          "Text": "# 基地地形／土方 SOP"
+        },
+        {
+          "Line": 15,
+          "Text": "## 1. 匯入與 QA"
+        },
+        {
+          "Line": 19,
+          "Text": "## 2. 座標基準"
+        },
+        {
+          "Line": 21,
+          "Text": "純計算使用 metres；Revit API 使用 internal feet，必須明確轉換。SharedCoordinates 為目前 ActiveProjectLocation 的 shared basis；讀取 Internal Origin、Project Base Point、Survey Point、ProjectPosition 與 transform。SurveyToInternal 與 InternalToSurvey 必須互逆，且與 GetProjectPosition 已知值獨立比較，不能只靠自洽 round-trip 證明方向。LocalCoordinates 必須明示輸入已在 Internal Origin／internal axes；不得把一般 Easting/Northing 當 internal X/Y。"
+        },
+        {
+          "Line": 27,
+          "Text": "## 3. Preview 與減點"
+        },
+        {
+          "Line": 31,
+          "Text": "## 4. 建立與回讀"
+        },
+        {
+          "Line": 35,
+          "Text": "## 5. 土方"
+        },
+        {
+          "Line": 37,
+          "Text": "A：指定 host Toposolid 與 Floor/Roof/Toposolid cutter，先 CanBeExcavatedBy；Preview 顯示來源、相交與 Revit 試算（transaction rollback，不留變更）。明確 Confirm 後 ExcavateBy；read-back 量與 Preview 一致，交易失敗 rollback。不移動或修改 cutter。"
+        },
+        {
+          "Line": 39,
+          "Text": "Boundary quantity：由現況頂面 TIN，將每個 triangle 裁切到明確 boundary，再依 target elevation 的正負深度零線分割；對每個分片積分線性深度。Cut/Fill 分開，Net = Fill − Cut。Area 是實際覆蓋水平投影；未覆蓋 boundary 必須警告／阻擋精準結果。AverageCutDepth = Cut/CutArea，AverageFillDepth = Fill/FillArea。不得以 bounding box 或全區平均高差當精準體積。第一版 boundary 限明確驗證的凸多邊形；其他形狀不得靜默近似。"
+        },
+        {
+          "Line": 45,
+          "Text": "## 6. 稽核與 fixtures"
+        }
+      ],
+      "SourceReview": {
+        "Status": "ASSESSED",
+        "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
+        "DomainSha256": "076e4d9d5f5efd84395e9873bc82088dd2803387cbb16cde3e63cb69e73da07d",
+        "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
+      },
+      "NativeBackendFiles": [
+        "MCP/Core/Site/TerrainEngine.cs",
+        "MCP/Core/Site/RevitTerrainService.cs",
+        "MCP/UI/SiteTerrainViewModel.cs",
+        "MCP/UI/RevitSiteHost.cs"
+      ],
+      "FixtureEvidence": "test-artifacts/revit-selftest-3bd528a3f0214cc197bf10b46baec787/terrain-runtime.json",
+      "NativeScope": {
+        "Mutation": "ConfirmedWrite",
+        "TransactionRequired": true,
+        "RequiresConfirmation": true,
+        "Readback": true,
+        "UI": "PreviewApplyPattern",
+        "Limits": [
+          "CSV/TXT only",
+          "Convex boundary / planar target",
+          "Existing/proposed disabled",
+          "No building move or ProjectLocation mutation"
+        ]
       }
     },
     {
@@ -92349,6 +92512,23 @@
   ],
   "NativeFeatures": [
     {
+      "Id": "site-terrain-earthwork",
+      "Status": "RUNTIME_VERIFIED",
+      "RequiredGates": [
+        "A",
+        "B",
+        "C",
+        "C2",
+        "C3",
+        "TerrainLogic",
+        "TerrainRuntime"
+      ],
+      "Limits": [
+        "Supported subset only; full Domain remains RULE_READY",
+        "Explicit confirmation and read-back required"
+      ]
+    },
+    {
       "Id": "model-summary",
       "Status": "RETIRED_NATIVE_UI",
       "Reason": "Removed low-value Native workflow; Domain and runtime tools retained"
@@ -92389,14 +92569,14 @@
   "Audit": {
     "Status": "COMPLETE_STATIC_CAPABILITY_MAPPING",
     "CompilerDiagnostics": 0,
-    "DomainCoverage": 84,
+    "DomainCoverage": 85,
     "RuntimeToolCoverage": 192,
-    "MethodCount": 1270,
+    "MethodCount": 1332,
     "Limitations": [
       "Branch union is conservative, not runtime proof.",
       "Unbound external invocations are retained in backend evidence.",
       "Domain-only tools absent from registry are blockers, not invented capabilities.",
-      "Only CoordinationFixture has runtime evidence for this release."
+      "Runtime evidence covers only explicitly named Coordination/Terrain fixture scopes with matching DLL hash."
     ]
   }
 }

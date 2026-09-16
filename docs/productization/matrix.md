@@ -4,7 +4,7 @@
 
 - NATIVE_READY: 0
 - ADAPTER_READY: 18
-- RULE_READY: 3
+- RULE_READY: 4
 - PROJECT_CONFIG_REQUIRED: 18
 - REVIEW_ONLY: 17
 - BLOCKED: 15
@@ -84,6 +84,7 @@
 | section-datum-adjustment |  |  |  | RULE_READY | P2 | No complete registered command chain for this domain. | AuditPattern |
 | session-context-guard | .claude/skills/floor-plan-from-template/SKILL.md | get_active_view, create_section_view, override_element_graphics | MCP/Core/CommandExecutor.cs, MCP/Core/Commands/CommandExecutor.Sheet.cs, MCP/Core/Commands/CommandExecutor.SmokeExhaust.cs, MCP/Core/Commands/CommandExecutor.ViewCreation.cs, MCP/Core/Commands/CommandExecutor.ViewCropBox.cs, MCP/Core/RevitCompatibility.cs | META_ONLY | P4 |  | N/A |
 | sheet-viewport-management | .claude/skills/sheet-management/SKILL.md, .claude/skills/viewport-arrangement/SKILL.md | sync_detail_component_numbers, get_all_sheets, get_titleblocks, create_sheets, auto_renumber_sheets, get_viewport_map | MCP/Core/CommandExecutor.cs, MCP/Core/Commands/CommandExecutor.DependentView.cs, MCP/Core/Commands/CommandExecutor.DetailComponent.cs, MCP/Core/Commands/CommandExecutor.Sheet.cs, MCP/Core/Logger.cs, MCP/Core/RevitCompatibility.cs | ADAPTER_READY | P1 | Reusable command implementation exists; typed orchestration and domain-specific fixture are still required before enabling this domain. | PreviewApplyPattern |
+| site-terrain-earthwork |  |  |  | RULE_READY | P3 | Full domain is not certified: existing/proposed experimental, inferred breakline connectivity unsupported | PreviewApplyPattern |
 | skill-authoring-standard | .claude/skills/archicad-skill-adapter/SKILL.md, .claude/skills/hj-pr-proposal/SKILL.md, .claude/skills/loop-up/SKILL.md |  | MCP/Core/CommandExecutor.cs | META_ONLY | P4 |  | N/A |
 | sleeve-classification-protocol |  | get_element_geometry, detect_clashes | MCP/Core/ClashDetector.cs, MCP/Core/CommandExecutor.cs, MCP/Core/LinkedModelHelper.cs, MCP/Core/RevitCompatibility.cs | REVIEW_ONLY | P1 | Review output is not formal engineering/regulatory approval; project applicability and uncovered rules require review. | CompliancePattern |
 | smoke-detector-check | .claude/skills/smoke-detector-check/SKILL.md |  | MCP/Core/CommandExecutor.cs, MCP/Core/Commands/CommandExecutor.SmokeDetector.cs, MCP/Core/RevitCompatibility.cs | REVIEW_ONLY | P2 | Review output is not formal engineering/regulatory approval; project applicability and uncovered rules require review. | CompliancePattern |

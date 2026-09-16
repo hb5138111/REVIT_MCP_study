@@ -16,6 +16,9 @@ const runtime=runtimeCandidates.filter(x=>x.Report.GateC==='PASS'&&x.Report.Fail
 const workflowPath=runtime?.Path.replace(/runtime\.json$/,'workflow-runtime.json');
 const workflowRuntime=workflowPath&&fs.existsSync(path.join(root,workflowPath))?JSON.parse(read(workflowPath)):null;
 const workflowPassed=workflowRuntime?.GateC3==='PASS'&&workflowRuntime?.Failed===0&&workflowRuntime?.BuildHash===buildHash;
+const terrainPath=runtime?.Path.replace(/runtime\.json$/,'terrain-runtime.json');
+const terrainRuntime=terrainPath&&fs.existsSync(path.join(root,terrainPath))?JSON.parse(read(terrainPath)):null;
+const terrainPassed=terrainRuntime?.Status==='PASS'&&terrainRuntime?.Failed===0&&terrainRuntime?.BuildSHA256===buildHash;
 const review=new Set(['beam-penetration-algorithm','beam-penetration-base','beam-penetration-rc','beam-penetration-sc','beam-penetration-src','sleeve-classification-protocol','corridor-analysis-protocol','daylight-area-check','exterior-wall-opening-check','fire-rating-check','floor-area-review','parking-clearance-check','parking-space-review','smoke-detector-check','smoke-exhaust-review','stair-compliance-check','wall-check','building-code-tw']);
 const settings={
  'GM_parameter-schema':['MaterialSlotAssignment','LicenseValidity','TargetTypes'],
@@ -111,17 +114,29 @@ for(const d of matrix.Domains){
   d.NativeScope={Host:true,Link:runtime?'Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested':'Source mapping only; runtime not verified',Mutation:'ReadOnly',TransactionRequired:false,UI:'DetectReviewPattern',Limits:['Centerline crossing; no solid-edge grazing certification','No opening/sleeve creation','Candidate/review only','Session-scoped project settings']};
   d.RecommendedUiPattern='DetectReviewPattern';d.LargeModelRisk='Explicit MEP category/level; pair and time budgets; totals and truncation reported';
  }
+ if(d.DomainId==='site-terrain-earthwork'){
+  d.NativeUiStatus='Implemented: v0.5 site step workflow; confirmed writes and read-back';
+  d.NativeWorkflowReadOnly=false;
+  d.NativeBackendFiles=['MCP/Core/Site/TerrainEngine.cs','MCP/Core/Site/RevitTerrainService.cs','MCP/UI/SiteTerrainViewModel.cs','MCP/UI/RevitSiteHost.cs'];
+  d.RuntimeCapability='Typed Native C# workflow; no additional MCP interface';
+  d.FixtureTestStatus=terrainPassed?'PASS: terrain-1; '+terrainRuntime.Passed+' assertions (explicit supported subset)':'NOT_TESTED: no matching-build TerrainFixture report';
+  d.FixtureEvidence=terrainPassed?terrainPath:null;
+  d.NativeScope={Mutation:'ConfirmedWrite',TransactionRequired:true,RequiresConfirmation:true,Readback:true,UI:'PreviewApplyPattern',Limits:['CSV/TXT only','Convex boundary / planar target','Existing/proposed disabled','No building move or ProjectLocation mutation']};
+  d.Blockers=['Full domain is not certified: existing/proposed experimental, inferred breakline connectivity unsupported'];
+  d.RecommendedUiPattern='PreviewApplyPattern';d.LargeModelRisk='Background parser/QA/reduction; explicit 20k create guard and display sample counts';
+ }
 }
 const allSource=[...matrix.Inventory,...backend.SourceFiles.map(f=>({...f,Bytes:Buffer.byteLength(read(f.Path))}))];
 matrix.Inventory=[...new Map(allSource.map(f=>[f.Path,f])).values()].sort((a,b)=>a.Path.localeCompare(b.Path));
 matrix.SchemaVersion=3;
 matrix.NativeFeatures=[
+ {Id:'site-terrain-earthwork',Status:terrainPassed?'RUNTIME_VERIFIED':'RELEASE_GATED',RequiredGates:['A','B','C','C2','C3','TerrainLogic','TerrainRuntime'],Limits:['Supported subset only; full Domain remains RULE_READY','Explicit confirmation and read-back required']},
  {Id:'model-summary',Status:'RETIRED_NATIVE_UI',Reason:'Removed low-value Native workflow; Domain and runtime tools retained'},
  {Id:'type-inventory',Status:'RETIRED_NATIVE_UI',Reason:'Removed Native inventory and navigation; generic link DTO and identity extracted'},
  {Id:'level-constraint-audit',Status:'RETIRED_NATIVE_UI',Reason:'Removed Native audit; Domain and runtime tools retained'},
  {Id:'coordination',Status:workflowPassed?'RUNTIME_VERIFIED':'RELEASE_GATED',Workflow:'One DetectReview workbench',Kinds:['Clash','OpeningCandidate','BeamPenetration','ReviewRequired'],RequiredGates:['A','B','C','C2','C3'],Limitations:['No automatic sleeve or structural approval','Centerline crossing only']}
 ];
-matrix.Audit={Status:'COMPLETE_STATIC_CAPABILITY_MAPPING',CompilerDiagnostics:0,DomainCoverage:matrix.Domains.length,RuntimeToolCoverage:matrix.RuntimeTools.length,MethodCount:backend.Methods.length,Limitations:['Branch union is conservative, not runtime proof.','Unbound external invocations are retained in backend evidence.','Domain-only tools absent from registry are blockers, not invented capabilities.','Only CoordinationFixture has runtime evidence for this release.']};
+matrix.Audit={Status:'COMPLETE_STATIC_CAPABILITY_MAPPING',CompilerDiagnostics:0,DomainCoverage:matrix.Domains.length,RuntimeToolCoverage:matrix.RuntimeTools.length,MethodCount:backend.Methods.length,Limitations:['Branch union is conservative, not runtime proof.','Unbound external invocations are retained in backend evidence.','Domain-only tools absent from registry are blockers, not invented capabilities.','Runtime evidence covers only explicitly named Coordination/Terrain fixture scopes with matching DLL hash.']};
 matrix.Counts=Object.fromEntries(['NATIVE_READY','ADAPTER_READY','RULE_READY','PROJECT_CONFIG_REQUIRED','REVIEW_ONLY','BLOCKED','META_ONLY'].map(s=>[s,matrix.Domains.filter(d=>d.ProductizationStatus===s).length]));
 fs.writeFileSync(path.join(root,'docs/productization/matrix.json'),JSON.stringify(matrix,null,2)+'\n');
 const safe=x=>String(x).replace(/\|/g,'/').replace(/\r?\n/g,' ');

@@ -14,6 +14,6 @@ check('negative-result domain blocked',()=>assert.equal(m.Domains.find(d=>d.Doma
 check('unregistered viewport tools blocked',()=>assert(m.Domains.find(d=>d.DomainId==='viewport-type-scale-sync').UnregisteredToolReferences.includes('sync_viewport_types_by_view_scale')));
 check('project clearance explicit',()=>assert(m.Domains.find(d=>d.DomainId==='mep-opening-candidate-scan').RequiredSettings.includes('OpeningClearance')));
 check('no full-domain native certification inferred',()=>assert.equal(m.Counts.NATIVE_READY,0));
-check('fixture scope is explicit',()=>assert(m.Domains.filter(d=>d.FixtureTestStatus.startsWith('PASS')).every(d=>d.NativeScope.Mutation==='ReadOnly')));
+check('fixture scope is explicit',()=>assert(m.Domains.filter(d=>d.FixtureTestStatus.startsWith('PASS')).every(d=>d.NativeScope.Mutation==='ReadOnly'||d.DomainId==='site-terrain-earthwork'&&d.NativeScope.Mutation==='ConfirmedWrite'&&d.NativeScope.RequiresConfirmation&&d.NativeScope.Readback)));
 const report={Gate:'Static semantic capability mapping',Status:'PASS',Passed:passed,Failed:0,SourceHash:crypto.createHash('sha256').update(fs.readFileSync('docs/productization/matrix.json')).digest('hex')};
 fs.mkdirSync('test-artifacts/source-audit',{recursive:true});fs.writeFileSync('test-artifacts/source-audit/tests.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));

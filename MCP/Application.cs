@@ -31,7 +31,11 @@ namespace RevitMCP
                         {
                             // Only the isolated, document-free test session may exit automatically.
                             bool isolated = app.Documents.Size == 0;
-                            try { CoordinationSelfTest.Run(app, selfTestDirectory); workflowTest.Start(); }
+                            try {
+#if REVIT2026
+                                Core.Site.TerrainSelfTest.Run(app, selfTestDirectory);
+#endif
+                                CoordinationSelfTest.Run(app, selfTestDirectory); workflowTest.Start(); }
                             catch (Exception ex)
                             {
                                 System.IO.File.WriteAllText(System.IO.Path.Combine(selfTestDirectory, "startup-error.txt"), ex.ToString());

@@ -1,0 +1,26 @@
+// Evidence-gated release state. Private model/template paths and raw reports stay local.
+const fs=require('fs'),path=require('path'),crypto=require('crypto');
+const root=path.resolve(__dirname,'..'),out='test-artifacts/v05';
+const read=p=>JSON.parse(fs.readFileSync(path.resolve(root,p),'utf8'));
+const exists=p=>fs.existsSync(path.resolve(root,p));
+const hash=p=>crypto.createHash('sha256').update(fs.readFileSync(path.resolve(root,p))).digest('hex').toUpperCase();
+const sha=hash('MCP/bin/Release.R26/RevitMCP.dll');
+const snapshot=process.argv[2]?read(path.join(process.argv[2],'reversible.json')):null;
+const runtimeFile=n=>snapshot?.RuntimeDirectory&&exists(path.join(snapshot.RuntimeDirectory,n))?read(path.join(snapshot.RuntimeDirectory,n)):null;
+const a=read(out+'/contracts.json'),b=read(out+'/logic.json'),c2=read(out+'/workflow-state.json'),site=read(out+'/terrain-logic.json');
+const c=runtimeFile('runtime.json'),c3=runtimeFile('workflow-runtime.json'),terrain=runtimeFile('terrain-runtime.json');
+const backend=read('test-artifacts/source-audit/backend.json');
+const sourceMatch=backend.SourceFiles.every(f=>hash(f.Path)===f.Sha256.toUpperCase());
+const logPass=name=>exists(out+'/'+name)&&/FAIL\s*:\s*0/.test(fs.readFileSync(path.join(root,out,name),'utf8'))&&/RESULT: PASSED/.test(fs.readFileSync(path.join(root,out,name),'utf8'));
+const gate=(r,key)=>({Status:r?.[key]??'NOT_TESTED',Passed:r?.Passed??0,Failed:r?.Failed??0});
+const gates={A:gate(a,'GateA'),B:gate(b,'GateB'),C:gate(c?.BuildHash===sha?c:null,'GateC'),C2:gate(c2,'GateC2'),C3:gate(c3?.BuildHash===sha?c3:null,'GateC3'),TerrainLogic:gate(site,'Status'),TerrainRuntime:gate(terrain?.BuildSHA256===sha?terrain:null,'Status'),Build:{Status:sourceMatch&&/0 個錯誤|0 Error\(s\)/.test(fs.readFileSync(path.join(root,out,'build.log'),'utf8'))?'PASS':'FAIL'},QAQC:{Status:logPass('qaqc.log')&&logPass('qaqc-source.log')?'PASS':'FAIL'},Rollback:{Status:snapshot?.Rollback??'NOT_TESTED'}};
+const all=Object.values(gates).every(g=>g.Status==='PASS'&&!g.Failed);
+const deployment=process.argv[3]?read(process.argv[3]):null;
+const deployed=all&&deployment?.Status==='PASS'&&deployment.Kind==='FORMAL_V05_RELEASE'&&deployment.DeployedSHA256===sha&&deployment.BuildSHA256===sha;
+const next=deployed?'Optional UAT only; stop.':all?'Formal installer deployment, scoped commits and origin/bim-custom push.':'Complete failed/pending gate; maintain verified v0.4.2 rollback. No release commit/push.';
+const finalCommit={Value:'SELF_COMMIT',Resolve:'git log -1 --format=%H -- docs/productization/development-state.json',LiteralReceipt:'test-artifacts/v05/final.json'};
+const report={Version:'v0.5',Task:'智慧基地地形／土方中心',Branch:'bim-custom',Timestamp:new Date().toISOString(),Status:deployed?'READY_FOR_OPTIONAL_UAT':all?'AWAITING_FORMAL_DEPLOYMENT':'IN_PROGRESS',Gates:gates,BuildSHA256:sha,SourceFingerprintVerified:sourceMatch,FormalDeployment:deployment??{Status:'NOT_RUN'},Fixtures:{Terrain:terrain?.FixtureVersion??'terrain-1',Coordination:c?.FixtureVersion??'coordination-2'},RuntimeEvidence:snapshot?.RuntimeDirectory?path.relative(root,snapshot.RuntimeDirectory).replaceAll('\\','/'):null,Assertions:{Terrain:terrain?.Assertions??[],PureLogicAndWorkflow:site.Assertions},Benchmarks:site.Benchmarks,Limits:['CSV/TXT only; explicit units and coordinate basis','Points-only convex hull; no legal site boundary inference','Coded points retained; no inferred breakline connectivity','Simplification error is conservative cell elevation envelope, not certified final-TIN interpolation error','20k-point tool guard requires simplification or explicit override','Boundary quantity supports convex polygons and planar target elevation only','Existing/proposed surfaces experimental and disabled for formal quantities','No host/link movement, ProjectLocation writes, phase changes or Revit.ini edits','Optional visual UAT remains; passing fixtures do not certify arbitrary survey/model conditions'],NextRecommendedBatch:next,FinalCommit:finalCommit};
+fs.writeFileSync(path.join(root,'docs/productization/v05-report.json'),JSON.stringify(report,null,2)+'\n');
+fs.writeFileSync(path.join(root,'docs/productization/v05-report.md'),'# v0.5 智慧基地地形／土方中心\n\nStatus: '+report.Status+'\n\n'+Object.entries(gates).map(([k,v])=>`- ${k}: ${v.Status}${v.Passed!==undefined?' — '+v.Passed+' PASS / '+v.Failed+' FAIL':''}`).join('\n')+'\n\nBuild SHA256: `'+sha+'`\n\nFormal deployment: '+(deployed?'PASS':'NOT_RELEASED')+'\n\n'+report.Limits.map(x=>'- '+x).join('\n')+'\n');
+fs.writeFileSync(path.join(root,'docs/productization/development-state.json'),JSON.stringify({SchemaVersion:2,Task:'v0.5',Branch:'bim-custom',Status:report.Status,UpdatedAt:report.Timestamp,Gates:gates,BuildSHA256:sha,InstalledVersion:deployed?'v0.5':snapshot?.Rollback==='PASS'?'v0.4.2':'TEMPORARY TEST LOAD / rollback pending',ProductionDeployment:deployed?'PASS — FORMAL_V05_RELEASE':'NOT_RELEASED',InstalledSHA256:deployed?sha:snapshot?.RestoredSHA256??null,SourceFingerprints:backend.SourceFiles,FinalCommit:finalCommit,NextAction:next,Report:'docs/productization/v05-report.json'},null,2)+'\n');
+console.log(JSON.stringify({Status:report.Status,Gates:gates,BuildSHA256:sha}));

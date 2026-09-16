@@ -15,7 +15,12 @@ for(const label of ['ModelSummary','TypeInventory','LevelConstraintAudit','TypeI
  const production=['MCP/UI/BimConstructionPanelPage.cs','MCP/UI/BimConstructionPanelViewModel.cs','MCP/UI/PanelReadOnlyDispatcher.cs','MCP/UI/CoordinationViewModel.cs','MCP/Core/CoordinationService.cs'].map(read).join('\n');
  check('retired_'+label,false,production.includes(label),!production.includes(label),'Retired Native wiring removed');
 }
-check('single_workbench',false,read('MCP/UI/BimConstructionPanelPage.cs').includes('TabControl'),!read('MCP/UI/BimConstructionPanelPage.cs').includes('TabControl'),'Single coordination workbench');
+const page=read('MCP/UI/BimConstructionPanelPage.cs');
+check('two_product_workbenches',true,page.includes('Header = "施工協調"')&&page.includes('Header = "基地／土方"'),page.includes('Header = "施工協調"')&&page.includes('Header = "基地／土方"'),'v0.5 adds site workflow; no inventory dashboards');
+const site=read('MCP/UI/SiteTerrainViewModel.cs'),siteBackend=read('MCP/Core/Site/RevitTerrainService.cs');
+for(const token of ['CanExecuteCreate','Confirmed','DocumentChanged','Task.Run','ExcavationPreview','Alignment.MaxResidual'])check('site_state_'+token,true,site.includes(token),site.includes(token),'Production state contract');
+for(const token of ['TransactionGroup','SurfaceBounds','CanBeExcavatedBy','TOTAL_EXCAVATION_VOLUME','group.RollBack()'])check('site_backend_'+token,true,siteBackend.includes(token),siteBackend.includes(token),'Read-back and rollback');
+check('site_no_hidden_placement',false,/MoveElement|RotateElement|SetProjectPosition|Revit.ini/.test(siteBackend),!/MoveElement|RotateElement|SetProjectPosition|Revit.ini/.test(siteBackend),'No building or shared coordinate mutation');
 check('session_identity_native_equality',true,read('MCP/Core/DocumentSessionIdentity.cs').includes('.Equals(document)'),read('MCP/Core/DocumentSessionIdentity.cs').includes('.Equals(document)'),'Native identity, no managed ReferenceEquals');
 check('ui_logic_testable',false,/Autodesk.Revit|System.Windows.Controls|System.Windows.Data/.test(vm),!/Autodesk.Revit|System.Windows.Controls|System.Windows.Data/.test(vm),'Production controller links into Gate C2');
 check('legacy_link_dto_preserved',true,read('MCP/Models/LinkSummary.cs').includes('class LinkSummary'),read('MCP/Models/LinkSummary.cs').includes('class LinkSummary'),'Shared legacy MCP shape survives retirement');
