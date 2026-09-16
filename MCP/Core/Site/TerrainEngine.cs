@@ -41,6 +41,9 @@ namespace RevitMCP.Core.Site
     }
     public sealed class TerrainPointDataset
     {
+        public TerrainSourceKind SourceKind {get;set;}=TerrainSourceKind.DelimitedPointFile;
+        public TerrainCoordinateBasis CoordinateBasis {get;set;}=TerrainCoordinateBasis.SourceCoordinates;
+        public object? Provenance {get;set;}
         public string SourceName {get;set;}="";
         public string SourceSHA256 {get;set;}="";
         public string Units {get;set;}="m";
@@ -65,7 +68,7 @@ namespace RevitMCP.Core.Site
             double factor=o.Units switch {"m"=>1,"mm"=>0.001,"ft"=>0.3048,_=>throw new ArgumentException("請指定 m/mm/ft。")};
             if(new[]{o.X,o.Y,o.Z}.Distinct().Count()!=3 || Math.Min(o.X,Math.Min(o.Y,o.Z))<0) throw new ArgumentException("X/Y/Z 欄位必須不同且有效。");
             if(!new[]{',',';','\t',' '}.Contains(o.Delimiter)) throw new ArgumentException("不支援的分隔符。");
-            var result=new TerrainPointDataset{Units=o.Units};
+            var result=new TerrainPointDataset{Units=o.Units,Provenance=o};
             var d=result.Diagnostics;
             var xy=new Dictionary<(double,double),TerrainPointRow>();
             using var reader=new StringReader(text);
@@ -123,7 +126,7 @@ namespace RevitMCP.Core.Site
             }
             return result;
         }
-        private static string[] Split(string line,char delimiter)
+        public static string[] Split(string line,char delimiter)
         {
             var fields=new List<string>();var field=new StringBuilder();bool quote=false;
             for(int i=0;i<line.Length;i++)
