@@ -1292,9 +1292,14 @@
       "Bytes": 1238
     },
     {
+      "Path": "MCP/Core/CoordinationNavigationService.cs",
+      "Sha256": "7a0127de67077f58588449a60288dd5bc2d9062777e4c553c800db4c96c8873d",
+      "Bytes": 7244
+    },
+    {
       "Path": "MCP/Core/CoordinationSelfTest.cs",
-      "Sha256": "849ed0415b47277e3ab637cde6aa2f8e0f2325138044f5babfea0bcb7e359b6c",
-      "Bytes": 19377
+      "Sha256": "74bf39e289e37e2e029cd843ed45fa7860a3b676163389ae4ee3578c56283864",
+      "Bytes": 24722
     },
     {
       "Path": "MCP/Core/CoordinationService.cs",
@@ -1303,8 +1308,8 @@
     },
     {
       "Path": "MCP/Core/CoordinationWorkflowSelfTest.cs",
-      "Sha256": "e4652d463975f595f4323e0238b1fd6a238868856ee5558059d7c919810f5a9f",
-      "Bytes": 14015
+      "Sha256": "2fe7f9c1139301ffc89283407d0ac593fb4814a744cf1aa8ec39dff3e85243ed",
+      "Bytes": 22001
     },
     {
       "Path": "MCP/Core/DocumentSessionIdentity.cs",
@@ -1403,8 +1408,8 @@
     },
     {
       "Path": "MCP/Models/CoordinationModels.cs",
-      "Sha256": "4c752d95c2d2d6235d62584d05c92f2c0e2e5eb7b82c1da2200119189e2c07ea",
-      "Bytes": 9165
+      "Sha256": "dc73d4d36fdfc863b6fd3e95688574e28ef255c08c005f56f6fd89fbb497bff1",
+      "Bytes": 11105
     },
     {
       "Path": "MCP/Models/LinkSummary.cs",
@@ -1433,13 +1438,13 @@
     },
     {
       "Path": "MCP/UI/CoordinationViewModel.cs",
-      "Sha256": "90010987d7a4a2235d08a2719ca15bf9827a0ccd5f8dc264c53d39464d821c9c",
-      "Bytes": 17471
+      "Sha256": "9b9c58448e46164759f8712fbe627847620ef4ea36cdb8869171654a96a8eb25",
+      "Bytes": 21356
     },
     {
       "Path": "MCP/UI/DetectReviewWorkflowControl.cs",
-      "Sha256": "3895c5196f146b9566038808606491282915f8d55dd5faedb5d2a7bfa350d6e0",
-      "Bytes": 8167
+      "Sha256": "81620472d0e1e0278e11a689cc2be0d96568109daecbf3a6694dd7088cbc2191",
+      "Bytes": 10785
     },
     {
       "Path": "MCP/UI/PanelReadOnlyDispatcher.cs",
@@ -1448,8 +1453,8 @@
     },
     {
       "Path": "MCP/UI/RevitCoordinationHost.cs",
-      "Sha256": "bc78bb7e831b909d88d7119d419683bcab1e28860882b2be387569accca4ac54",
-      "Bytes": 3108
+      "Sha256": "2724ce29386c08855b15ba6e5dce91827c97c48a479e00d557f419e3e248f9a4",
+      "Bytes": 3025
     }
   ],
   "RuntimeTools": [
@@ -69910,7 +69915,7 @@
       "RequiredSettings": [],
       "RuntimeCapability": "8 command mappings; 40 reachable methods. Method graph is conservative across branches.",
       "NativeUiStatus": "Implemented: typed read-only coordination subworkflow; release gated",
-      "FixtureTestStatus": "PASS: coordination-2, 18 assertions (native scan subset only)",
+      "FixtureTestStatus": "PASS: coordination-2, 20 assertions (native scan subset only)",
       "ProductizationStatus": "ADAPTER_READY",
       "Priority": "P1",
       "Blockers": [
@@ -70287,9 +70292,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-4addbcf0d1e741ebaea1eaf024572f1c/runtime.json",
       "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059/workflow-runtime.json",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-4addbcf0d1e741ebaea1eaf024572f1c/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -71581,7 +71586,7 @@
       ],
       "RuntimeCapability": "6 command mappings; 45 reachable methods. Method graph is conservative across branches.",
       "NativeUiStatus": "Implemented: typed read-only coordination subworkflow; release gated",
-      "FixtureTestStatus": "PASS: coordination-2, 18 assertions (native scan subset only)",
+      "FixtureTestStatus": "PASS: coordination-2, 20 assertions (native scan subset only)",
       "ProductizationStatus": "PROJECT_CONFIG_REQUIRED",
       "Priority": "P1",
       "Blockers": [
@@ -72126,9 +72131,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-4addbcf0d1e741ebaea1eaf024572f1c/runtime.json",
       "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059/workflow-runtime.json",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-4addbcf0d1e741ebaea1eaf024572f1c/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -92386,7 +92391,7 @@
     "CompilerDiagnostics": 0,
     "DomainCoverage": 84,
     "RuntimeToolCoverage": 192,
-    "MethodCount": 1251,
+    "MethodCount": 1270,
     "Limitations": [
       "Branch union is conservative, not runtime proof.",
       "Unbound external invocations are retained in backend evidence.",

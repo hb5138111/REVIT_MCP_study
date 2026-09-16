@@ -1,6 +1,6 @@
 # Reversible Gate C only. Never commits or performs a permanent release.
 [CmdletBinding()]
-param([string]$RecoveryDirectory)
+param([string]$RecoveryDirectory,[string]$ProjectTemplate)
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot -Parent
 $base=Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Autodesk\Revit\Addins\2026'
@@ -24,6 +24,10 @@ function SaveReport {
     '# Reversible Gate C' + "`n`n" + (($report.GetEnumerator() | ForEach-Object { '- '+$_.Key+': '+($_.Value | ConvertTo-Json -Compress -Depth 10) }) -join "`n") | Set-Content -LiteralPath (Join-Path $run 'reversible.md')
 }
 if(Get-Process Revit -ErrorAction SilentlyContinue){throw 'BLOCKED_BY_ACTIVE_REVIT: close Revit normally before retrying.'}
+if($ProjectTemplate -and -not $RecoveryDirectory){
+    $ProjectTemplate=(Resolve-Path -LiteralPath $ProjectTemplate).Path
+    if([IO.Path]::GetExtension($ProjectTemplate) -ne '.rte'){throw 'Only an explicitly selected test .rte template is allowed'}
+}
 if($RecoveryDirectory){
     $run=(Resolve-Path -LiteralPath $RecoveryDirectory).Path
     $report=Get-Content (Join-Path $run 'reversible.json') -Raw | ConvertFrom-Json -AsHashtable
@@ -50,7 +54,9 @@ try {
         $report.TemporaryHashMatch=$report.BuildSHA256 -eq $report.TemporarySHA256
         if(-not $report.TemporaryHashMatch){throw 'Temporary build hash mismatch'}
         SaveReport
-        $launch=& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'run-revit-selftest.ps1')
+        $templateArguments=@()
+        if($ProjectTemplate){$templateArguments=@('-ProjectTemplate',$ProjectTemplate)}
+        $launch=& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'run-revit-selftest.ps1') @templateArguments
         if($LASTEXITCODE -ne 0){throw ($launch -join "`n")}
         $line=$launch | Where-Object {$_ -match '^STARTED '} | Select-Object -Last 1
         $report.RuntimeDirectory=$line -replace '^STARTED \d+ ',''

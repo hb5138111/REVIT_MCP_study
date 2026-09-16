@@ -45,28 +45,69 @@ namespace RevitMCP.Core
             {
                 var request = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(Path.Combine(root, "request.json"))) ?? throw new InvalidOperationException("Invalid fixture request.");
                 string template = request["ProjectTemplate"];
+                string baseTemplate = request.TryGetValue("BaseProjectTemplate", out var baseline) ? baseline : template;
                 string familyTemplate = request["FamilyTemplate"];
                 // NewProjectDocument creates a new document; no existing RVT is accepted.
                 if (!template.EndsWith(".rte", StringComparison.OrdinalIgnoreCase) || !familyTemplate.EndsWith(".rft", StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException("Only templates are accepted.");
-                doc = app.NewProjectDocument(template);
+                // Work only from a local snapshot; never load inherited external model links.
+                string isolatedTemplate = Path.Combine(root, "isolated-template.rte");
+                File.Copy(template, isolatedTemplate, false);
+                using (var info = BasicFileInfo.Extract(isolatedTemplate))
+                    if (info.IsWorkshared) throw new InvalidOperationException("Test template must be standalone, not workshared.");
+                var modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(isolatedTemplate);
+                var transmission = TransmissionData.ReadTransmissionData(modelPath);
+                if (transmission != null)
+                {
+                    foreach (var id in transmission.GetAllExternalFileReferenceIds())
+                    {
+                        var reference = transmission.GetLastSavedReferenceData(id);
+                        // Only model links support this unload workflow; keynotes/material resources are not links.
+                        if (reference.ExternalFileReferenceType != ExternalFileReferenceType.RevitLink &&
+                            reference.ExternalFileReferenceType != ExternalFileReferenceType.CADLink) continue;
+                        string extension = reference.ExternalFileReferenceType == ExternalFileReferenceType.RevitLink ? ".rvt" : ".dwg";
+                        var unloadedPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(Path.Combine(root, "unloaded-reference-" + id.GetIdValue() + extension));
+                        transmission.SetDesiredReferenceData(id, unloadedPath, PathType.Absolute, false);
+                    }
+                    transmission.IsTransmitted = true;
+                    TransmissionData.WriteTransmissionData(modelPath, transmission);
+                }
+                doc = app.NewProjectDocument(isolatedTemplate);
                 if (doc.IsWorkshared || doc.IsLinked) throw new InvalidOperationException("Fixture must be standalone.");
+                // Inherited content is removed only from this newly created disposable document.
+                using (var setup = new Transaction(doc, "Isolate disposable coordination fixture"))
+                {
+                    setup.Start();
+                    setup.SetFailureHandlingOptions(setup.GetFailureHandlingOptions().SetFailuresPreprocessor(new SilentFailuresPreprocessor()));
+                    var categories = new[] { BuiltInCategory.OST_Walls, BuiltInCategory.OST_Floors, BuiltInCategory.OST_StructuralFraming,
+                        BuiltInCategory.OST_StructuralColumns, BuiltInCategory.OST_PipeCurves, BuiltInCategory.OST_DuctCurves,
+                        BuiltInCategory.OST_Conduit, BuiltInCategory.OST_CableTray };
+                    var inherited = new FilteredElementCollector(doc).WherePasses(new ElementMulticategoryFilter(categories)).WhereElementIsNotElementType().ToElementIds();
+                    var links = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkType)).ToElementIds();
+                    if (links.Count > 0) doc.Delete(links);
+                    if (inherited.Count > 0) doc.Delete(inherited);
+                    setup.Commit();
+                }
                 FamilySymbol beam = MakeBoxFamily(app, doc, familyTemplate, root, "FixtureBeam", BuiltInCategory.OST_StructuralFraming, 8, 1, 2);
                 FamilySymbol column = MakeBoxFamily(app, doc, familyTemplate, root, "FixtureColumn", BuiltInCategory.OST_StructuralColumns, 1, 1, 10);
-                Level fl1, fl2; Pipe wallPipe, beamPipe; Duct duct; Conduit conduit;
+                Level fl1, fl2; Pipe wallPipe, beamPipe; Duct duct; Conduit conduit; Floor fixtureFloor;
                 using (var tx = new Transaction(doc, "Create disposable CoordinationFixture"))
                 {
                     tx.Start();
                     // Remove template contents in the newly created fixture only.
                     var levels = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).ToList();
-                    fl1 = levels.FirstOrDefault() ?? Level.Create(doc, 0); fl1.Name = "FL1"; fl1.Elevation = 0;
-                    fl2 = levels.Skip(1).FirstOrDefault() ?? Level.Create(doc, 12); fl2.Name = "FL2"; fl2.Elevation = 12;
+                    fl1 = levels.FirstOrDefault() ?? Level.Create(doc, 0); fl1.Name = "FL1"; fl1.Elevation -= fl1.ProjectElevation;
+                    fl2 = levels.Skip(1).FirstOrDefault() ?? Level.Create(doc, 12); fl2.Name = "FL2"; fl2.Elevation += 12 - fl2.ProjectElevation;
                     var wallType = new FilteredElementCollector(doc).OfClass(typeof(WallType)).Cast<WallType>().First(t => t.Kind == WallKind.Basic);
                     Wall.Create(doc, Line.CreateBound(new XYZ(0,-5,0),new XYZ(0,5,0)), wallType.Id, fl1.Id, 10, 0, false, false);
-                    var floorType = new FilteredElementCollector(doc).OfClass(typeof(FloorType)).Cast<FloorType>().First();
+                    var baseFloorType = new FilteredElementCollector(doc).OfClass(typeof(FloorType)).Cast<FloorType>().First(t => !t.IsFoundationSlab);
+                    var floorType = (FloorType)baseFloorType.Duplicate("FixtureFloorType");
+                    var floorStructure = floorType.GetCompoundStructure();
+                    floorStructure.SetLayers(new List<CompoundStructureLayer> { new CompoundStructureLayer(0.5, MaterialFunctionAssignment.Structure, ElementId.InvalidElementId) });
+                    floorType.SetCompoundStructure(floorStructure);
                     var loop = Rectangle(30,-4,38,4,6);
-                    var floor = Floor.Create(doc, new List<CurveLoop> { loop }, floorType.Id, fl1.Id);
-                    floor.get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).Set(6);
+                    fixtureFloor = Floor.Create(doc, new List<CurveLoop> { loop }, floorType.Id, fl1.Id);
+                    fixtureFloor.get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).Set(6);
                     beam.Activate(); column.Activate(); doc.Regenerate();
                     doc.Create.NewFamilyInstance(new XYZ(12,0,4),beam,fl1,StructuralType.NonStructural);
                     doc.Create.NewFamilyInstance(new XYZ(45,0,0),column,fl1,StructuralType.NonStructural);
@@ -87,6 +128,17 @@ namespace RevitMCP.Core
                     conduit = Conduit.Create(doc,conduitType.Id,new XYZ(60,0,3),new XYZ(65,0,3),fl1.Id);
                     tx.Commit();
                 }
+                Check("fixture_project_elevations", "0 / 12 ft", $"{fl1.ProjectElevation} / {fl2.ProjectElevation}",
+                    Math.Abs(fl1.ProjectElevation) < 1e-8 && Math.Abs(fl2.ProjectElevation - 12) < 1e-8, "Fixture coordinates use project elevations, independent of inherited survey elevation display base");
+                var floorBox = fixtureFloor.get_BoundingBox(null);
+                var ductLine = (duct.Location as LocationCurve)?.Curve;
+                File.WriteAllText(Path.Combine(root, "fixture-geometry.json"), JsonConvert.SerializeObject(new {
+                    FloorMin = floorBox == null ? null : new[] { floorBox.Min.X, floorBox.Min.Y, floorBox.Min.Z },
+                    FloorMax = floorBox == null ? null : new[] { floorBox.Max.X, floorBox.Max.Y, floorBox.Max.Z },
+                    DuctStart = ductLine == null ? null : new[] { ductLine.GetEndPoint(0).X, ductLine.GetEndPoint(0).Y, ductLine.GetEndPoint(0).Z },
+                    DuctEnd = ductLine == null ? null : new[] { ductLine.GetEndPoint(1).X, ductLine.GetEndPoint(1).Y, ductLine.GetEndPoint(1).Z }
+                }, Formatting.Indented));
+                Check("fixture_floor_project_height", "top 6 ft", floorBox?.Max.Z, floorBox != null && Math.Abs(floorBox.Max.Z - 6) < 1e-6, "Generated uniform half-foot slab; template Type construction is not a test oracle");
                 var service = new CoordinationService();
                 CoordinationRequest Query(string mep, string host) => new CoordinationRequest { MepCategory=mep, HostCategory=host, LevelName="FL1", OpeningCandidates=true, ClearanceMm=25 };
                 var walls = service.Scan(doc,Query("Pipes","Walls"));
@@ -122,7 +174,7 @@ namespace RevitMCP.Core
                 var limited=service.Scan(doc,capped);
                 Check("explicit_truncation","total=2, returned=1, truncated=true",$"{limited.TotalMatchedCount}/{limited.ReturnedCount}/{limited.IsTruncated}",limited.TotalMatchedCount==2&&limited.ReturnedCount==1&&limited.IsTruncated,"Total includes matches beyond display cap");
                 // Independent translated MEP link created entirely from a new fixture document.
-                Document linkDoc=app.NewProjectDocument(template);
+                Document linkDoc=app.NewProjectDocument(baseTemplate);
                 string linkPath=Path.Combine(root,"translated-link.rvt");
                 try
                 {
@@ -149,7 +201,7 @@ namespace RevitMCP.Core
                 var linkedResult=service.Scan(doc,linked);
                 Check("translated_link",1,linkedResult.TotalMatchedCount,linkedResult.TotalMatchedCount==1,"MEP link translated +100 ft; pipe center resolves to host origin");
                 Check("translated_point",0,linkedResult.Rows.FirstOrDefault()?.Xmm,linkedResult.Rows.Count==1&&Math.Abs(linkedResult.Rows[0].Xmm)<1,"Host-coordinate center mm");
-                Document hostLinkDoc=app.NewProjectDocument(template);
+                Document hostLinkDoc=app.NewProjectDocument(baseTemplate);
                 string hostLinkPath=Path.Combine(root,"translated-host.rvt");
                 try
                 {
@@ -173,7 +225,7 @@ namespace RevitMCP.Core
                 Check("translated_host_link",2,hostLinkedResult.TotalIssues,hostLinkedResult.TotalIssues==2&&hostLinkedResult.Rows.All(r=>r.Host.LinkInstanceId==hostLinkId),"Main pipes against translated host wall");
                 Check("wall_classification",true,walls.Rows[0].ResultKind,walls.Rows[0].ResultKind==CoordinationKind.OpeningCandidate&&walls.Rows[0].HasClash,"One interaction, one opening row with clash evidence");
                 Check("beam_classification",true,service.Scan(doc,Query("Pipes","StructuralFraming")).Rows[0].ResultKind,service.Scan(doc,Query("Pipes","StructuralFraming")).Rows[0].ResultKind==CoordinationKind.BeamPenetration,"Always manual review");
-                Document switchDoc=app.NewProjectDocument(template);
+                Document switchDoc=app.NewProjectDocument(baseTemplate);
                 try { switchDoc.SaveAs(Path.Combine(root,"WorkflowSwitch.rvt"),new SaveAsOptions()); }
                 finally { switchDoc.Close(false); }
                 string fixturePath=Path.Combine(root,"CoordinationFixture.rvt");doc.SaveAs(fixturePath,new SaveAsOptions { OverwriteExistingFile=false });

@@ -1,13 +1,13 @@
 {
   "SchemaVersion": 2,
-  "Task": "v0.4.1",
+  "Task": "v0.4.2",
   "Branch": "bim-custom",
   "Status": "READY_FOR_OPTIONAL_UAT",
-  "UpdatedAt": "2026-09-16T01:47:40.565Z",
+  "UpdatedAt": "2026-09-16T03:53:39.410Z",
   "Gates": {
     "A": {
       "Status": "PASS",
-      "Passed": 465,
+      "Passed": 477,
       "Failed": 0
     },
     "B": {
@@ -17,17 +17,17 @@
     },
     "C": {
       "Status": "PASS",
-      "Passed": 18,
+      "Passed": 20,
       "Failed": 0
     },
     "C2": {
       "Status": "PASS",
-      "Passed": 43,
+      "Passed": 65,
       "Failed": 0
     },
     "C3": {
       "Status": "PASS",
-      "Passed": 30,
+      "Passed": 48,
       "Failed": 0
     },
     "Build": {
@@ -40,14 +40,14 @@
       "Status": "PASS"
     }
   },
-  "BuildSHA256": "7677DBDEAA894F091E6F00BF62BFF6BB74F6F2210651006C6405C617A443BCD6",
-  "InstalledVersion": "v0.4.1",
-  "ProductionDeployment": "PASS — FORMAL_V041_RELEASE",
-  "InstalledSHA256": "7677DBDEAA894F091E6F00BF62BFF6BB74F6F2210651006C6405C617A443BCD6",
+  "BuildSHA256": "CA23412E813338B6A431EA22C6AFC506A2D5C7F15046A6337007C05680ECB14E",
+  "InstalledVersion": "v0.4.2",
+  "ProductionDeployment": "PASS — FORMAL_V042_RELEASE",
+  "InstalledSHA256": "CA23412E813338B6A431EA22C6AFC506A2D5C7F15046A6337007C05680ECB14E",
   "FinalCommit": {
     "Value": "SELF_COMMIT",
     "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
-    "Reason": "A tracked file cannot contain its own commit hash. Literal receipt is local test-artifacts/v041/final.json after push."
+    "Reason": "A tracked file cannot contain its own commit hash. Literal receipt is local test-artifacts/v042/final.json after push."
   },
   "SourceFingerprints": [
     {
@@ -331,8 +331,12 @@
       "SHA256": "E6508D11EA12F8BFD367EDB43318E3F4CF924E1A8629E37D75E62F5D18E412AD"
     },
     {
+      "Path": "MCP/Core/CoordinationNavigationService.cs",
+      "SHA256": "7A0127DE67077F58588449A60288DD5BC2D9062777E4C553C800DB4C96C8873D"
+    },
+    {
       "Path": "MCP/Core/CoordinationSelfTest.cs",
-      "SHA256": "849ED0415B47277E3AB637CDE6AA2F8E0F2325138044F5BABFEA0BCB7E359B6C"
+      "SHA256": "74BF39E289E37E2E029CD843ED45FA7860A3B676163389AE4EE3578C56283864"
     },
     {
       "Path": "MCP/Core/CoordinationService.cs",
@@ -340,7 +344,7 @@
     },
     {
       "Path": "MCP/Core/CoordinationWorkflowSelfTest.cs",
-      "SHA256": "E4652D463975F595F4323E0238B1FD6A238868856EE5558059D7C919810F5A9F"
+      "SHA256": "2FE7F9C1139301FFC89283407D0AC593FB4814A744CF1AA8EC39DFF3E85243ED"
     },
     {
       "Path": "MCP/Core/DocumentSessionIdentity.cs",
@@ -420,7 +424,7 @@
     },
     {
       "Path": "MCP/Models/CoordinationModels.cs",
-      "SHA256": "4C752D95C2D2D6235D62584D05C92F2C0E2E5EB7B82C1DA2200119189E2C07EA"
+      "SHA256": "DC73D4D36FDFC863B6FD3E95688574E28EF255C08C005F56F6FD89FBB497BFF1"
     },
     {
       "Path": "MCP/Models/LinkSummary.cs",
@@ -444,11 +448,11 @@
     },
     {
       "Path": "MCP/UI/CoordinationViewModel.cs",
-      "SHA256": "90010987D7A4A2235D08A2719CA15BF9827A0CCD5F8DC264C53D39464D821C9C"
+      "SHA256": "9B9C58448E46164759F8712FBE627847620EF4EA36CDB8869171654A96A8EB25"
     },
     {
       "Path": "MCP/UI/DetectReviewWorkflowControl.cs",
-      "SHA256": "3895C5196F146B9566038808606491282915F8D55DD5FAEDB5D2A7BFA350D6E0"
+      "SHA256": "81620472D0E1E0278E11A689CC2BE0D96568109DAECBF3A6694DD7088CBC2191"
     },
     {
       "Path": "MCP/UI/PanelReadOnlyDispatcher.cs",
@@ -456,9 +460,9 @@
     },
     {
       "Path": "MCP/UI/RevitCoordinationHost.cs",
-      "SHA256": "BC78BB7E831B909D88D7119D419683BCAB1E28860882B2BE387569ACCCA4AC54"
+      "SHA256": "2724CE29386C08855B15BA6E5DCE91827C97C48A479E00D557F419E3E248F9A4"
     }
   ],
   "NextAction": "Optional short UAT only; stop until a new task is authorized.",
-  "Report": "docs/productization/v041-report.json"
+  "Report": "docs/productization/v042-report.json"
 }

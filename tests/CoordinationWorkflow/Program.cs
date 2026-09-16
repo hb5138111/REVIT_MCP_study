@@ -64,8 +64,44 @@ Check("refresh_failure_actionable",true,vm.StatusMessage,vm.StatusMessage.Contai
 host.Context.ThrowRefresh=false;vm.RefreshSources();host.Drain();vm.HostCategory="Walls";
 Check("refresh_retry",true,vm.CanScan,vm.CanScan);
 host.Reject=true;vm.RefreshSources();Check("queue_rejection",false,vm.CanScan,!vm.CanScan&&vm.StatusMessage.Contains("無法排程"));host.Reject=false;vm.RefreshSources();host.Drain();
+Check("auto_locate_default_on",true,vm.AutoLocateEnabled,vm.AutoLocateEnabled);
+Check("3d_navigation_available",true,vm.ThreeDNavigationAvailable,vm.ThreeDNavigationAvailable);
+Check("before_scan_empty_state",true,vm.EmptyState,vm.EmptyState.Contains("選擇協調範圍"));
+vm.HostCategory="Walls";vm.ScanCommand.Execute(null);
+Check("scan_progress",true,vm.StatusMessage,vm.StatusMessage=="掃描中…"&&!vm.CanScan);host.Drain();
+host.Context.ActiveView=10;vm.Locate3DCommand.Execute(null);host.Drain();
+Check("resolve_orthographic_before_perspective",20,vm.CoordinationViewId,vm.CoordinationViewId==20&&vm.LastFocusVerified);
+Check("previous_view_recorded",10,vm.PreviousViewId,vm.PreviousViewId==10&&vm.ReturnPreviousCommand.CanExecute(null));
+int enumerations=host.Context.ViewEnumerations;host.Context.ActiveView=21;
+vm.NextCommand.Execute(null);host.Drain();
+Check("next_keeps_session_view",20,host.Context.ActiveView,host.Context.ActiveView==20&&host.Context.ViewEnumerations==enumerations);
+vm.PreviousCommand.Execute(null);host.Drain();Check("previous_keeps_session_view",20,host.Context.ActiveView,host.Context.ActiveView==20&&vm.NavigationPosition=="1 / 2");
+host.Context.ActiveView=21;vm.Locate3DCommand.Execute(null);host.Drain();
+Check("explicit_locate_prefers_current_3d",21,vm.CoordinationViewId,vm.CoordinationViewId==21);
+vm.SelectedRow=vm.RowsView[1];Check("row_change_clears_focus_evidence",false,vm.LastFocusVerified,!vm.LastFocusVerified);vm.SelectedRow=vm.RowsView[0];
+vm.ReturnPreviousCommand.Execute(null);host.Drain();Check("return_previous",10,host.Context.ActiveView,host.Context.ActiveView==10&&vm.PreviousViewId==null);
+vm.AutoLocateEnabled=false;int submissions=host.Submissions;vm.NextCommand.Execute(null);
+Check("auto_off_selection_only",true,vm.NavigationPosition,vm.NavigationPosition=="2 / 2"&&host.Submissions==submissions);
+Check("detail_selected_row",true,vm.Detail,vm.Detail.Contains("Element ID：2")&&vm.Detail.Contains("穿透長度")&&vm.Detail.Contains("人工確認"));
+vm.SelectedRow=vm.RowsView[0];Check("row_selection_no_api",true,host.Submissions,host.Submissions==submissions&&vm.NavigationPosition=="1 / 2");
+vm.AutoLocateEnabled=true;host.Context.Views.RemoveAll(v=>v.Id==21);vm.Locate3DCommand.Execute(null);host.Drain();
+Check("invalid_session_view_resolved",20,vm.CoordinationViewId,vm.CoordinationViewId==20);
+vm.ReturnPreviousCommand.Execute(null);host.Drain();host.Context.ActiveView=999;vm.Locate3DCommand.Execute(null);host.Drain();vm.ReturnPreviousCommand.Execute(null);host.Drain();
+Check("stale_previous_clears_session",true,vm.PreviousViewId,vm.PreviousViewId==null&&vm.CoordinationViewId==null&&vm.StatusMessage.Contains("失效"));
+host.Context.Views.Clear();vm.Locate3DCommand.Execute(null);host.Drain();
+Check("no_3d_safe_fallback",true,vm.StatusMessage,!vm.ThreeDNavigationAvailable&&!vm.LastFocusVerified&&vm.CoordinationViewId==null&&vm.StatusMessage.Contains("沒有可用的 3D"));
+host.Context.Views.Add(new(){Id=20,Usable=true});vm.MepSource=vm.Sources[1];host.Drain();vm.ScanCommand.Execute(null);host.Drain();vm.Locate3DCommand.Execute(null);host.Drain();
+Check("linked_navigation_state",true,vm.Detail,vm.ThreeDNavigationAvailable&&vm.SelectedRow?.Mep.LinkInstanceId==9&&vm.Detail.Contains("9:1")&&vm.StatusMessage.Contains("Link instance"));
+int scans=host.Context.Scans;vm.FilterBeamCommand.Execute(null);Check("summary_filter_no_rescan",1,vm.RowsView.Count,vm.RowsView.Count==1&&host.Context.Scans==scans);
+host.Context.Identity="D";vm.DocumentChanged("D");host.Drain();
+Check("document_clears_navigation_session",true,vm.CoordinationViewId,vm.CoordinationViewId==null&&vm.PreviousViewId==null&&!vm.LastFocusVerified);
+vm.HostCategory="Walls";vm.OpeningCandidates=false;host.Context.ZeroResults=true;vm.ScanCommand.Execute(null);host.Drain();
+Check("zero_results_empty_state",true,vm.EmptyState,vm.EmptyState=="目前範圍未發現協調問題。"&&!vm.CanNavigate);
+var lazyViews=new[]{new CoordinationViewOption{Id=200,Usable=true},new CoordinationViewOption{Id=100,Usable=true},new CoordinationViewOption{Id=1,Usable=true,Perspective=true}};
+var deterministic=CoordinationViewPolicy.Resolve(999,null,false,id=>lazyViews.FirstOrDefault(v=>v.Id==id),()=>lazyViews);
+Check("view_resolution_deterministic",100,deterministic,deterministic==100);
 var report=new { GateC2=failed==0?"PASS":"FAIL", Passed=checks.Count-failed,Failed=failed,Assertions=checks,Timestamp=DateTimeOffset.UtcNow };
-var output=args.Length>0?args[0]:"test-artifacts/v041";Directory.CreateDirectory(output);
+var output=args.Length>0?args[0]:"test-artifacts/v042";Directory.CreateDirectory(output);
 File.WriteAllText(Path.Combine(output,"workflow-state.json"),JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));
 File.WriteAllText(Path.Combine(output,"workflow-state.md"),$"# Native workflow state\n\nGate C2: {report.GateC2}\nPassed: {report.Passed}; Failed: {failed}\n\n"+string.Join("\n",checks.Select(x=>JsonSerializer.Serialize(x))));
 Console.WriteLine($"Gate C2 {report.GateC2}: {report.Passed} passed / {failed} failed");return failed==0?0:1;
@@ -83,12 +119,26 @@ sealed class TestHost : ICoordinationHost
 }
 sealed class TestContext : ICoordinationContext
 {
-    public string Identity="A";public string DocumentIdentity=>Identity;public int Scans,Highlights;public bool NoLevels,ThrowRefresh;
+    public string Identity="A";public string DocumentIdentity=>Identity;public int Scans,Highlights;public bool NoLevels,ThrowRefresh,ZeroResults;
     public IReadOnlyList<CoordinationSource> GetSources() {if(ThrowRefresh)throw new Exception("fixture failure");return new[]{new CoordinationSource{Name="Main"},new CoordinationSource{LinkInstanceId=9,Name="Link"}};}
     public IReadOnlyList<CoordinationLevel> GetLevels(long id) => NoLevels ? Array.Empty<CoordinationLevel>() : id==0?new[]{new CoordinationLevel{Id=11,Name="FL1"},new CoordinationLevel{Id=12,Name="FL2"}}:new[]{new CoordinationLevel{Id=91,Name="LINK-FL1"}};
     public IReadOnlyList<string> GetMepCategories(long id)=>new[]{"Pipes","Ducts"};
     public double ParseClearance(string text)=>double.Parse(text.Replace(" mm",""),System.Globalization.CultureInfo.InvariantCulture);
     public CoordinationResult Scan(CoordinationRequest request)
-    { Scans++;return new CoordinationResult{DocumentIdentity=Identity,Scope=request,TotalMatchedCount=2,TotalScanned=3,CountsByKind=new(){{CoordinationKind.OpeningCandidate,1},{CoordinationKind.BeamPenetration,1}},CountsByStatus=new(){{"需人工複核",2}},Rows=new(){new CoordinationRow{ResultKind=CoordinationKind.OpeningCandidate,Mep=new(){ElementId=1},System="=Unsafe",MepLabel="Pipe",WarningCodes=new(){"solid_edge_unknown"}},new CoordinationRow{ResultKind=CoordinationKind.BeamPenetration,Mep=new(){ElementId=2},WarningCodes=new(){"structural_framing_review"}}}}; }
-    public void Highlight(CoordinationRow row,bool mep,bool host){Highlights++;}
+    { Scans++;if(ZeroResults)return new CoordinationResult{DocumentIdentity=Identity,Scope=request};return new CoordinationResult{DocumentIdentity=Identity,Scope=request,TotalMatchedCount=2,TotalScanned=3,CountsByKind=new(){{CoordinationKind.OpeningCandidate,1},{CoordinationKind.BeamPenetration,1}},CountsByStatus=new(){{"需人工複核",2}},Rows=new(){new CoordinationRow{ResultKind=CoordinationKind.OpeningCandidate,Mep=new(){ElementId=1,LinkInstanceId=request.MepLinkId},System="=Unsafe",MepLabel="Pipe",WarningCodes=new(){"solid_edge_unknown"}},new CoordinationRow{ResultKind=CoordinationKind.BeamPenetration,Mep=new(){ElementId=2},WarningCodes=new(){"structural_framing_review"}}}}; }
+    public long ActiveView = 10; public List<CoordinationViewOption> Views = new() { new(){Id=20,Usable=true}, new(){Id=21,Usable=true},new(){Id=19,Usable=true,Perspective=true},new(){Id=18,Usable=false} };
+    public int ViewEnumerations;
+    private long? Resolve(CoordinationNavigationSession session,bool keep) => CoordinationViewPolicy.Resolve(ActiveView,session.CoordinationViewId,keep,
+        id=>Views.FirstOrDefault(v=>v.Id==id),()=>{ViewEnumerations++;return Views;});
+    public bool NavigationAvailable(CoordinationNavigationSession session)=>Resolve(session,false).HasValue;
+    public CoordinationNavigationResult Locate(CoordinationRow row,bool mep,bool host,CoordinationNavigationSession session,bool keepSession)
+    {
+        Highlights++; var target=Resolve(session,keepSession);
+        if(!target.HasValue){session.CoordinationViewId=null;return new(){Message="目前模型沒有可用的 3D 視圖，無法執行 3D 定位。"};}
+        if(!Views.Any(v=>v.Id==ActiveView&&v.Usable)&&session.PreviousViewId==null)session.PreviousViewId=ActiveView;
+        ActiveView=target.Value; session.CoordinationViewId=target;
+        return new(){ThreeDAvailable=true,FocusVerified=true,Message=row.Mep.LinkInstanceId!=0?"連結構件以 Link instance 選取":"已在 3D 視圖定位交點"};
+    }
+    public string ReturnPrevious(CoordinationNavigationSession session)
+    {if(session.PreviousViewId==999){session.Clear();return "原視圖已失效";}ActiveView=session.PreviousViewId??ActiveView;session.PreviousViewId=null;return "已返回原視圖";}
 }

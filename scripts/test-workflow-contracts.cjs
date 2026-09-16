@@ -20,6 +20,13 @@ check('session_identity_native_equality',true,read('MCP/Core/DocumentSessionIden
 check('ui_logic_testable',false,/Autodesk.Revit|System.Windows.Controls|System.Windows.Data/.test(vm),!/Autodesk.Revit|System.Windows.Controls|System.Windows.Data/.test(vm),'Production controller links into Gate C2');
 check('legacy_link_dto_preserved',true,read('MCP/Models/LinkSummary.cs').includes('class LinkSummary'),read('MCP/Models/LinkSummary.cs').includes('class LinkSummary'),'Shared legacy MCP shape survives retirement');
 check('runtime_workflow_real_dispatcher',true,read('MCP/Core/CoordinationWorkflowSelfTest.cs').includes('Vm.ScanCommand.Execute')&&read('MCP/UI/RevitCoordinationHost.cs').includes('dispatcher.TrySubmit'),read('MCP/Core/CoordinationWorkflowSelfTest.cs').includes('Vm.ScanCommand.Execute')&&read('MCP/UI/RevitCoordinationHost.cs').includes('dispatcher.TrySubmit'),'Runtime Gate C3 exercises production workflow');
+const navigation=read('MCP/Core/CoordinationNavigationService.cs'),control=read('MCP/UI/DetectReviewWorkflowControl.cs');
+for(const pattern of [/new Transaction\(/,/CreateIsometric|CreatePerspective|SetSectionBox|\.Set\(/,/ShowElements\(/,/\{3D\}/,/service\.Scan|IntersectCenterline/])
+ check('navigation_forbidden_'+pattern.source,false,pattern.test(navigation),!pattern.test(navigation),'UI-only navigation source');
+for(const token of ['ui.ActiveView = view','ZoomAndCenterRectangle','GetZoomCorners','ResolveNavigation(document, row.Mep)','ResolveNavigation(document, row.Host)'])
+ check('navigation_contract_'+token,true,navigation.includes(token),navigation.includes(token),'Fresh references, explicit view and camera read-back');
+check('double_click_row_only',true,control.includes('ContainerFromElement(table, origin) is DataGridRow')&&control.includes('vm.Locate3DCommand.Execute'),control.includes('ContainerFromElement(table, origin) is DataGridRow')&&control.includes('vm.Locate3DCommand.Execute'),'Header double-click must not navigate');
+check('navigation_session_transient',false,/Parameter|WriteAllText/.test(vm),!/Parameter|WriteAllText/.test(vm),'View IDs remain session-only');
 const seen=new Set();
 for(const tool of matrix.RuntimeTools){
  const quarantine=tool.Command==='check_sanitary_fixture_requirements';

@@ -28,6 +28,9 @@ namespace RevitMCP.Core
         private DateTime deadline;
         private long mepLink, hostLink, selectedMep, selectedHost;
         private string originalIdentity = "";
+        private long planView, coordinationView;
+        private int viewCount;
+        private bool modifiedBeforeNavigation;
         public bool Started { get; private set; }
         public CoordinationWorkflowSelfTest(UIControlledApplication application, string directory)
         {
@@ -70,6 +73,14 @@ namespace RevitMCP.Core
                         var backend = JObject.Parse(File.ReadAllText(Fixture("runtime.json")));
                         Require((string?)backend["GateC"] == "PASS", "Backend Gate C failed");
                         app.OpenAndActivateDocument(Fixture("CoordinationFixture.rvt"));
+                        var fixtureDocument = app.ActiveUIDocument.Document;
+                        var plan = new FilteredElementCollector(fixtureDocument).OfClass(typeof(ViewPlan)).Cast<ViewPlan>()
+                            .Where(v => !v.IsTemplate && v.ViewType == ViewType.FloorPlan).OrderBy(v => v.Id.GetIdValue()).First();
+                        planView = plan.Id.GetIdValue(); app.ActiveUIDocument.ActiveView = plan;
+                        var available3D = new FilteredElementCollector(fixtureDocument).OfClass(typeof(View3D)).Cast<View3D>().Where(v => !v.IsTemplate && v.CanBePrinted).ToList();
+                        Check("fixture_existing_3d", "At least one existing usable 3D; never create", available3D.Count, available3D.Count > 0);
+                        Require(available3D.Count > 0, "Fixture template has no existing 3D view; creation is prohibited. Supply an isolated template with an existing 3D view.");
+                        modifiedBeforeNavigation = fixtureDocument.IsModified; viewCount = ViewCount(fixtureDocument);
                         var page = new BimConstructionPanelPage(panel);
                         Check("production_view_data_context", true, page.DataContext == panel, page.DataContext == panel);
                         panel.Initialize(); break;
@@ -103,9 +114,14 @@ namespace RevitMCP.Core
                         var ids=app.ActiveUIDocument.Selection.GetElementIds().Select(i=>i.GetIdValue()).ToArray();
                         Check("native_selection_readback",true,string.Join(",",ids),ids.Contains(selectedMep)&&ids.Contains(selectedHost));
                         Check("view_change_preserves_results",true,Vm.Result!=null,Vm.Result!=null&&Vm.DocumentIdentity==originalIdentity);
+                        coordinationView = app.ActiveUIDocument.ActiveView.Id.GetIdValue();
+                        Check("floor_plan_to_3d", true, app.ActiveUIDocument.ActiveView.ViewType, app.ActiveUIDocument.ActiveView is View3D && Vm.CoordinationViewId == coordinationView && Vm.PreviousViewId == planView);
+                        Check("host_interaction_focus", true, Vm.StatusMessage, Vm.LastFocusVerified && CoordinationNavigationService.FocusContains(app.ActiveUIDocument, Vm.SelectedRow!));
+                        Check("navigation_does_not_modify_model", true, app.ActiveUIDocument.Document.IsModified, app.ActiveUIDocument.Document.IsModified == modifiedBeforeNavigation && ViewCount(app.ActiveUIDocument.Document) == viewCount);
                         Vm.NextCommand.Execute(null);break;
                     case 5:
                         Check("native_next_navigation",true,Vm.SelectedRow?.Mep.ElementId,Vm.SelectedRow!=null&&Vm.SelectedRow.Mep.ElementId!=selectedMep&&app.ActiveUIDocument.Selection.GetElementIds().Any(i=>i.GetIdValue()==Vm.SelectedRow.Mep.ElementId));
+                        Check("next_stays_in_same_3d", coordinationView, app.ActiveUIDocument.ActiveView.Id.GetIdValue(), app.ActiveUIDocument.ActiveView.Id.GetIdValue() == coordinationView && Vm.LastFocusVerified);
                         Vm.MepSource=Vm.Sources.Single(s=>s.LinkInstanceId==mepLink);break;
                     case 6:
                         Check("source_change_clear_results",true,Vm.Result==null,Vm.Result==null&&Vm.SelectedRow==null);
@@ -117,6 +133,11 @@ namespace RevitMCP.Core
                         Vm.HighlightBothCommand.Execute(null);break;
                     case 8:
                         Check("link_navigation_instance",true,string.Join(",",app.ActiveUIDocument.Selection.GetElementIds()),app.ActiveUIDocument.Selection.GetElementIds().Any(i=>i.GetIdValue()==mepLink));
+                        var safeIds = new[] { mepLink, Vm.SelectedRow!.Host.ElementId }.OrderBy(id=>id).ToArray();
+                        Check("linked_selection_exact_not_fake", string.Join(",",safeIds), string.Join(",",app.ActiveUIDocument.Selection.GetElementIds()), app.ActiveUIDocument.Selection.GetElementIds().Select(id=>id.GetIdValue()).OrderBy(id=>id).SequenceEqual(safeIds));
+                        Check("linked_interaction_focus_same_3d", true, Vm.StatusMessage, Vm.LastFocusVerified && app.ActiveUIDocument.ActiveView.Id.GetIdValue()==coordinationView && CoordinationNavigationService.FocusContains(app.ActiveUIDocument, Vm.SelectedRow));
+                        var corners = app.ActiveUIDocument.GetOpenUIViews().Single(v=>v.ViewId==app.ActiveUIDocument.ActiveView.Id).GetZoomCorners();
+                        Check("linked_focus_is_local", "Camera diagonal < 40 ft, not full translated link", corners[0].DistanceTo(corners[1]), corners[0].DistanceTo(corners[1])<40);
                         Check("csv_schema",15,Vm.ExportCsv().Split('\n')[0].Trim().Split(',').Length,Vm.ExportCsv().Split('\n')[0].Trim().Split(',').Length==15);
                         Vm.MepSource=Vm.Sources.Single(s=>s.LinkInstanceId==0);break;
                     case 9:
@@ -136,7 +157,8 @@ namespace RevitMCP.Core
                         Check("native_no_clash",0,Vm.Result?.TotalIssues,Vm.Result!=null&&Vm.Result.TotalIssues==0&&Vm.RowsView.Count==0&&!Vm.CanNavigate);
                         app.OpenAndActivateDocument(Fixture("WorkflowSwitch.rvt"));break;
                     case 14:
-                        Check("document_switch_refresh",true,Vm.DocumentIdentity,Vm.DocumentIdentity!=originalIdentity&&Vm.Result==null&&Vm.SelectedRow==null&&Vm.Sources.Count==1&&Vm.ClearanceMm==null);
+                        Check("document_switch_clears_view_ids", true, Vm.CoordinationViewId, Vm.CoordinationViewId==null&&Vm.PreviousViewId==null);
+                        Check("document_switch_refresh",true,JsonConvert.SerializeObject(new { IdentityChanged=Vm.DocumentIdentity!=originalIdentity, ResultNull=Vm.Result==null, SelectedRowNull=Vm.SelectedRow==null, Sources=Vm.Sources.Count, Clearance=Vm.ClearanceMm, Busy=Vm.IsBusy, Status=Vm.StatusMessage }),Vm.DocumentIdentity!=originalIdentity&&Vm.Result==null&&Vm.SelectedRow==null&&Vm.Sources.Count==1&&Vm.ClearanceMm==null);
                         app.OpenAndActivateDocument(Fixture("CoordinationFixture.rvt"));break;
                     case 15:
                         Check("return_document_settings",25,Vm.ClearanceMm,Vm.DocumentIdentity==originalIdentity&&Vm.ClearanceMm.HasValue&&Math.Abs(Vm.ClearanceMm.Value-25)<0.001);
@@ -145,12 +167,52 @@ namespace RevitMCP.Core
                         break;
                     case 16:
                         Check("document_changed_event_refresh",true,string.Join(",",Vm.Levels.Select(l=>l.Name)),Vm.Levels.Any(l=>l.Name=="C3_EDIT")&&Vm.Result==null);
+                        Vm.MepCategory="Pipes";Vm.HostCategory="Walls";Vm.ScanCommand.Execute(null);break;
+                    case 17:
+                        Require(Vm.Result?.TotalIssues==2,Vm.StatusMessage);
+                        app.ActiveUIDocument.ActiveView=(View)app.ActiveUIDocument.Document.GetElement(CoordinationService.Id(planView));
+                        Vm.Locate3DCommand.Execute(null);break;
+                    case 18:
+                        coordinationView=app.ActiveUIDocument.ActiveView.Id.GetIdValue();
+                        Check("locate_after_document_return",true,Vm.StatusMessage,Vm.LastFocusVerified&&Vm.PreviousViewId==planView);
+                        Vm.Locate3DCommand.Execute(null);break;
+                    case 19:
+                        Check("current_3d_stays_same",coordinationView,app.ActiveUIDocument.ActiveView.Id.GetIdValue(),app.ActiveUIDocument.ActiveView.Id.GetIdValue()==coordinationView&&Vm.LastFocusVerified);
+                        Vm.NextCommand.Execute(null);break;
+                    case 20:
+                        Check("next_3d_focus",true,Vm.StatusMessage,Vm.LastFocusVerified&&app.ActiveUIDocument.ActiveView.Id.GetIdValue()==coordinationView);
+                        Vm.PreviousCommand.Execute(null);break;
+                    case 21:
+                        Check("previous_3d_focus",true,Vm.StatusMessage,Vm.LastFocusVerified&&app.ActiveUIDocument.ActiveView.Id.GetIdValue()==coordinationView&&Vm.NavigationPosition=="1 / 2");
+                        Vm.ReturnPreviousCommand.Execute(null);break;
+                    case 22:
+                        Check("return_original_floor_plan",planView,app.ActiveUIDocument.ActiveView.Id.GetIdValue(),app.ActiveUIDocument.ActiveView.Id.GetIdValue()==planView&&Vm.PreviousViewId==null);
+                        // Isolated fixture setup only: remove existing 3D views to exercise selection-only fallback.
+                        // No production navigation path creates or deletes views.
+                        var document=app.ActiveUIDocument.Document;
+                        var threedIds=new FilteredElementCollector(document).OfClass(typeof(View3D)).Cast<View3D>().Where(v=>!v.IsTemplate).Select(v=>v.Id).ToList();
+                        foreach(var open in app.ActiveUIDocument.GetOpenUIViews().Where(v=>threedIds.Contains(v.ViewId))) open.Close();
+                        using(var tx=new Transaction(document,"Disposable C3 no-3D fixture setup"))
+                        {tx.Start();document.Delete(threedIds);tx.Commit();}
+                        break;
+                    case 23:
+                        Check("deleted_3d_invalidates_session",true,Vm.CoordinationViewId,Vm.CoordinationViewId==null&&!Vm.ThreeDNavigationAvailable);
+                        Vm.MepCategory="Pipes";Vm.HostCategory="Walls";Vm.ScanCommand.Execute(null);break;
+                    case 24:
+                        Require(Vm.Result?.TotalIssues==2,Vm.StatusMessage);
+                        app.ActiveUIDocument.Document.Save(); modifiedBeforeNavigation=app.ActiveUIDocument.Document.IsModified;viewCount=ViewCount(app.ActiveUIDocument.Document);
+                        Vm.Locate3DCommand.Execute(null);break;
+                    case 25:
+                        Check("no_3d_fallback_message",true,Vm.StatusMessage,Vm.StatusMessage.Contains(CoordinationNavigationService.NoThreeD)&&!Vm.LastFocusVerified&&!Vm.ThreeDNavigationAvailable);
+                        Check("no_3d_selection_readback",true,string.Join(",",app.ActiveUIDocument.Selection.GetElementIds()),app.ActiveUIDocument.Selection.GetElementIds().Select(id=>id.GetIdValue()).OrderBy(id=>id).SequenceEqual(new[]{Vm.SelectedRow!.Mep.ElementId,Vm.SelectedRow.Host.ElementId}.OrderBy(id=>id)));
+                        Check("no_3d_no_view_created_or_model_modified",viewCount,ViewCount(app.ActiveUIDocument.Document),ViewCount(app.ActiveUIDocument.Document)==viewCount&&app.ActiveUIDocument.Document.IsModified==modifiedBeforeNavigation&&app.ActiveUIDocument.ActiveView.Id.GetIdValue()==planView);
                         Finish(app);break;
                 }
                 step++;
             }
             catch(Exception ex) { Check("runtime_workflow_exception","No exception",ex.ToString(),false); Finish(app); }
         }
+        private static int ViewCount(Document document) => new FilteredElementCollector(document).OfClass(typeof(View)).GetElementCount();
         private void Finish(UIApplication app)
         {
             complete=true;timer.Stop();
@@ -162,7 +224,7 @@ namespace RevitMCP.Core
             catch(Exception ex) { Check("fixture_save_before_exit","success",ex.Message,false); }
             string hash;
             using(var sha=SHA256.Create())using(var stream=File.OpenRead(Assembly.GetExecutingAssembly().Location))hash=BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","");
-            var report=new {GateC3=assertions.All(a=>a.Passed)&&assertions.Count>=25?"PASS":"FAIL",BuildHash=hash,FixtureVersion=CoordinationSelfTest.FixtureVersion,Timestamp=DateTimeOffset.UtcNow,Passed=assertions.Count(a=>a.Passed),Failed=assertions.Count(a=>!a.Passed),Assertions=assertions};
+            var report=new {GateC3=assertions.All(a=>a.Passed)&&assertions.Count>=45?"PASS":"FAIL",BuildHash=hash,FixtureVersion=CoordinationSelfTest.FixtureVersion,NavigationFixtureVersion="navigation-1",Timestamp=DateTimeOffset.UtcNow,Passed=assertions.Count(a=>a.Passed),Failed=assertions.Count(a=>!a.Passed),Assertions=assertions};
             File.WriteAllText(Path.Combine(root,"workflow-runtime.json"),JsonConvert.SerializeObject(report,Formatting.Indented));
             File.WriteAllText(Path.Combine(root,"workflow-runtime.md"),"# Native Runtime Workflow\n\nGate C3: "+report.GateC3+"\n\n"+string.Join("\n",assertions.Select(a=>$"- {(a.Passed?"PASS":"FAIL")} {a.TestName}: expected {a.Expected}; actual {a.Actual}")));
             var exit=RevitCommandId.LookupPostableCommandId(PostableCommand.ExitRevit);if(app.CanPostCommand(exit))app.PostCommand(exit);
