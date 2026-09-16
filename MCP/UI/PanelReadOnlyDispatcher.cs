@@ -13,7 +13,8 @@ namespace RevitMCP.UI
         LevelConstraintAudit,
         LevelConstraintHighlight,
         LevelConstraintPrevious,
-        LevelConstraintNext
+        LevelConstraintNext,
+        CoordinationScan
     }
 
     internal sealed class PanelReadOnlyDispatcher : IExternalEventHandler

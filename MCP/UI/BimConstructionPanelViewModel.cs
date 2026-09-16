@@ -22,6 +22,8 @@ namespace RevitMCP.UI
             TypeInventory = new TypeInventoryViewModel(_dispatcher, new TypeInventoryService());
             LevelConstraintAudit = new LevelConstraintAuditViewModel(
                 _dispatcher, new LevelConstraintAuditService());
+            Clashes = new CoordinationViewModel(_dispatcher, false);
+            Openings = new CoordinationViewModel(_dispatcher, true);
             _dispatcher.BusyChanged += (_, __) =>
             {
                 IsRefreshing = _dispatcher.IsBusy;
@@ -35,6 +37,8 @@ namespace RevitMCP.UI
         public ICommand RefreshCommand { get; }
         public TypeInventoryViewModel TypeInventory { get; }
         public LevelConstraintAuditViewModel LevelConstraintAudit { get; }
+        public CoordinationViewModel Clashes { get; }
+        public CoordinationViewModel Openings { get; }
 
         public ModelSummaryResult Result
         {

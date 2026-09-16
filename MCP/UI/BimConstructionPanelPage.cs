@@ -38,6 +38,20 @@ namespace RevitMCP.UI
             tabs.Items.Add(new TabItem { Header = "模型摘要", Content = BuildModelSummaryContent() });
             tabs.Items.Add(new TabItem { Header = "族群／類型檢查", Content = BuildTypeInventoryContent() });
             tabs.Items.Add(new TabItem { Header = "樓層／約束檢查", Content = BuildLevelConstraintAuditContent() });
+            tabs.Items.Add(new TabItem { Header = "施工協調", Content = BuildCoordinationContent() });
+            return tabs;
+        }
+
+        private UIElement BuildCoordinationContent()
+        {
+            var tabs = new TabControl();
+            foreach (var workflow in WorkflowRegistry.Definitions)
+            {
+                if (!workflow.Enabled) continue;
+                var panel = new DetectReviewWorkflowControl(workflow);
+                panel.SetBinding(DataContextProperty, new WpfBinding(workflow.Id == "clashes" ? "Clashes" : "Openings"));
+                tabs.Items.Add(new TabItem { Header = workflow.Title, Content = panel });
+            }
             return tabs;
         }
 

@@ -124,7 +124,7 @@ namespace RevitMCP.Core
                         try
                         {
                             // 使用 Solid.IntersectWithCurve 取得穿透線段
-                            var solidCurveIntersection = solid.IntersectWithCurve(mepCurve, new SolidCurveIntersectionOptions());
+                            var solidCurveIntersection = IntersectCenterline(solid, mepCurve);
                             if (solidCurveIntersection == null || solidCurveIntersection.SegmentCount == 0)
                                 continue;
 
@@ -586,7 +586,7 @@ namespace RevitMCP.Core
         /// <summary>
         /// 取得元素中心線（經 Transform 後）
         /// </summary>
-        private Curve GetElementCurve(Element element, Transform transform)
+        internal static Curve GetElementCurve(Element element, Transform transform)
         {
             var location = element.Location;
             if (location is LocationCurve locCurve)
@@ -599,7 +599,7 @@ namespace RevitMCP.Core
         /// <summary>
         /// 取得元素的轉換後 BoundingBox
         /// </summary>
-        private BoundingBoxXYZ GetTransformedBBox(Element element, Transform transform)
+        internal static BoundingBoxXYZ GetTransformedBBox(Element element, Transform transform)
         {
             var bbox = element.get_BoundingBox(null);
             if (bbox == null) return null;
@@ -617,7 +617,7 @@ namespace RevitMCP.Core
                 new XYZ(bbox.Max.X, bbox.Max.Y, bbox.Max.Z),
             };
 
-            var transformed = corners.Select(c => transform.OfPoint(c)).ToArray();
+            var transformed = corners.Select(c => transform.OfPoint(bbox.Transform.OfPoint(c))).ToArray();
             var result = new BoundingBoxXYZ
             {
                 Min = new XYZ(
@@ -635,7 +635,7 @@ namespace RevitMCP.Core
         /// <summary>
         /// BoundingBox 相交測試
         /// </summary>
-        private bool BBoxIntersects(BoundingBoxXYZ a, BoundingBoxXYZ b)
+        internal static bool BBoxIntersects(BoundingBoxXYZ a, BoundingBoxXYZ b)
         {
             return a.Min.X <= b.Max.X && a.Max.X >= b.Min.X
                 && a.Min.Y <= b.Max.Y && a.Max.Y >= b.Min.Y
@@ -645,7 +645,13 @@ namespace RevitMCP.Core
         /// <summary>
         /// 取得元素的所有 Solid（經 Transform）
         /// </summary>
-        private List<Solid> GetElementSolids(Element element, Transform transform)
+        internal static SolidCurveIntersection IntersectCenterline(Solid solid, Curve curve)
+        {
+            using (var options = new SolidCurveIntersectionOptions())
+                return solid.IntersectWithCurve(curve, options);
+        }
+
+        internal static List<Solid> GetElementSolids(Element element, Transform transform)
         {
             var solids = new List<Solid>();
             try
