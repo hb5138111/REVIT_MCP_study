@@ -66,3 +66,7 @@
 3. 提 PR，格式參考現有檔案
 
 詳見 `CONTRIBUTING.md` 和 `docs/architecture-v2-module-system.md`
+
+## Native 基地／土方
+
+[site-terrain-earthwork.md](site-terrain-earthwork.md)：CSV/TXT 測量點、明確座標基準、確認後 Toposolid 建立、開挖與 TIN 土方稽核；由 Native typed workflow 使用，無新增 MCP Tool。

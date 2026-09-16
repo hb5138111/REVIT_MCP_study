@@ -36,7 +36,7 @@ These counts must be derived from source, not copied by memory.
 | Item | Current Count | Source of Truth |
 |---|---:|---|
 | Runtime MCP tools | 192 | `registerRevitTools()` from `MCP-Server/src/tools/index.ts` |
-| Domain SOP files | 83 | `domain/*.md` except `domain/README.md`, plus `domain/references/*.md` |
+| Domain SOP files | 84 | `domain/*.md` except `domain/README.md`, plus `domain/references/*.md` |
 | Claude skills | 61 | `.claude/skills/*/SKILL.md` |
 
 When these numbers change, update `CLAUDE.md`, `README.md`, `README.zh-TW.md`, `docs/DOCUMENT_AUDIENCE_INVENTORY.md`, and any public site copy that makes grand-total claims. Then run `scripts/verify-qaqc.ps1 -SkipBuild -SkipDeploy`.
@@ -277,6 +277,7 @@ Read the matching file before applying a workflow or calculation.
 | curtain wall, panel pattern, curtain panel | `domain/curtain-wall-pattern.md` |
 | daylight, daylight area, natural lighting | `domain/daylight-area-check.md` |
 | dependent view, crop, grid crop, view split | `domain/dependent-view-crop-workflow.md` |
+| survey, terrain, Toposolid, earthwork, excavation, 基地, 地形, 土方, shared coordinates | `domain/site-terrain-earthwork.md` |
 | dwg, cad, 柱匯入, 圖層建柱, 批次建柱, column from dwg, 柱號對應, 柱名稱對應, textLayerName | `domain/dwg-column-import.md` |
 | dwg, cad, 樑翻模, 圖層建樑, 批次建樑, beam from dwg, 大樑, 次樑, 地樑, create_beams_from_dwg | `domain/dwg-beam-import.md` |
 | beam penetration, sleeve, 穿梁套管, 套管檢核, RC 梁開孔, 開孔, 穿梁 | `domain/beam-penetration-base.md` |
