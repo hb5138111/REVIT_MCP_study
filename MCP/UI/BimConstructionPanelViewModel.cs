@@ -33,7 +33,7 @@ namespace RevitMCP.UI
             application.ControlledApplication.DocumentChanged += (_, e) => Coordination.DocumentChanged(Coordination.DocumentIdentity, true);
             application.ControlledApplication.DocumentClosed += (_, e) => Coordination.DocumentChanged("", true);
 #if REVIT2026
-            application.ControlledApplication.DocumentChanged += (_, e) => { siteHost.ModelChanged(); Site.DocumentChanged(DocumentSessionIdentity.GetDocumentIdentity(e.GetDocument()), true); };
+            application.ControlledApplication.DocumentChanged += (_, e) => { var identity=DocumentSessionIdentity.GetDocumentIdentity(e.GetDocument()); if(Site.Context?.DocumentIdentity==identity){siteHost.ModelChanged(); Site.DocumentChanged(identity, true);} };
             application.ControlledApplication.DocumentClosed += (_, e) => { siteHost.ModelChanged(); Site.DocumentChanged("", true); };
 #endif
         }

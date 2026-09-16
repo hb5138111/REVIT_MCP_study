@@ -30,6 +30,20 @@ namespace RevitMCP.Core
             var ids = new List<ElementId>();
             if (mep) ids.Add(mepElement.Id);
             if (host) ids.Add(hostElement.Id);
+            return LocateResolved(ui,row,ids,session,keepSession);
+        }
+        public CoordinationNavigationResult LocateElement(UIDocument ui,ElementId id,CoordinationNavigationSession session)
+        {
+            var element=ui.Document.GetElement(id)??throw new InvalidOperationException("地形已不存在，請重新選取。");
+            var bounds=element.get_BoundingBox(null)??throw new InvalidOperationException("元素沒有可定位範圍。");
+            var center=bounds.Transform.OfPoint((bounds.Min+bounds.Max)*.5);
+            var row=new CoordinationRow{Xmm=center.X*304.8,Ymm=center.Y*304.8,Zmm=center.Z*304.8,IntersectionLengthMm=bounds.Min.DistanceTo(bounds.Max)*304.8};
+            var result=LocateResolved(ui,row,new List<ElementId>{id},session,true);
+            result.Message=result.Message.Replace("交點","地形中心");return result;
+        }
+        private CoordinationNavigationResult LocateResolved(UIDocument ui,CoordinationRow row,List<ElementId> ids,CoordinationNavigationSession session,bool keepSession)
+        {
+            var document=ui.Document;
             ids = ids.Distinct().ToList();
             long? target = Resolve(ui, session, keepSession);
             if (!target.HasValue)

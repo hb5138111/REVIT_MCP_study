@@ -38,6 +38,34 @@ namespace RevitMCP.UI
         public string GetName()=>"BIM Site Confirmed Write Dispatcher";
         internal sealed class Context : ISiteContext
         {
+            public CadTerrainAnalysis AnalyzeCad(CadTerrainRequest request)=>CadTerrainService.Analyze(document,request);
+            public SitePoint PickControlPoint()=>CoordinateTransformService.Metres((ui??throw new InvalidOperationException("需要可操作的模型視窗。")).Selection.PickPoint("選取控制點的模型位置"));
+            public string Locate(long id)=>new CoordinationNavigationService().LocateElement(ui??throw new InvalidOperationException("需要可操作的模型視窗。"),new ElementId(id),new RevitMCP.Models.CoordinationNavigationSession()).Message;
+            public System.Collections.Generic.IReadOnlyList<SitePoint> SelectedBoundary()
+            {
+                var ids=ui?.Selection.GetElementIds()??throw new InvalidOperationException("請選取樓板、地形或閉合模型線。");
+                var elements=ids.Select(document.GetElement).ToArray();
+                System.Collections.Generic.IReadOnlyList<SitePoint> loop;
+                if(elements.Length==1&&elements[0] is Floor floor&&document.GetElement(floor.SketchId) is Sketch sketch)
+                {
+                    if(sketch.Profile.Size!=1)throw new ArgumentException("含孔洞或多重邊界的樓板，第一版不自動選擇輪廓。");
+                    loop=ReadLoop(sketch.Profile.get_Item(0).Cast<Curve>().ToArray());
+                }
+                else if(elements.Length>=3&&elements.All(e=>e is ModelCurve))loop=ReadLoop(elements.Cast<ModelCurve>().Select(e=>e.GeometryCurve).ToArray());
+                else throw new ArgumentException("請選取一個無孔洞樓板，或至少三條閉合直線模型線；不使用 bounding box 當邊界。");
+                if(!CadTerrainAnalysis.ValidBoundary(loop))throw new ArgumentException("邊界必須平面、閉合且為凸多邊形；不自動近似。");return loop;
+            }
+            private static System.Collections.Generic.IReadOnlyList<SitePoint> ReadLoop(Curve[] curves)
+            {
+                if(curves.Any(c=>c is not Line||!c.IsBound))throw new ArgumentException("第一版僅支援直線邊界。");
+                var remaining=curves.ToList();var points=new System.Collections.Generic.List<XYZ>{remaining[0].GetEndPoint(0),remaining[0].GetEndPoint(1)};remaining.RemoveAt(0);
+                while(remaining.Count>0)
+                {
+                    var candidates=remaining.Where(c=>c.GetEndPoint(0).IsAlmostEqualTo(points[^1])||c.GetEndPoint(1).IsAlmostEqualTo(points[^1])).ToArray();
+                    if(candidates.Length!=1)throw new ArgumentException("邊界斷開或分岔。");var next=candidates[0];points.Add(next.GetEndPoint(next.GetEndPoint(0).IsAlmostEqualTo(points[^1])?1:0));remaining.Remove(next);
+                }
+                if(!points[0].IsAlmostEqualTo(points[^1]))throw new ArgumentException("邊界未閉合。");return CadTerrainAnalysis.OpenLoop(points.Select(CoordinateTransformService.Metres).ToArray());
+            }
             private readonly Document document;
             private readonly string? reportRoot;
             private readonly UIDocument? ui;
@@ -47,15 +75,19 @@ namespace RevitMCP.UI
                 var ids=ui?.Selection.GetElementIds();
                 if(ids==null||ids.Count!=1)throw new InvalidOperationException("請在 Revit 選取一個 host 元素；不接受 Link instance。");
                 var element=document.GetElement(ids.Single());
-                if(terrain?element is not Toposolid:element is not Floor && element is not RoofBase && element is not Toposolid)throw new ArgumentException("選取類別不符合 Terrain/Cutter。");
+                if(terrain?element is not Toposolid:element is not Floor && element is not RoofBase && element is not Toposolid)throw new ArgumentException(terrain?"請選取本模型的地形實體。":"開挖構件僅接受樓板、屋頂或地形；不接受連結模型。");
                 var box=element.get_BoundingBox(null)??throw new InvalidOperationException("選取元素沒有範圍。");
                 var min=CoordinateTransformService.Metres(box.Min);var max=CoordinateTransformService.Metres(box.Max);
-                return new(element.Id.GetIdValue(),$"{element.Category.Name} / {element.Name} / ID {element.Id.GetIdValue()}\nInternal bounds (m): {min} → {max}");
+                return new(element.Id.GetIdValue(),$"{element.Category.Name} / {element.Name}");
             }
             public SiteContextSnapshot Snapshot()
             {
                 var c=CoordinateTransformService.Read(document);
-                return new(DocumentSessionIdentity.GetDocumentIdentity(document),c.SurveyToInternal,JsonConvert.SerializeObject(c,Formatting.Indented),RevitTerrainService.Types(document).Select(t=>new SiteChoice(t.Id,t.Name)).ToArray(),RevitTerrainService.Levels(document).Select(t=>new SiteChoice(t.Id,t.Name)).ToArray());
+                var unit=document.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();double factor=UnitUtils.ConvertToInternalUnits(1,unit)*.3048;
+                string Format(SitePoint p)=>string.Join(" / ",new[]{p.X,p.Y,p.Z}.Select(v=>UnitFormatUtils.Format(document.GetUnits(),SpecTypeId.Length,v/.3048,false)));
+                string evidence=$"目前位置：{document.ActiveProjectLocation.Name}\n內部原點：{Format(c.InternalOrigin)}\n專案基準點：{Format(c.ProjectBasePoint)}\n測量點：{Format(c.SurveyPoint)}\n真北旋轉：{c.TrueNorthRotation*180/Math.PI:F4}°\n座標正反向已與 ProjectPosition 驗證。";
+                string symbol=unit==UnitTypeId.Millimeters?"mm":unit==UnitTypeId.Meters?"m":unit==UnitTypeId.Centimeters?"cm":unit==UnitTypeId.Feet?"ft":LabelUtils.GetLabelForUnit(unit);
+                return new(DocumentSessionIdentity.GetDocumentIdentity(document),c.SurveyToInternal,evidence,RevitTerrainService.Types(document).Select(t=>new SiteChoice(t.Id,t.Name)).ToArray(),RevitTerrainService.Levels(document).Select(t=>new SiteChoice(t.Id,t.Name)).ToArray(),factor,symbol);
             }
             public SiteCreateOutcome Create(SiteCreateRequest r,bool confirmed)
             {
@@ -69,7 +101,9 @@ namespace RevitMCP.UI
             {
                 var r=EarthworkEngine.Calculate(RevitTerrainService.Surface(document,terrain),boundary,elevation,tolerance);r.ExistingTerrainId=terrain;
                 var result=new{Quantity=r,ProjectCut=RevitTerrainService.FormatVolume(document,r.CutVolume),ProjectFill=RevitTerrainService.FormatVolume(document,r.FillVolume),ProjectNet=RevitTerrainService.FormatVolume(document,r.NetVolume)};
-                Save("earthwork-tin",audit,result);return JsonConvert.SerializeObject(result,Formatting.Indented);
+                Save("earthwork-tin",audit,result);
+                string Length(double metres)=>UnitFormatUtils.Format(document.GetUnits(),SpecTypeId.Length,metres/.3048,false);
+                return new SiteEarthworkSummary(UnitFormatUtils.Format(document.GetUnits(),SpecTypeId.Area,r.Area/Math.Pow(.3048,2),false),result.ProjectCut,result.ProjectFill,result.ProjectNet,Length(r.MaxDepth),"頂面三角網裁切積分",document.GetElement(new ElementId(terrain)).Name,Length(elevation),string.Join("；",r.Warnings),r);
             }
             private string Save(string operation,object audit,object result)
             {
