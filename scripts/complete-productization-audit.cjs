@@ -19,6 +19,9 @@ const workflowPassed=workflowRuntime?.GateC3==='PASS'&&workflowRuntime?.Failed==
 const terrainPath=runtime?.Path.replace(/runtime\.json$/,'terrain-runtime.json');
 const terrainRuntime=terrainPath&&fs.existsSync(path.join(root,terrainPath))?JSON.parse(read(terrainPath)):null;
 const terrainPassed=terrainRuntime?.Status==='PASS'&&terrainRuntime?.Failed===0&&terrainRuntime?.BuildSHA256===buildHash;
+const cadPath=runtime?.Path.replace(/runtime\.json$/,'cad-runtime.json');
+const cadRuntime=cadPath&&fs.existsSync(path.join(root,cadPath))?JSON.parse(read(cadPath)):null;
+const cadPassed=cadRuntime?.Status==='PASS'&&cadRuntime?.Failed===0&&cadRuntime?.BuildSHA256===buildHash;
 const review=new Set(['beam-penetration-algorithm','beam-penetration-base','beam-penetration-rc','beam-penetration-sc','beam-penetration-src','sleeve-classification-protocol','corridor-analysis-protocol','daylight-area-check','exterior-wall-opening-check','fire-rating-check','floor-area-review','parking-clearance-check','parking-space-review','smoke-detector-check','smoke-exhaust-review','stair-compliance-check','wall-check','building-code-tw']);
 const settings={
  'GM_parameter-schema':['MaterialSlotAssignment','LicenseValidity','TargetTypes'],
@@ -117,7 +120,7 @@ for(const d of matrix.Domains){
  if(d.DomainId==='site-terrain-earthwork'){
   d.NativeUiStatus='Implemented: v0.5 site step workflow; confirmed writes and read-back';
   d.NativeWorkflowReadOnly=false;
-  d.NativeBackendFiles=['MCP/Core/Site/TerrainEngine.cs','MCP/Core/Site/RevitTerrainService.cs','MCP/UI/SiteTerrainViewModel.cs','MCP/UI/RevitSiteHost.cs'];
+  d.NativeBackendFiles=['MCP/Core/Site/TerrainEngine.cs','MCP/Core/Site/RevitTerrainService.cs','MCP/Core/Site/CadTerrainData.cs','MCP/Core/Site/CadTerrainService.cs','MCP/UI/SiteTerrainViewModel.cs','MCP/UI/SiteTerrainWorkflow.cs','MCP/UI/RevitSiteHost.cs'];
   d.RuntimeCapability='Typed Native C# workflow; no additional MCP interface';
   d.FixtureTestStatus=terrainPassed?'PASS: terrain-1; '+terrainRuntime.Passed+' assertions (explicit supported subset)':'NOT_TESTED: no matching-build TerrainFixture report';
   d.FixtureEvidence=terrainPassed?terrainPath:null;
@@ -130,7 +133,7 @@ const allSource=[...matrix.Inventory,...backend.SourceFiles.map(f=>({...f,Bytes:
 matrix.Inventory=[...new Map(allSource.map(f=>[f.Path,f])).values()].sort((a,b)=>a.Path.localeCompare(b.Path));
 matrix.SchemaVersion=3;
 matrix.NativeFeatures=[
- {Id:'site-terrain-earthwork',Status:terrainPassed?'RUNTIME_VERIFIED':'RELEASE_GATED',RequiredGates:['A','B','C','C2','C3','TerrainLogic','TerrainRuntime'],Limits:['Supported subset only; full Domain remains RULE_READY','Explicit confirmation and read-back required']},
+ {Id:'site-terrain-earthwork',Status:terrainPassed&&cadPassed?'RUNTIME_VERIFIED':'RELEASE_GATED',RequiredGates:['A','B','C','C2','C3','TerrainLogic','TerrainRuntime','CadRuntime'],CadFixtureStatus:cadPassed?'PASS':'NOT_TESTED',Limits:['Supported subset only; full Domain remains RULE_READY','Explicit confirmation and read-back required','CAD temporary import rollback; no inferred elevation text or breaklines']},
  {Id:'model-summary',Status:'RETIRED_NATIVE_UI',Reason:'Removed low-value Native workflow; Domain and runtime tools retained'},
  {Id:'type-inventory',Status:'RETIRED_NATIVE_UI',Reason:'Removed Native inventory and navigation; generic link DTO and identity extracted'},
  {Id:'level-constraint-audit',Status:'RETIRED_NATIVE_UI',Reason:'Removed Native audit; Domain and runtime tools retained'},

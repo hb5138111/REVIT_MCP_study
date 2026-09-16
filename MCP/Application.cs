@@ -33,9 +33,17 @@ namespace RevitMCP
                             bool isolated = app.Documents.Size == 0;
                             try {
 #if REVIT2026
+                                if(string.Equals(Environment.GetEnvironmentVariable("REVIT_MCP_SELFTEST_CAD_ONLY"),"True",StringComparison.OrdinalIgnoreCase))
+                                { Core.Site.CadTerrainSelfTest.Run(app,selfTestDirectory); }
+                                else {
                                 Core.Site.TerrainSelfTest.Run(app, selfTestDirectory);
+                                Core.Site.CadTerrainSelfTest.Run(app, selfTestDirectory);
 #endif
-                                CoordinationSelfTest.Run(app, selfTestDirectory); workflowTest.Start(); }
+                                CoordinationSelfTest.Run(app, selfTestDirectory); workflowTest.Start();
+#if REVIT2026
+                                }
+#endif
+                            }
                             catch (Exception ex)
                             {
                                 System.IO.File.WriteAllText(System.IO.Path.Combine(selfTestDirectory, "startup-error.txt"), ex.ToString());

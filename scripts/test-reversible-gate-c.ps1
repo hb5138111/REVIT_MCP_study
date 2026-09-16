@@ -1,6 +1,6 @@
 # Reversible Gate C only. Never commits or performs a permanent release.
 [CmdletBinding()]
-param([string]$RecoveryDirectory,[string]$ProjectTemplate)
+param([string]$RecoveryDirectory,[string]$ProjectTemplate,[switch]$CadOnly)
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot -Parent
 $base=Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Autodesk\Revit\Addins\2026'
@@ -56,6 +56,7 @@ try {
         SaveReport
         $templateArguments=@()
         if($ProjectTemplate){$templateArguments=@('-ProjectTemplate',$ProjectTemplate)}
+        if($CadOnly){$templateArguments+= '-CadOnly'}
         $launch=& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'run-revit-selftest.ps1') @templateArguments
         if($LASTEXITCODE -ne 0){throw ($launch -join "`n")}
         $line=$launch | Where-Object {$_ -match '^STARTED '} | Select-Object -Last 1
@@ -65,7 +66,12 @@ try {
         $deadline=[DateTime]::UtcNow.AddMinutes(5)
         while((Get-Process -Id $report.ProcessId -ErrorAction SilentlyContinue) -and [DateTime]::UtcNow -lt $deadline){Start-Sleep -Seconds 2}
         $runtime=Join-Path $report.RuntimeDirectory 'runtime.json'
-        if(Test-Path -LiteralPath $runtime){
+        if($CadOnly){
+            $cadResult=Get-Content (Join-Path $report.RuntimeDirectory 'cad-runtime.json') -Raw|ConvertFrom-Json
+            $report.CadDiagnosticStatus=$cadResult.Status
+            if($cadResult.BuildSHA256 -ne $report.BuildSHA256){throw 'CAD diagnostic loaded hash mismatch'}
+        }
+        elseif(Test-Path -LiteralPath $runtime){
             $result=Get-Content -LiteralPath $runtime -Raw | ConvertFrom-Json
             $report.GateC=$result.GateC;$report.Assertions=$result.Assertions;$report.Passed=$result.Passed;$report.Failed=$result.Failed
             if($result.BuildHash -ne $report.BuildSHA256){$report.GateC='FAIL';throw 'Runtime loaded hash mismatch'}

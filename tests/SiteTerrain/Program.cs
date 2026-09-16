@@ -70,6 +70,53 @@ vm.FilePath=input;await vm.ImportAsync();vm.RefreshContext();vm.CoordinateMode="
 vm.Units="mm";Check("ui_units_require_reimport",true,vm.Dataset==null,vm.Dataset==null);
 vm.Units="m";await vm.ImportAsync();vm.RefreshContext();await vm.PreviewAsync();vm.Confirmed=true;host.Delay=true;vm.Create();vm.ToleranceMetres=.03;host.Flush();Check("queued_setting_invalidates",2,host.Context.Writes,host.Context.Writes==2);host.Delay=false;
 vm.UseSelection(true);vm.UseSelection(false);Check("ui_revit_selection",true,new{vm.TerrainId,vm.CutterId},vm.TerrainId==123&&vm.CutterId==456);
+// v0.5.1 source-independent CAD data and interactive workflow regression.
+var cadData=new CadTerrainAnalysis{FileName="fixture.dxf",SHA256=new string('A',64),RollbackVerified=true,Geometry=new CadPrimitive[]{
+ new("SURVEY","Point",new SitePoint[]{new(0,0,2),new(10,0,2),new(10,10,4),new(0,10,4),new(5,5,3)}),
+ new("BOUNDARY","PolyLine",new SitePoint[]{new(0,0,0),new(10,0,0),new(10,10,0),new(0,10,0),new(0,0,0)},true),
+ new("ZERO_Z","Line",new SitePoint[]{new(20,0,0),new(25,0,0)}),new("NOTES","需複核：Text",Array.Empty<SitePoint>())}};
+Check("cad_layer_discovery",4,cadData.Layers.Count,cadData.Layers.Count==4);
+Check("cad_boundary_candidate",1,cadData.Boundaries.Count,cadData.Boundaries.Count==1);
+var selectedData=cadData.Dataset(new[]{"SURVEY"});
+Check("cad_layer_filter",5,selectedData.Points.Count,selectedData.Points.Count==5);
+Check("cad_provenance",TerrainSourceKind.CadFile,selectedData.SourceKind,selectedData.SourceKind==TerrainSourceKind.CadFile&&selectedData.Provenance!=null);
+Check("cad_zero_z_warning",true,cadData.Dataset(new[]{"ZERO_Z"}).Diagnostics.Warnings.Count,cadData.Dataset(new[]{"ZERO_Z"}).Diagnostics.Warnings.Any(w=>w.Code=="CAD_ZERO_Z_REVIEW_REQUIRED"));
+Check("cad_unsupported_review",true,cadData.Dataset(new[]{"NOTES"}).Diagnostics.Warnings.Count,cadData.Dataset(new[]{"NOTES"}).Diagnostics.Warnings.Any(w=>w.Code=="CAD_REVIEW_REQUIRED"));
+var boundaryProvenance=System.Text.Json.JsonSerializer.SerializeToElement(selectedData.Provenance);
+Check("cad_no_auto_boundary",System.Text.Json.JsonValueKind.Null,boundaryProvenance.GetProperty("Boundary").ValueKind,boundaryProvenance.GetProperty("Boundary").ValueKind==System.Text.Json.JsonValueKind.Null);
+Check("boundary_reject_concave",false,CadTerrainAnalysis.ValidBoundary(new SitePoint[]{new(0,0,0),new(10,0,0),new(5,5,0),new(10,10,0),new(0,10,0)}),!CadTerrainAnalysis.ValidBoundary(new SitePoint[]{new(0,0,0),new(10,0,0),new(5,5,0),new(10,10,0),new(0,10,0)}));
+Check("boundary_reject_nonplanar",false,CadTerrainAnalysis.ValidBoundary(new SitePoint[]{new(0,0,0),new(10,0,1),new(0,10,0)}),!CadTerrainAnalysis.ValidBoundary(new SitePoint[]{new(0,0,0),new(10,0,1),new(0,10,0)}));
+Check("boundary_reject_crossing",false,CadTerrainAnalysis.ValidBoundary(new SitePoint[]{new(0,0,0),new(10,10,0),new(0,10,0),new(10,0,0)}),!CadTerrainAnalysis.ValidBoundary(new SitePoint[]{new(0,0,0),new(10,10,0),new(0,10,0),new(10,0,0)}));
+var workflow=new RevitMCP.UI.SiteTerrainViewModel(new TestHost());workflow.FilePath=input;workflow.ReadColumns();
+Check("visual_mapping_columns",3,workflow.Columns.Count,workflow.Columns.Count==3);
+Check("visual_mapping_sample",4,workflow.SampleRows.Count,workflow.SampleRows.Count==4);
+workflow.SetColumn(2,1);Check("mapping_selection",1,workflow.GetColumn(2),workflow.GetColumn(2)==1);workflow.SetColumn(2,2);
+await workflow.ImportAsync();workflow.RefreshContext();await workflow.PreviewAsync();
+Check("default_quality_balanced","平衡",workflow.ReductionMode,workflow.ReductionMode=="平衡");
+workflow.GoToStep(2);Check("step_next",2,workflow.Step,workflow.Step==2);workflow.GoToStep(1);Check("step_back",1,workflow.Step,workflow.Step==1);
+Check("step_complete_source",RevitMCP.UI.SiteStepState.Complete,workflow.StepState(0),workflow.StepState(0)==RevitMCP.UI.SiteStepState.Complete);
+workflow.CutterId=123;Check("cutter_preserves_terrain_preview",4,workflow.PreviewPoints.Count,workflow.PreviewPoints.Count==4);
+workflow.ControlRows.Add(new(){Easting=1,Northing=2,Elevation=3,ModelX=4,ModelY=5,ModelZ=6});workflow.ApplyControlRows();
+Check("control_grid_invalidates",0,workflow.PreviewPoints.Count,workflow.PreviewPoints.Count==0);
+Check("control_grid_serialization",1,RevitMCP.UI.SiteTerrainViewModel.ParseControls(workflow.ControlPoints).Count,RevitMCP.UI.SiteTerrainViewModel.ParseControls(workflow.ControlPoints)[0].Internal==new SitePoint(4,5,6));
+workflow.FilePath="fixture.dxf";Check("source_switch_cad",true,workflow.IsCad,workflow.IsCad&&workflow.Dataset==null&&!workflow.Confirmed);
+workflow.GoToStep(9);Check("step_bounds",1,workflow.Step,workflow.Step==1);
+var cadHost=new TestHost();cadHost.Context.CadData=cadData;cadHost.Context.Shared=new(100,200,300,.3);
+var cadVm=new RevitMCP.UI.SiteTerrainViewModel(cadHost);cadVm.RefreshContext();cadVm.FilePath="fixture.dxf";cadVm.AnalyzeCad();
+Check("cad_ui_layer_table",4,cadVm.CadLayers.Count,cadVm.CadLayers.Count==4);
+cadVm.CadLayers.Single(l=>l.Name=="SURVEY").Selected=true;cadVm.ApplyCadLayers();await cadVm.PreviewAsync();
+Check("cad_no_double_transform",10,cadVm.PreviewPoints.Max(p=>p.X),cadVm.PreviewPoints.Max(p=>p.X)==10&&cadVm.Dataset?.CoordinateBasis==TerrainCoordinateBasis.PositionedModelMetres);
+cadVm.Confirmed=true;cadVm.CadLayers.Single(l=>l.Name=="ZERO_Z").Selected=true;
+Check("cad_layer_invalidates",true,cadVm.Dataset==null,cadVm.Dataset==null&&!cadVm.Confirmed&&cadVm.PreviewPoints.Count==0);
+cadVm.ApplyCadLayers();cadVm.Units="mm";Check("cad_units_require_reanalysis",true,cadVm.CadAnalysis==null,cadVm.CadAnalysis==null&&cadVm.Dataset==null);
+var budget=new CadTerrainBudget();budget.Vertices(CadTerrainBudget.MaxVertices);bool budgetRejected=false;
+try{budget.Vertices(1);}catch(InvalidOperationException e){budgetRejected=e.Message==CadTerrainBudget.Message;}
+Check("cad_vertex_budget",true,budgetRejected,budgetRejected);
+budget=new CadTerrainBudget();for(int i=0;i<CadTerrainBudget.MaxGeometry;i++)budget.Geometry(0);budgetRejected=false;
+try{budget.Geometry(0);}catch(InvalidOperationException){budgetRejected=true;}Check("cad_geometry_budget",true,budgetRejected,budgetRejected);
+budget=new CadTerrainBudget();budgetRejected=false;try{budget.Geometry(CadTerrainBudget.MaxDepth+1);}catch(InvalidOperationException){budgetRejected=true;}Check("cad_depth_budget",true,budgetRejected,budgetRejected);
+Check("boundary_vertex_budget",false,CadTerrainAnalysis.ValidBoundary(Enumerable.Range(0,2001).Select(i=>new SitePoint(Math.Cos(i),Math.Sin(i),0)).ToArray()),!CadTerrainAnalysis.ValidBoundary(Enumerable.Range(0,2001).Select(i=>new SitePoint(Math.Cos(i),Math.Sin(i),0)).ToArray()));
+
 File.WriteAllText(Path.Combine(output,"terrain-logic.json"),JsonSerializer.Serialize(new{Status=failed==0?"PASS":"FAIL",Passed=checks.Count-failed,Failed=failed,Assertions=checks,Benchmarks=benches},new JsonSerializerOptions{WriteIndented=true}));
 Console.WriteLine($"Terrain logic: {checks.Count-failed} PASS / {failed} FAIL");return failed==0?0:1;
 
@@ -83,8 +130,11 @@ sealed class TestHost:RevitMCP.UI.ISiteHost
 sealed class TestContext:RevitMCP.UI.ISiteContext
 {
     public int Writes;
+    public CadTerrainAnalysis? CadData;
+    public SiteTransform Shared=new(0,0,0,0);
+    public CadTerrainAnalysis AnalyzeCad(CadTerrainRequest request)=>CadData??throw new InvalidOperationException("Missing test CAD data");
     public RevitMCP.UI.SiteChoice SelectedElement(bool terrain)=>new(terrain?123:456,"selected host element");
-    public RevitMCP.UI.SiteContextSnapshot Snapshot()=>new("fixture",new(0,0,0,0),"Fixture",new[]{new RevitMCP.UI.SiteChoice(1,"type")},new[]{new RevitMCP.UI.SiteChoice(2,"level")});
+    public RevitMCP.UI.SiteContextSnapshot Snapshot()=>new("fixture",Shared,"Fixture",new[]{new RevitMCP.UI.SiteChoice(1,"type")},new[]{new RevitMCP.UI.SiteChoice(2,"level")});
     public RevitMCP.UI.SiteCreateOutcome Create(RevitMCP.UI.SiteCreateRequest request,bool confirmed){if(!confirmed)throw new Exception("Missing confirmation");Writes++;return new(123,"read-back");}
     public double Excavate(long t,long c,bool execute,bool confirmed,double? expected,object audit){if(execute){if(!confirmed)throw new Exception("Missing confirmation");Writes++;}return 50;}
     public object Calculate(long t,IReadOnlyList<SitePoint>b,double e,double tol,object audit)=>new{Cut=50};

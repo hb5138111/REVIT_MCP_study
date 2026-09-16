@@ -61,6 +61,7 @@ namespace RevitMCP.Core.Site
                 using(var tx=new Transaction(doc,"Disposable cutter"))
                 {
                     tx.Start();var loop=new CurveLoop();for(int i=0;i<boundary.Length;i++)loop.Append(Line.CreateBound(CoordinateTransformService.Feet(boundary[i]),CoordinateTransformService.Feet(boundary[(i+1)%boundary.Length])));
+                    tx.SetFailureHandlingOptions(tx.GetFailureHandlingOptions().SetFailuresPreprocessor(new FixtureOverlapWarning()));
                     cutter=Floor.Create(doc,new[]{loop},floorType.Id,level.Id);cutter.get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).Set(.2/.3048);tx.Commit();
                 }
                 double original=read.Volume;
@@ -108,6 +109,16 @@ namespace RevitMCP.Core.Site
             public FixtureHost(ISiteContext context){this.context=context;}
             public bool Submit(string expected,Action<ISiteContext> work,Action<string> failed)
             {try{if(expected!=""&&expected!=context.Snapshot().DocumentIdentity)throw new InvalidOperationException("Stale fixture document");work(context);}catch(Exception e){failed(e.Message);}return true;}
+        }
+        private sealed class FixtureOverlapWarning : IFailuresPreprocessor
+        {
+            public FailureProcessingResult PreprocessFailures(FailuresAccessor accessor)
+            {
+                foreach(var failure in accessor.GetFailureMessages())
+                    if(failure.GetSeverity()==FailureSeverity.Warning&&failure.GetFailureDefinitionId()==BuiltInFailures.OverlapFailures.ToposolidFloorOverlap)
+                        accessor.DeleteWarning(failure); // This fixture deliberately overlaps a disposable cutter with terrain.
+                return FailureProcessingResult.Continue;
+            }
         }
     }
 }

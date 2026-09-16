@@ -1,9 +1,9 @@
 {
   "SchemaVersion": 2,
-  "Task": "v0.5",
+  "Task": "v0.5.1",
   "Branch": "bim-custom",
   "Status": "READY_FOR_OPTIONAL_UAT",
-  "UpdatedAt": "2026-09-16T06:44:10.302Z",
+  "UpdatedAt": "2026-09-16T08:19:38.092Z",
   "Gates": {
     "A": {
       "Status": "PASS",
@@ -32,12 +32,17 @@
     },
     "TerrainLogic": {
       "Status": "PASS",
-      "Passed": 89,
+      "Passed": 119,
       "Failed": 0
     },
     "TerrainRuntime": {
       "Status": "PASS",
       "Passed": 31,
+      "Failed": 0
+    },
+    "CadRuntime": {
+      "Status": "PASS",
+      "Passed": 47,
       "Failed": 0
     },
     "Build": {
@@ -50,14 +55,14 @@
       "Status": "PASS"
     }
   },
-  "BuildSHA256": "571D1C86435EC680D022AD9BC6040ED1EB17C1221A35BB75DDC9EBE09BCD51E4",
-  "InstalledVersion": "v0.5",
-  "ProductionDeployment": "PASS — FORMAL_V05_RELEASE",
-  "InstalledSHA256": "571D1C86435EC680D022AD9BC6040ED1EB17C1221A35BB75DDC9EBE09BCD51E4",
+  "BuildSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F",
+  "InstalledVersion": "v0.5.1",
+  "ProductionDeployment": "PASS — FORMAL_V051_RELEASE",
+  "InstalledSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F",
   "SourceFingerprints": [
     {
       "Path": "MCP/Application.cs",
-      "Sha256": "2ed1f8aef6856565c709000590978ace404d12b60bd17ed95430ee6fdf6f5f26"
+      "Sha256": "1a997b164cc30e4cb1338f67c5641d7301f0df6e4f89b4e75ef873650447ab4e"
     },
     {
       "Path": "MCP/Commands/MCPCommands.cs",
@@ -337,7 +342,7 @@
     },
     {
       "Path": "MCP/Core/CoordinationNavigationService.cs",
-      "Sha256": "7a0127de67077f58588449a60288dd5bc2d9062777e4c553c800db4c96c8873d"
+      "Sha256": "a2e9b63bfed3056828538f4c21e98ec6638a7f427ad5046224dd10dbb08050f0"
     },
     {
       "Path": "MCP/Core/CoordinationSelfTest.cs",
@@ -412,16 +417,28 @@
       "Sha256": "c05dd90559c8a875c6d5b6e79e5cb3296955ad8d3b363df0b9f79ea7cfaadd88"
     },
     {
+      "Path": "MCP/Core/Site/CadTerrainData.cs",
+      "Sha256": "8c095eeb7e3a30cadcbcb560556d407fae461668772239cb2cd0e7181c57c5e8"
+    },
+    {
+      "Path": "MCP/Core/Site/CadTerrainSelfTest.cs",
+      "Sha256": "46af6fcd6a55456a6d0ef09a4a749adbca4dfa47349b699fae984475ed071b0b"
+    },
+    {
+      "Path": "MCP/Core/Site/CadTerrainService.cs",
+      "Sha256": "1801a0aa6d65788a243268f0a0eae081f0dfefcb0d1af930256a64a977df7ce2"
+    },
+    {
       "Path": "MCP/Core/Site/RevitTerrainService.cs",
       "Sha256": "1970be3fc8b519e17f01c289aa6ef863befac9f5f57c0a21e8674ec09b96521f"
     },
     {
       "Path": "MCP/Core/Site/TerrainEngine.cs",
-      "Sha256": "e9d056406a6dda1b2f2b52e1055aa47a608cc552a480bf675e863f2de2cdc48c"
+      "Sha256": "3f5be36629a5edef353c3a7a3d251e44ab7482005067f04fce5eca7faaaf941f"
     },
     {
       "Path": "MCP/Core/Site/TerrainSelfTest.cs",
-      "Sha256": "9a9381884f98c07e0d774bb44832adcff5e4d2f6eb96f7e3eae4233efea436f1"
+      "Sha256": "f36129a42a334e6069d590fe0d4d1c31c1d818bb58ca8b808c2a9d1c5ab3ef8d"
     },
     {
       "Path": "MCP/Core/SocketService.cs",
@@ -461,7 +478,7 @@
     },
     {
       "Path": "MCP/UI/BimConstructionPanelViewModel.cs",
-      "Sha256": "d529e274cac2c80b41529d0b95cf7be80078938149120c4ec068db36697f9798"
+      "Sha256": "0283136e9d1403b87ab071fc41963b6dd4ad9ba4cc85920101dee849532a3cd1"
     },
     {
       "Path": "MCP/UI/CoordinationViewModel.cs",
@@ -481,22 +498,26 @@
     },
     {
       "Path": "MCP/UI/RevitSiteHost.cs",
-      "Sha256": "b5589b6cfe990408557d89ee86b363f832624616f4c6ba296e026de7c8c5598a"
+      "Sha256": "9b109ca688be59b839f07d6cc54ec166ef27becbfd7760f5e4a310c248d638f7"
     },
     {
       "Path": "MCP/UI/SiteTerrainControl.cs",
-      "Sha256": "ec16e379f8f717630ac5c7c68808f8db2dbd57929491cd0c5a3b51cc6b9e51a8"
+      "Sha256": "5101feb8f41f6edcfd81b38a1bf67cd3e700e4c692f1fbd106319c0574262fff"
     },
     {
       "Path": "MCP/UI/SiteTerrainViewModel.cs",
-      "Sha256": "67cf17fcb50cd487e9e141a21e41da08618aec066d3f3cf0d2c8c9703e3c4112"
+      "Sha256": "6cc96544f3bb5aaabae8bb894180886d758c8e93ba4f35d85c7a1e3f17980122"
+    },
+    {
+      "Path": "MCP/UI/SiteTerrainWorkflow.cs",
+      "Sha256": "1162eee1851effde801f5fb5346456e9b790dc276b615f7611b233eb6270d1d8"
     }
   ],
   "FinalCommit": {
     "Value": "SELF_COMMIT",
     "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
-    "LiteralReceipt": "test-artifacts/v05/final.json"
+    "LiteralReceipt": "test-artifacts/v051/final.json"
   },
   "NextAction": "Optional UAT only; stop.",
-  "Report": "docs/productization/v05-report.json"
+  "Report": "docs/productization/v051-report.json"
 }

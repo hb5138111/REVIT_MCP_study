@@ -1,0 +1,1411 @@
+{
+  "Version": "v0.5.1",
+  "Task": "智慧基地地形／土方中心 — CAD Terrain + UX Refinement",
+  "Branch": "bim-custom",
+  "Timestamp": "2026-09-16T08:19:38.092Z",
+  "Status": "READY_FOR_OPTIONAL_UAT",
+  "Gates": {
+    "A": {
+      "Status": "PASS",
+      "Passed": 489,
+      "Failed": 0
+    },
+    "B": {
+      "Status": "PASS",
+      "Passed": 20,
+      "Failed": 0
+    },
+    "C": {
+      "Status": "PASS",
+      "Passed": 20,
+      "Failed": 0
+    },
+    "C2": {
+      "Status": "PASS",
+      "Passed": 65,
+      "Failed": 0
+    },
+    "C3": {
+      "Status": "PASS",
+      "Passed": 48,
+      "Failed": 0
+    },
+    "TerrainLogic": {
+      "Status": "PASS",
+      "Passed": 119,
+      "Failed": 0
+    },
+    "TerrainRuntime": {
+      "Status": "PASS",
+      "Passed": 31,
+      "Failed": 0
+    },
+    "CadRuntime": {
+      "Status": "PASS",
+      "Passed": 47,
+      "Failed": 0
+    },
+    "Build": {
+      "Status": "PASS"
+    },
+    "QAQC": {
+      "Status": "PASS"
+    },
+    "Rollback": {
+      "Status": "PASS"
+    }
+  },
+  "BuildSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F",
+  "SourceFingerprintVerified": true,
+  "FormalDeployment": {
+    "Kind": "FORMAL_V051_RELEASE",
+    "Status": "PASS",
+    "BuildSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F",
+    "Timestamp": "2026-09-16T08:16:53.6509507+00:00",
+    "Backup": "test-artifacts\\reversible-36fa6237382f438db82b44c015306215",
+    "Rollback": "NOT_NEEDED",
+    "DeployedSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F",
+    "HashMatch": true,
+    "RequiredDllSet": "PASS",
+    "RequiredDllCount": 8,
+    "Files": [
+      {
+        "File": "ClosedXML.dll",
+        "BuildSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C",
+        "DeployedSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C"
+      },
+      {
+        "File": "DocumentFormat.OpenXml.dll",
+        "BuildSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974",
+        "DeployedSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974"
+      },
+      {
+        "File": "ExcelNumberFormat.dll",
+        "BuildSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507",
+        "DeployedSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507"
+      },
+      {
+        "File": "Irony.dll",
+        "BuildSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD",
+        "DeployedSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD"
+      },
+      {
+        "File": "Newtonsoft.Json.dll",
+        "BuildSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07",
+        "DeployedSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07"
+      },
+      {
+        "File": "RevitMCP.dll",
+        "BuildSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F",
+        "DeployedSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F"
+      },
+      {
+        "File": "SixLabors.Fonts.dll",
+        "BuildSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F",
+        "DeployedSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F"
+      },
+      {
+        "File": "XLParser.dll",
+        "BuildSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C",
+        "DeployedSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C"
+      }
+    ],
+    "ManifestCount": 1,
+    "Assembly": "RevitMCP\\RevitMCP.dll",
+    "FullClassName": "RevitMCP.Application"
+  },
+  "Fixtures": {
+    "Terrain": "terrain-1",
+    "Coordination": "coordination-2"
+  },
+  "RuntimeEvidence": "test-artifacts/revit-selftest-6f89b7e4d63e4697a0050ee3f342efa3",
+  "Assertions": {
+    "CAD": [
+      {
+        "TestName": "simple-points.dxf_rollback",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_layers",
+        "Expected": [
+          "SURVEY",
+          "BOUNDARY",
+          "ZERO_Z"
+        ],
+        "Actual": [
+          "0",
+          "BLOCK_POINTS",
+          "BOUNDARY",
+          "CONTOURS",
+          "NOTES",
+          "SURVEY",
+          "ZERO_Z"
+        ],
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_point_count",
+        "Expected": 5,
+        "Actual": 5,
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_max_x",
+        "Expected": 10,
+        "Actual": 10,
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_min_z",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_max_z",
+        "Expected": 4,
+        "Actual": 4,
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_block_transform",
+        "Expected": 0,
+        "Actual": 7.32410687763558e-15,
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_provenance",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_boundary",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "TestName": "simple-points.dxf_zero_z_review",
+        "Expected": true,
+        "Actual": [
+          {
+            "Line": 0,
+            "Code": "CAD_ZERO_Z_REVIEW_REQUIRED",
+            "Message": "CAD 圖層存在高程文字，但幾何沒有可靠 Z 值，第一版不自動配對。請確認零高程是否為實際測量值；文字存在與否無法由幾何 API 完整判定。"
+          }
+        ],
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_rollback",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_layers",
+        "Expected": [
+          "SURVEY",
+          "BOUNDARY",
+          "ZERO_Z"
+        ],
+        "Actual": [
+          "0",
+          "BLOCK_POINTS",
+          "BOUNDARY",
+          "CONTOURS",
+          "NOTES",
+          "SURVEY",
+          "ZERO_Z"
+        ],
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_point_count",
+        "Expected": 5,
+        "Actual": 5,
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_max_x",
+        "Expected": 10,
+        "Actual": 10,
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_min_z",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_max_z",
+        "Expected": 4,
+        "Actual": 4,
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_block_transform",
+        "Expected": 0,
+        "Actual": 7.32410687763558e-15,
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_provenance",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_boundary",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "TestName": "contours-3d.dxf_zero_z_review",
+        "Expected": true,
+        "Actual": [
+          {
+            "Line": 0,
+            "Code": "CAD_ZERO_Z_REVIEW_REQUIRED",
+            "Message": "CAD 圖層存在高程文字，但幾何沒有可靠 Z 值，第一版不自動配對。請確認零高程是否為實際測量值；文字存在與否無法由幾何 API 完整判定。"
+          }
+        ],
+        "Passed": true
+      },
+      {
+        "TestName": "polyline_vertices",
+        "Expected": 6,
+        "Actual": 6,
+        "Passed": true
+      },
+      {
+        "TestName": "cad_ui_preview",
+        "Expected": 5,
+        "Actual": 5,
+        "Passed": true
+      },
+      {
+        "TestName": "cad_four_step_wpf",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "native_step_0",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "TestName": "native_step_1",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "TestName": "native_step_2",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true
+      },
+      {
+        "TestName": "native_step_3",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "TestName": "cad_ui_create_readback",
+        "Expected": true,
+        "Actual": "地形建立及 read-back 完成；JSON／CSV／Markdown 已保存。",
+        "Passed": true
+      },
+      {
+        "TestName": "cad_mm_unit",
+        "Expected": 0.01,
+        "Actual": 0.01,
+        "Passed": true
+      },
+      {
+        "TestName": "origin_with_true_north_x",
+        "Expected": 10,
+        "Actual": 10,
+        "Passed": true
+      },
+      {
+        "TestName": "origin_with_true_north_z",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_zero_source_elevation_review",
+        "Expected": true,
+        "Actual": [
+          {
+            "Line": 0,
+            "Code": "CAD_ZERO_Z_REVIEW_REQUIRED",
+            "Message": "CAD 圖層存在高程文字，但幾何沒有可靠 Z 值，第一版不自動配對。請確認零高程是否為實際測量值；文字存在與否無法由幾何 API 完整判定。"
+          }
+        ],
+        "Passed": true
+      },
+      {
+        "TestName": "shared_true_north_SitePoint { X = 0, Y = 0, Z = 2, Finite = True }",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_round_trip_SitePoint { X = 0, Y = 0, Z = 2, Finite = True }",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_true_north_SitePoint { X = 10, Y = 0, Z = 2, Finite = True }",
+        "Expected": 0,
+        "Actual": 1.4210854715202004e-14,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_round_trip_SitePoint { X = 10, Y = 0, Z = 2, Finite = True }",
+        "Expected": 0,
+        "Actual": 1.7763568394002505e-15,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_true_north_SitePoint { X = 10, Y = 10, Z = 4, Finite = True }",
+        "Expected": 0,
+        "Actual": 7.105427357601002e-15,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_round_trip_SitePoint { X = 10, Y = 10, Z = 4, Finite = True }",
+        "Expected": 0,
+        "Actual": 7.105427357601002e-15,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_true_north_SitePoint { X = 0, Y = 10, Z = 4, Finite = True }",
+        "Expected": 0,
+        "Actual": 2.0097183471152322e-14,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_round_trip_SitePoint { X = 0, Y = 10, Z = 4, Finite = True }",
+        "Expected": 0,
+        "Actual": 5.0242958677880805e-15,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_true_north_SitePoint { X = 5, Y = 5, Z = 3, Finite = True }",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_round_trip_SitePoint { X = 5, Y = 5, Z = 3, Finite = True }",
+        "Expected": 0,
+        "Actual": 6.466036496704424e-15,
+        "Passed": true
+      },
+      {
+        "TestName": "dwg_fixture_export",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "dwg_load_and_rollback",
+        "Expected": true,
+        "Actual": 6,
+        "Passed": true
+      },
+      {
+        "TestName": "dwg_dataset",
+        "Expected": true,
+        "Actual": 8,
+        "Passed": true
+      },
+      {
+        "TestName": "dwg_native_coordinate_preview",
+        "Expected": true,
+        "Actual": "預覽完成；檢查摘要後按建立，於確認視窗核准本次操作。",
+        "Passed": true
+      },
+      {
+        "TestName": "extension_reject_no_import",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      }
+    ],
+    "Terrain": [
+      {
+        "TestName": "shared_direction_easting",
+        "Expected": 100,
+        "Actual": 99.99999999999999,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_direction_northing",
+        "Expected": -30,
+        "Actual": -30,
+        "Passed": true
+      },
+      {
+        "TestName": "shared_vertical_datum",
+        "Expected": 7,
+        "Actual": 6.999999999999999,
+        "Passed": true
+      },
+      {
+        "TestName": "independent_direction_x_17",
+        "Expected": 113.22243186433545,
+        "Actual": 113.22243186433545,
+        "Passed": true
+      },
+      {
+        "TestName": "independent_direction_y_17",
+        "Expected": -18.901923788646684,
+        "Actual": -18.901923788646684,
+        "Passed": true
+      },
+      {
+        "TestName": "round_trip_17",
+        "Expected": 0,
+        "Actual": 8.881784197001252e-16,
+        "Passed": true
+      },
+      {
+        "TestName": "independent_direction_x_-4",
+        "Expected": 86.03589838486225,
+        "Actual": 86.03589838486224,
+        "Passed": true
+      },
+      {
+        "TestName": "independent_direction_y_-4",
+        "Expected": -13.813466520526784,
+        "Actual": -13.813466520526788,
+        "Passed": true
+      },
+      {
+        "TestName": "round_trip_-4",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "TestName": "unconfirmed_create_blocked",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "toposolid_area",
+        "Expected": 100,
+        "Actual": 100.00000000000001,
+        "Passed": true
+      },
+      {
+        "TestName": "toposolid_volume",
+        "Expected": 1000,
+        "Actual": 1000.0000000000001,
+        "Passed": true
+      },
+      {
+        "TestName": "surface_min_z",
+        "Expected": 2,
+        "Actual": 2.0000000152587893,
+        "Passed": true
+      },
+      {
+        "TestName": "surface_max_x",
+        "Expected": 10,
+        "Actual": 10.000000076293945,
+        "Passed": true
+      },
+      {
+        "TestName": "toposolid_type_level",
+        "Expected": true,
+        "Actual": {
+          "TypeId": 210616,
+          "LevelId": 210615
+        },
+        "Passed": true
+      },
+      {
+        "TestName": "runtime_tin_cut",
+        "Expected": 50,
+        "Actual": 50.00000038146973,
+        "Passed": true
+      },
+      {
+        "TestName": "runtime_tin_fill",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "TestName": "revit_excavation_expected",
+        "Expected": 50,
+        "Actual": 50.00000000000024,
+        "Passed": true
+      },
+      {
+        "TestName": "preview_rollback_volume",
+        "Expected": 1000.0000000000001,
+        "Actual": 1000.0000000000001,
+        "Passed": true
+      },
+      {
+        "TestName": "excavation_readback",
+        "Expected": 50,
+        "Actual": 50.00000000000024,
+        "Passed": true
+      },
+      {
+        "TestName": "custom_vs_revit",
+        "Expected": 50.00000038146973,
+        "Actual": 50.00000000000024,
+        "Passed": true
+      },
+      {
+        "TestName": "post_excavation_volume",
+        "Expected": 949.9999999999999,
+        "Actual": 949.9999999999999,
+        "Passed": true
+      },
+      {
+        "TestName": "report_failure_rolls_back",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "TestName": "audit_formats",
+        "Expected": true,
+        "Actual": 6,
+        "Passed": true
+      },
+      {
+        "TestName": "runtime_mixed_cut",
+        "Expected": 15.625,
+        "Actual": 15.625003542900336,
+        "Passed": true
+      },
+      {
+        "TestName": "runtime_mixed_fill",
+        "Expected": 15.625,
+        "Actual": 15.624998183250447,
+        "Passed": true
+      },
+      {
+        "TestName": "native_vm_can_create",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "native_wpf_constructed",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "TestName": "native_vm_create_readback",
+        "Expected": true,
+        "Actual": "地形建立及 read-back 完成；JSON／CSV／Markdown 已保存。",
+        "Passed": true
+      },
+      {
+        "TestName": "native_vm_quantity",
+        "Expected": true,
+        "Actual": "TIN 裁切積分完成；Project Units 結果與報告已保存。",
+        "Passed": true
+      },
+      {
+        "TestName": "stale_terrain_rejected",
+        "Expected": true,
+        "Actual": "Terrain 已刪除或不是 Toposolid。",
+        "Passed": true
+      }
+    ],
+    "PureLogicAndWorkflow": [
+      {
+        "Name": "parser_44_True_m",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "parser_44_True_mm",
+        "Expected": 0.003,
+        "Actual": 0.003,
+        "Passed": true
+      },
+      {
+        "Name": "parser_44_True_ft",
+        "Expected": 0.9144000000000001,
+        "Actual": 0.9144000000000001,
+        "Passed": true
+      },
+      {
+        "Name": "parser_44_False_m",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "parser_44_False_mm",
+        "Expected": 0.003,
+        "Actual": 0.003,
+        "Passed": true
+      },
+      {
+        "Name": "parser_44_False_ft",
+        "Expected": 0.9144000000000001,
+        "Actual": 0.9144000000000001,
+        "Passed": true
+      },
+      {
+        "Name": "parser_59_True_m",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "parser_59_True_mm",
+        "Expected": 0.003,
+        "Actual": 0.003,
+        "Passed": true
+      },
+      {
+        "Name": "parser_59_True_ft",
+        "Expected": 0.9144000000000001,
+        "Actual": 0.9144000000000001,
+        "Passed": true
+      },
+      {
+        "Name": "parser_59_False_m",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "parser_59_False_mm",
+        "Expected": 0.003,
+        "Actual": 0.003,
+        "Passed": true
+      },
+      {
+        "Name": "parser_59_False_ft",
+        "Expected": 0.9144000000000001,
+        "Actual": 0.9144000000000001,
+        "Passed": true
+      },
+      {
+        "Name": "parser_9_True_m",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "parser_9_True_mm",
+        "Expected": 0.003,
+        "Actual": 0.003,
+        "Passed": true
+      },
+      {
+        "Name": "parser_9_True_ft",
+        "Expected": 0.9144000000000001,
+        "Actual": 0.9144000000000001,
+        "Passed": true
+      },
+      {
+        "Name": "parser_9_False_m",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "parser_9_False_mm",
+        "Expected": 0.003,
+        "Actual": 0.003,
+        "Passed": true
+      },
+      {
+        "Name": "parser_9_False_ft",
+        "Expected": 0.9144000000000001,
+        "Actual": 0.9144000000000001,
+        "Passed": true
+      },
+      {
+        "Name": "parser_32_True_m",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "parser_32_True_mm",
+        "Expected": 0.003,
+        "Actual": 0.003,
+        "Passed": true
+      },
+      {
+        "Name": "parser_32_True_ft",
+        "Expected": 0.9144000000000001,
+        "Actual": 0.9144000000000001,
+        "Passed": true
+      },
+      {
+        "Name": "parser_32_False_m",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "parser_32_False_mm",
+        "Expected": 0.003,
+        "Actual": 0.003,
+        "Passed": true
+      },
+      {
+        "Name": "parser_32_False_ft",
+        "Expected": 0.9144000000000001,
+        "Actual": 0.9144000000000001,
+        "Passed": true
+      },
+      {
+        "Name": "qa_counts",
+        "Expected": "9/4/3/2/1",
+        "Actual": "9/4/3/2/1",
+        "Passed": true
+      },
+      {
+        "Name": "outlier",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "isolated",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "bad_mapping",
+        "Expected": "exception",
+        "Actual": "ArgumentException",
+        "Passed": true
+      },
+      {
+        "Name": "alignment_x_2",
+        "Expected": 100,
+        "Actual": 99.99999999999999,
+        "Passed": true
+      },
+      {
+        "Name": "alignment_y_2",
+        "Expected": -30,
+        "Actual": -30,
+        "Passed": true
+      },
+      {
+        "Name": "alignment_z_2",
+        "Expected": 7,
+        "Actual": 7,
+        "Passed": true
+      },
+      {
+        "Name": "rotation_2",
+        "Expected": 0.5235987755982988,
+        "Actual": 0.5235987755982991,
+        "Passed": true
+      },
+      {
+        "Name": "residual_2",
+        "Expected": 0,
+        "Actual": 1.4210854715202004e-14,
+        "Passed": true
+      },
+      {
+        "Name": "alignment_x_3",
+        "Expected": 100,
+        "Actual": 100,
+        "Passed": true
+      },
+      {
+        "Name": "alignment_y_3",
+        "Expected": -30,
+        "Actual": -29.999999999999993,
+        "Passed": true
+      },
+      {
+        "Name": "alignment_z_3",
+        "Expected": 7,
+        "Actual": 7,
+        "Passed": true
+      },
+      {
+        "Name": "rotation_3",
+        "Expected": 0.5235987755982988,
+        "Actual": 0.5235987755982987,
+        "Passed": true
+      },
+      {
+        "Name": "residual_3",
+        "Expected": 0,
+        "Actual": 7.105427357601002e-15,
+        "Passed": true
+      },
+      {
+        "Name": "alignment_x_4",
+        "Expected": 100,
+        "Actual": 99.99999999999999,
+        "Passed": true
+      },
+      {
+        "Name": "alignment_y_4",
+        "Expected": -30,
+        "Actual": -30,
+        "Passed": true
+      },
+      {
+        "Name": "alignment_z_4",
+        "Expected": 7,
+        "Actual": 7,
+        "Passed": true
+      },
+      {
+        "Name": "rotation_4",
+        "Expected": 0.5235987755982988,
+        "Actual": 0.5235987755982988,
+        "Passed": true
+      },
+      {
+        "Name": "residual_4",
+        "Expected": 0,
+        "Actual": 1.4210854715202004e-14,
+        "Passed": true
+      },
+      {
+        "Name": "single_translation",
+        "Expected": 5,
+        "Actual": 5,
+        "Passed": true
+      },
+      {
+        "Name": "round_trip",
+        "Expected": 0,
+        "Actual": 5.0242958677880805e-15,
+        "Passed": true
+      },
+      {
+        "Name": "degenerate",
+        "Expected": "exception",
+        "Actual": "ArgumentException",
+        "Passed": true
+      },
+      {
+        "Name": "scale_fixed_residual",
+        "Expected": true,
+        "Actual": 0.610453496134123,
+        "Passed": true
+      },
+      {
+        "Name": "flat_cut",
+        "Expected": 50,
+        "Actual": 50,
+        "Passed": true
+      },
+      {
+        "Name": "flat_area",
+        "Expected": 25,
+        "Actual": 25,
+        "Passed": true
+      },
+      {
+        "Name": "flat_net",
+        "Expected": -50,
+        "Actual": -50,
+        "Passed": true
+      },
+      {
+        "Name": "slope_cut",
+        "Expected": 62.5,
+        "Actual": 62.5,
+        "Passed": true
+      },
+      {
+        "Name": "average_depth",
+        "Expected": 2.5,
+        "Actual": 2.5,
+        "Passed": true
+      },
+      {
+        "Name": "mixed_cut",
+        "Expected": 15.625,
+        "Actual": 15.624999999999998,
+        "Passed": true
+      },
+      {
+        "Name": "mixed_fill",
+        "Expected": 15.625,
+        "Actual": 15.624999999999998,
+        "Passed": true
+      },
+      {
+        "Name": "mixed_net",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "Name": "winding",
+        "Expected": 62.5,
+        "Actual": 62.5,
+        "Passed": true
+      },
+      {
+        "Name": "missing_coverage",
+        "Expected": "exception",
+        "Actual": "InvalidOperationException",
+        "Passed": true
+      },
+      {
+        "Name": "coverage_independent_of_control_tolerance",
+        "Expected": "exception",
+        "Actual": "InvalidOperationException",
+        "Passed": true
+      },
+      {
+        "Name": "concave_boundary",
+        "Expected": "exception",
+        "Actual": "ArgumentException",
+        "Passed": true
+      },
+      {
+        "Name": "benchmark_count_1000",
+        "Expected": 1000,
+        "Actual": 1000,
+        "Passed": true
+      },
+      {
+        "Name": "reduction_bound_1000",
+        "Expected": "<=.02",
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_1000",
+        "Expected": true,
+        "Actual": 1000,
+        "Passed": true
+      },
+      {
+        "Name": "benchmark_count_10000",
+        "Expected": 10000,
+        "Actual": 10000,
+        "Passed": true
+      },
+      {
+        "Name": "reduction_bound_10000",
+        "Expected": "<=.02",
+        "Actual": 0.009000000000000008,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_10000",
+        "Expected": true,
+        "Actual": 1134,
+        "Passed": true
+      },
+      {
+        "Name": "benchmark_count_20000",
+        "Expected": 20000,
+        "Actual": 20000,
+        "Passed": true
+      },
+      {
+        "Name": "reduction_bound_20000",
+        "Expected": "<=.02",
+        "Actual": 0.009000000000000008,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_20000",
+        "Expected": true,
+        "Actual": 1370,
+        "Passed": true
+      },
+      {
+        "Name": "benchmark_count_50000",
+        "Expected": 50000,
+        "Actual": 50000,
+        "Passed": true
+      },
+      {
+        "Name": "reduction_bound_50000",
+        "Expected": "<=.02",
+        "Actual": 0.009000000000000008,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_50000",
+        "Expected": true,
+        "Actual": 2078,
+        "Passed": true
+      },
+      {
+        "Name": "benchmark_count_100000",
+        "Expected": 100000,
+        "Actual": 100000,
+        "Passed": true
+      },
+      {
+        "Name": "reduction_bound_100000",
+        "Expected": "<=.02",
+        "Actual": 0.009000000000000008,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_100000",
+        "Expected": true,
+        "Actual": 3258,
+        "Passed": true
+      },
+      {
+        "Name": "ui_import",
+        "Expected": 4,
+        "Actual": 4,
+        "Passed": true
+      },
+      {
+        "Name": "ui_context",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "ui_preview",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "ui_unconfirmed_block",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "Name": "ui_setting_invalidates",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true
+      },
+      {
+        "Name": "ui_create_readback",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "ui_excavation_preview",
+        "Expected": 50,
+        "Actual": 50,
+        "Passed": true
+      },
+      {
+        "Name": "ui_excavation_unconfirmed",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "ui_excavation_confirmed",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true
+      },
+      {
+        "Name": "ui_residual_blocks_create",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true
+      },
+      {
+        "Name": "ui_document_invalidates",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "ui_model_change_invalidates",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true
+      },
+      {
+        "Name": "ui_units_require_reimport",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "queued_setting_invalidates",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true
+      },
+      {
+        "Name": "ui_revit_selection",
+        "Expected": true,
+        "Actual": {
+          "TerrainId": 123,
+          "CutterId": 456
+        },
+        "Passed": true
+      },
+      {
+        "Name": "cad_layer_discovery",
+        "Expected": 4,
+        "Actual": 4,
+        "Passed": true
+      },
+      {
+        "Name": "cad_boundary_candidate",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "cad_layer_filter",
+        "Expected": 5,
+        "Actual": 5,
+        "Passed": true
+      },
+      {
+        "Name": "cad_provenance",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "cad_zero_z_warning",
+        "Expected": true,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "cad_unsupported_review",
+        "Expected": true,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "cad_no_auto_boundary",
+        "Expected": 7,
+        "Actual": 7,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_reject_concave",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_reject_nonplanar",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_reject_crossing",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true
+      },
+      {
+        "Name": "visual_mapping_columns",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "visual_mapping_sample",
+        "Expected": 4,
+        "Actual": 4,
+        "Passed": true
+      },
+      {
+        "Name": "mapping_selection",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "default_quality_balanced",
+        "Expected": "平衡",
+        "Actual": "平衡",
+        "Passed": true
+      },
+      {
+        "Name": "step_next",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true
+      },
+      {
+        "Name": "step_back",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "step_complete_source",
+        "Expected": 3,
+        "Actual": 3,
+        "Passed": true
+      },
+      {
+        "Name": "cutter_preserves_terrain_preview",
+        "Expected": 4,
+        "Actual": 4,
+        "Passed": true
+      },
+      {
+        "Name": "control_grid_invalidates",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true
+      },
+      {
+        "Name": "control_grid_serialization",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "source_switch_cad",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "step_bounds",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true
+      },
+      {
+        "Name": "cad_ui_layer_table",
+        "Expected": 4,
+        "Actual": 4,
+        "Passed": true
+      },
+      {
+        "Name": "cad_no_double_transform",
+        "Expected": 10,
+        "Actual": 10,
+        "Passed": true
+      },
+      {
+        "Name": "cad_layer_invalidates",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "cad_units_require_reanalysis",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "cad_vertex_budget",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "cad_geometry_budget",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "cad_depth_budget",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true
+      },
+      {
+        "Name": "boundary_vertex_budget",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true
+      }
+    ]
+  },
+  "Benchmarks": [
+    {
+      "InputCount": 1000,
+      "ParserQAms": 4,
+      "SimplificationMs": 3,
+      "FinalCount": 1000
+    },
+    {
+      "InputCount": 10000,
+      "ParserQAms": 26,
+      "SimplificationMs": 8,
+      "FinalCount": 1134
+    },
+    {
+      "InputCount": 20000,
+      "ParserQAms": 34,
+      "SimplificationMs": 9,
+      "FinalCount": 1370
+    },
+    {
+      "InputCount": 50000,
+      "ParserQAms": 103,
+      "SimplificationMs": 39,
+      "FinalCount": 2078
+    },
+    {
+      "InputCount": 100000,
+      "ParserQAms": 211,
+      "SimplificationMs": 90,
+      "FinalCount": 3258
+    }
+  ],
+  "Limits": [
+    "CSV/TXT and bounded Revit DWG/DXF import; explicit units and coordinate basis",
+    "Point, PolyLine and Line vertices only; no text elevation pairing, AEC/proxy interpretation or unbounded curve sampling",
+    "CAD boundary is a selected convex planar quantity boundary; not a terrain breakline",
+    "Points-only convex hull; no legal site boundary inference",
+    "Coded points retained; no inferred breakline connectivity",
+    "Simplification error is conservative cell elevation envelope, not certified final-TIN interpolation error",
+    "20k-point tool guard requires simplification or explicit override",
+    "Boundary quantity supports convex polygons and planar target elevation only",
+    "Existing/proposed surfaces experimental and disabled for formal quantities",
+    "No host/link movement, ProjectLocation writes, phase changes or Revit.ini edits",
+    "Optional visual UAT remains; passing fixtures do not certify arbitrary survey/model conditions"
+  ],
+  "NextRecommendedBatch": "Optional UAT only; stop.",
+  "FinalCommit": {
+    "Value": "SELF_COMMIT",
+    "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
+    "LiteralReceipt": "test-artifacts/v051/final.json"
+  }
+}
