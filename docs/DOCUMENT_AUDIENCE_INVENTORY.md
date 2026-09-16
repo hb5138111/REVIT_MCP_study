@@ -48,6 +48,7 @@ These must remain understandable by both sides.
 | `domain/README.md` | domain catalog | Bilingual preferred |
 | `log/README.md` | logging policy | Bilingual acceptable |
 | `log/YYYY-MM.md` | append-only history | Preserve existing entries; new entries should be UTF-8 readable |
+| `docs/productization/*.md`, `docs/productization/*.json` | development audit and release evidence | Traditional Chinese explanations with typed English identifiers; distinguish source inventory from runtime verification |
 
 ## Human-Facing Documents
 

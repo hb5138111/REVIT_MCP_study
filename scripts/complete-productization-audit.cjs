@@ -1,0 +1,119 @@
+// Complete the development-time mapping with method-level evidence and explicit gaps.
+const fs=require('fs'),path=require('path'),crypto=require('crypto');
+const root=path.resolve(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const hash=p=>crypto.createHash('sha256').update(fs.readFileSync(path.join(root,p))).digest('hex');
+const matrix=JSON.parse(read('docs/productization/matrix.json'));
+const backend=JSON.parse(read('test-artifacts/source-audit/backend.json'));
+if(backend.Diagnostics.length)throw Error('Source graph has compilation errors');
+for(const f of backend.SourceFiles)if(hash(f.Path)!==f.Sha256)throw Error('Stale source graph: '+f.Path);
+const commandMap=new Map(backend.Commands.map(c=>[c.Command,c]));
+const names=new Set(matrix.RuntimeTools.map(t=>t.Name));
+const buildPath='MCP/bin/Release.R26/RevitMCP.dll';
+const buildHash=fs.existsSync(path.join(root,buildPath))?hash(buildPath).toUpperCase():null;
+const runtimeCandidates=fs.existsSync(path.join(root,'test-artifacts'))?fs.readdirSync(path.join(root,'test-artifacts')).filter(n=>n.startsWith('revit-selftest-')).map(n=>'test-artifacts/'+n+'/runtime.json').filter(p=>fs.existsSync(path.join(root,p))).map(p=>({Path:p,Report:JSON.parse(read(p))})):[];
+const runtime=runtimeCandidates.filter(x=>x.Report.GateC==='PASS'&&x.Report.Failed===0&&x.Report.BuildHash===buildHash).sort((a,b)=>b.Report.Timestamp.localeCompare(a.Report.Timestamp))[0];
+const review=new Set(['beam-penetration-algorithm','beam-penetration-base','beam-penetration-rc','beam-penetration-sc','beam-penetration-src','sleeve-classification-protocol','corridor-analysis-protocol','daylight-area-check','exterior-wall-opening-check','fire-rating-check','floor-area-review','parking-clearance-check','parking-space-review','smoke-detector-check','smoke-exhaust-review','stair-compliance-check','wall-check','building-code-tw']);
+const settings={
+ 'GM_parameter-schema':['MaterialSlotAssignment','LicenseValidity','TargetTypes'],
+ 'GM_rfa-family-injection':['BaseFamilyType','WritableBackupFolder','VerifiedCatalogData'],
+ 'cad-block-point-placement':['BlockToFamilyTypeMapping','LevelMapping','PlacementMode'],
+ 'dedup-detail-elements-workflow':['TargetView','DuplicateEquivalence','PreviewApproval'],
+ 'dependent-view-crop-workflow':['ParentView','GridScope','CropOffset','SheetTemplate'],
+ 'door-window-legend-workflow':['SeedElement','TargetLegend','DimensionType'],
+ 'dwg-beam-import':['CadLayers','BeamFamilyTypeMapping','LevelOffsets'],
+ 'dwg-column-import':['CadLayers','ColumnFamilyTypeMapping','LevelOffsets'],
+ 'family-inventory-cleanup':['TypeEquivalenceSignature','CascadeDisclosure','ReplacementMapping'],
+ 'floor-slope-analysis':['DesignSlopeThreshold','TargetFloors'],
+ 'ifc-structural-native-sync':['LinkInstance','FamilyMapping','LevelMapping','ReplacementPolicy'],
+ 'ifc-structural-sync':['LinkInstance','FamilyMapping','LevelMapping','ReplacementPolicy'],
+ 'beam-slab-alignment':['FloorSelectionPolicy','ReferenceLevel','HeightAdjustmentPolicy'],
+ 'mep-mechanical-settings':['SizingDesignBasis','SegmentMaterialAndSizes','SystemMapping'],
+ 'mep-opening-candidate-scan':['OpeningClearance'],
+ 'mep-space-demand-matrix':['SpaceUse','DesignDemandFactors','EquipmentBasis'],
+ 'parking-auto-numbering':['StartElement','StartNumber','OrderingPolicy'],
+ 'quantity-takeoff-excel':['Exclusions','TakeoffScope','HeightSource','OpeningAttribution'],
+ 'revit-partition-takeoff':['WallTypeScope','OpeningDeductions','SourceReport'],
+ 'room-numbering-workflow':['TargetLevel','StartNumber','OrderingTolerance'],
+ 'room-surface-area-review':['IncludeFinishLayers','RoomScope'],
+ 'scaffold-takeoff':['IncludedRooms','ExcludedRooms','HeightSource','ScaffoldMethod'],
+ 'space-centroid-placement':['FamilyType','PlacementMode','SpaceScope'],
+ 'threshold-opening-takeoff':['ExcludedRooms','ExcludedTypes','DeduplicationPolicy'],
+ 'viewport-type-scale-sync':['ViewportTypeNaming','FallbackType','ExcludedViewNames']
+};
+const hardGaps={
+ 'GM_rfa-family-injection':'Domain records unresolved backup-path / family injection defects; no complete Native workflow certification.',
+ 'detect-range-box':'Domain describes a pyRevit-only feature; no registered MCP implementation.',
+ 'view-link-cleanup-workflow':'Domain records a negative result for per-link category hiding while preserving host datums; do not implement the obsolete proposal.',
+ 'viewport-type-scale-sync':'get_viewport_types and sync_viewport_types_by_view_scale are absent from the current runtime registry and C# dispatcher.',
+ 'GM_keyword-search':'External catalog/search workflow; no complete native Revit query service mapping.',
+ 'pdf-export-comparison':'Comparison/reference document; no complete exporter workflow is established by the referenced runtime tools.'
+};
+for(const t of matrix.RuntimeTools){
+ const c=commandMap.get(t.Command);
+ t.Backend=c?{...c}:null;
+ t.ImplementationStatus=c&&c.EntryMethods.length?'DISPATCHED':'MISSING';
+ if(!c)t.Gap='Existing repository quarantine: no command dispatcher (not silently accepted as implemented)';
+}
+for(const d of matrix.Domains){
+ const text=read(d.DomainPath),lines=text.split(/\r?\n/);
+ const direct=d.Tools.filter(t=>new RegExp('(?<![\\w])'+t+'(?![\\w])').test(text));
+ d.DomainTools=direct;d.SkillSupportTools=d.Tools.filter(t=>!direct.includes(t));
+ d.DocumentedToolCandidates=[...new Set([...text.matchAll(/`((?:get|query|scan|analyze|create|sync|set|adjust|rename|renumber|calculate|export|import|detect|check|preview|copy|place|modify|delete|read|list|align|remap|batch|trace|duplicate|apply)_[a-z0-9_]+)`/g)].map(m=>m[1]))].sort();
+ d.UnregisteredToolReferences=d.DocumentedToolCandidates.filter(t=>!names.has(t));
+ const selected=(direct.length?direct:d.Tools).map(t=>matrix.RuntimeTools.find(x=>x.Name===t));
+ const cs=selected.map(t=>t?.Backend).filter(Boolean);
+ const missing=selected.filter(t=>!t?.Backend).map(t=>t.Name);
+ const methods=[...new Map(cs.flatMap(c=>c.Methods).map(m=>[m.Id,m])).values()];
+ d.ReachableMethods=methods;
+ d.BackendFiles=[...new Set(methods.map(m=>m.File))].sort();
+ d.CommandEvidence=d.Tools.flatMap(name=>{const t=matrix.RuntimeTools.find(x=>x.Name===name);return (t?.Backend?.EntryMethods||[]).map(id=>({Command:t.Command,Method:id,...t.Backend.Methods.find(x=>x.Id===id)}));});
+ d.BackendFiles=[...new Set([...d.BackendFiles,...d.CommandEvidence.map(e=>e.File)])].sort();
+ d.MutationAssessmentScope=direct.length?'Direct domain tool references; broader SkillSupportTools retain separate per-tool backend evidence':'Skill tool chain (no direct domain tool references)';
+ d.TransactionEvidence=cs.filter(c=>c.Transactions.length).map(c=>({Command:c.Command,Types:c.Transactions}));
+ d.RevitApiEvidence=[...new Set(cs.flatMap(c=>c.RevitApi))].sort();
+ d.LinkMethodEvidence=cs.filter(c=>c.LinkEvidence.length).map(c=>({Command:c.Command,Evidence:c.LinkEvidence}));
+ const meta=d.ProductizationStatus==='META_ONLY';
+ d.ReadOnly=meta?true:cs.length&&!missing.length?cs.every(c=>c.ReadOnly):null;
+ d.TransactionRequired=meta?false:cs.length&&!missing.length?cs.some(c=>c.Transactions.length>0):null;
+ d.MutationLevel=meta?'None':d.TransactionRequired?'ModelWriteOrTransactionalReview':d.ReadOnly?'ReadOnlyQueriesOrExternalIO':'UnresolvedImplementation';
+ d.HostSupport=meta?'N/A':cs.length?'Host entry path exists; scope is command-specific':'No complete runtime mapping';
+ d.LinkSupport=meta?'N/A':d.LinkMethodEvidence.length?'Only listed commands have Link API evidence; do not generalize to entire workflow':'No reachable Link-document/transform evidence; host-only assumption for product design';
+ d.RequiredSettings=settings[d.DomainId]||[];
+ d.RequiresProjectSettings=d.RequiredSettings.length>0;
+ d.RuleEvidence=lines.map((line,i)=>({Line:i+1,Text:line.trim()})).filter(x=>/^#{1,4} |^description:|必須|不得|禁止|候選|人工|尚未|已知缺|不支援|不支持|待實作|Negative Result|Read.back|dry.run/i.test(x.Text));
+ d.SourceReview={Status:'ASSESSED',Method:'Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly',DomainSha256:hash(d.DomainPath),SemanticScope:'Static capability mapping, not certification of every engineering rule or runtime path'};
+ const blockers=[];
+ if(missing.length)blockers.push('Missing dispatcher: '+missing.join(', '));
+ if(d.UnregisteredToolReferences.length)blockers.push('Documented names not registered (may include historical/external functions): '+d.UnregisteredToolReferences.join(', '));
+ if(hardGaps[d.DomainId])blockers.push(hardGaps[d.DomainId]);
+ if(d.RequiresProjectSettings)blockers.push('Explicit user/project inputs: '+d.RequiredSettings.join(', '));
+ if(review.has(d.DomainId))blockers.push('Review output is not formal engineering/regulatory approval; project applicability and uncovered rules require review.');
+ if(!meta&&!cs.length)blockers.push('No complete registered command chain for this domain.');
+ d.ProductizationStatus=meta?'META_ONLY':hardGaps[d.DomainId]||missing.length||d.UnregisteredToolReferences.length?'BLOCKED':review.has(d.DomainId)?'REVIEW_ONLY':d.RequiresProjectSettings?'PROJECT_CONFIG_REQUIRED':cs.length?'ADAPTER_READY':'RULE_READY';
+ if(d.ProductizationStatus==='ADAPTER_READY')blockers.push('Reusable command implementation exists; typed orchestration and domain-specific fixture are still required before enabling this domain.');
+ d.Blockers=blockers;
+ d.RuntimeCapability=meta?'Development governance/reference only':cs.length?`${cs.length} command mappings; ${methods.length} reachable methods. Method graph is conservative across branches.`:'No complete mapping; retain domain as rules/reference';
+ d.FixtureTestStatus='NOT_TESTED (outside this release fixture scope)';
+ d.NativeUiStatus='DISABLED / not included in v0.4';
+ d.LargeModelRisk=meta?'N/A':methods.some(m=>/Geometry|Clash|Surface|Dimension|Spatial|Takeoff|Opening|Penetration/.test(m.Id))?'Geometry/collector-heavy; explicit scope and budget needed before enabling':'Command-specific collector/batch bounds need dedicated fixture and benchmark';
+ d.RecommendedUiPattern=meta?'N/A':review.has(d.DomainId)?'CompliancePattern':/takeoff|scaffold|surface-area/.test(d.DomainId)?'TakeoffPattern':d.TransactionRequired?'PreviewApplyPattern':'AuditPattern';
+ if(['mep-csa-clash-detection','mep-opening-candidate-scan'].includes(d.DomainId)){
+  d.NativeUiStatus='Implemented: typed read-only coordination subworkflow; release gated';
+  d.NativeWorkflowReadOnly=true;d.NativeBackendFiles=['MCP/Core/CoordinationService.cs','MCP/Models/CoordinationModels.cs','MCP/Core/ClashDetector.cs'];
+  d.FixtureTestStatus=runtime?'PASS: '+runtime.Report.FixtureVersion+', '+runtime.Report.Passed+' assertions (native scan subset only)':'NOT_TESTED: no matching build runtime report';
+  d.FixtureEvidence=runtime?.Path||null;
+  d.NativeScope={Host:true,Link:runtime?'Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested':'Source mapping only; runtime not verified',Mutation:'ReadOnly',TransactionRequired:false,UI:'DetectReviewPattern',Limits:['Centerline crossing; no solid-edge grazing certification','No opening/sleeve creation','Candidate/review only','Session-scoped project settings']};
+  d.RecommendedUiPattern='DetectReviewPattern';d.LargeModelRisk='Explicit MEP category/level; pair and time budgets; totals and truncation reported';
+ }
+}
+const allSource=[...matrix.Inventory,...backend.SourceFiles.map(f=>({...f,Bytes:Buffer.byteLength(read(f.Path))}))];
+matrix.Inventory=[...new Map(allSource.map(f=>[f.Path,f])).values()].sort((a,b)=>a.Path.localeCompare(b.Path));
+matrix.SchemaVersion=2;
+matrix.Audit={Status:'COMPLETE_STATIC_CAPABILITY_MAPPING',CompilerDiagnostics:0,DomainCoverage:matrix.Domains.length,RuntimeToolCoverage:matrix.RuntimeTools.length,MethodCount:backend.Methods.length,Limitations:['Branch union is conservative, not runtime proof.','Unbound external invocations are retained in backend evidence.','Domain-only tools absent from registry are blockers, not invented capabilities.','Only CoordinationFixture has runtime evidence for this release.']};
+matrix.Counts=Object.fromEntries(['NATIVE_READY','ADAPTER_READY','RULE_READY','PROJECT_CONFIG_REQUIRED','REVIEW_ONLY','BLOCKED','META_ONLY'].map(s=>[s,matrix.Domains.filter(d=>d.ProductizationStatus===s).length]));
+fs.writeFileSync(path.join(root,'docs/productization/matrix.json'),JSON.stringify(matrix,null,2)+'\n');
+const safe=x=>String(x).replace(/\|/g,'/').replace(/\r?\n/g,' ');
+const md='# Domain 產品化矩陣\n\n全域靜態能力稽核完成：逐 Domain 保留 SOP 證據與行號，對應 Skill、Tool/schema、dispatcher、method/helper、Revit API、Transaction 與 Link 證據。這是產品化能力盤點，不是所有 Domain 的 runtime 或法規認證。未註冊工具、既知缺陷與不可達 API 均明列 BLOCKED；不可據檔名或 tool 存在就啟用功能。\n\n'+Object.entries(matrix.Counts).map(([s,n])=>'- '+s+': '+n).join('\n')+'\n\n協調 Native 子流程已通過 coordination-1 fixture；完整 Domain 的上色、外部輸出、後續開孔/結構核准仍按各自 scope 管理。完整證據見 [JSON](matrix.json)。\n\n| Domain | Skill | Tools | Backend | Status | Priority | Blocker | UI Pattern |\n|---|---|---|---|---|---|---|---|\n'+matrix.Domains.map(d=>'| '+[d.DomainId,d.SkillPath.join(', '),d.DomainTools.join(', '),d.BackendFiles.join(', '),d.ProductizationStatus,d.Priority,d.Blockers.join('; '),d.RecommendedUiPattern].map(safe).join(' | ')+' |').join('\n')+'\n';
+fs.writeFileSync(path.join(root,'docs/productization/matrix.md'),md);
+console.log(JSON.stringify({Audit:matrix.Audit.Status,Counts:matrix.Counts}));
