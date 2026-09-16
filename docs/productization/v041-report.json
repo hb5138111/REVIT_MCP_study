@@ -1,0 +1,937 @@
+{
+  "Version": "v0.4.1",
+  "Task": "施工協調工作台重構",
+  "Branch": "bim-custom",
+  "Timestamp": "2026-09-16T01:47:40.565Z",
+  "Status": "READY_FOR_OPTIONAL_UAT",
+  "Gates": {
+    "A": {
+      "Status": "PASS",
+      "Passed": 465,
+      "Failed": 0
+    },
+    "B": {
+      "Status": "PASS",
+      "Passed": 20,
+      "Failed": 0
+    },
+    "C": {
+      "Status": "PASS",
+      "Passed": 18,
+      "Failed": 0
+    },
+    "C2": {
+      "Status": "PASS",
+      "Passed": 43,
+      "Failed": 0
+    },
+    "C3": {
+      "Status": "PASS",
+      "Passed": 30,
+      "Failed": 0
+    },
+    "Build": {
+      "Status": "PASS"
+    },
+    "QAQC": {
+      "Status": "PASS"
+    },
+    "Rollback": {
+      "Status": "PASS"
+    }
+  },
+  "BuildSHA256": "7677DBDEAA894F091E6F00BF62BFF6BB74F6F2210651006C6405C617A443BCD6",
+  "SourceFingerprintVerified": true,
+  "FixtureVersion": "coordination-2",
+  "RuntimeEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059",
+  "RollbackEvidence": "test-artifacts/reversible-ebcf9688248d49089b472b6e0f98affc",
+  "FormalDeployment": {
+    "Kind": "FORMAL_V041_RELEASE",
+    "Status": "PASS",
+    "BuildSHA256": "7677DBDEAA894F091E6F00BF62BFF6BB74F6F2210651006C6405C617A443BCD6",
+    "Timestamp": "2026-09-16T01:41:11.6171103+00:00",
+    "Backup": "test-artifacts\\reversible-ebcf9688248d49089b472b6e0f98affc",
+    "Rollback": "NOT_NEEDED",
+    "DeployedSHA256": "7677DBDEAA894F091E6F00BF62BFF6BB74F6F2210651006C6405C617A443BCD6",
+    "HashMatch": true,
+    "RequiredDllSet": "PASS",
+    "RequiredDllCount": 8,
+    "Files": [
+      {
+        "File": "ClosedXML.dll",
+        "BuildSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C",
+        "DeployedSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C"
+      },
+      {
+        "File": "DocumentFormat.OpenXml.dll",
+        "BuildSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974",
+        "DeployedSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974"
+      },
+      {
+        "File": "ExcelNumberFormat.dll",
+        "BuildSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507",
+        "DeployedSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507"
+      },
+      {
+        "File": "Irony.dll",
+        "BuildSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD",
+        "DeployedSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD"
+      },
+      {
+        "File": "Newtonsoft.Json.dll",
+        "BuildSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07",
+        "DeployedSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07"
+      },
+      {
+        "File": "RevitMCP.dll",
+        "BuildSHA256": "7677DBDEAA894F091E6F00BF62BFF6BB74F6F2210651006C6405C617A443BCD6",
+        "DeployedSHA256": "7677DBDEAA894F091E6F00BF62BFF6BB74F6F2210651006C6405C617A443BCD6"
+      },
+      {
+        "File": "SixLabors.Fonts.dll",
+        "BuildSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F",
+        "DeployedSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F"
+      },
+      {
+        "File": "XLParser.dll",
+        "BuildSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C",
+        "DeployedSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C"
+      }
+    ],
+    "ManifestCount": 1,
+    "Assembly": "RevitMCP\\RevitMCP.dll",
+    "FullClassName": "RevitMCP.Application"
+  },
+  "RootCause": "Uninitialized Native controller allowed settings command into a stale-document guard; source change did not reload levels; backend-only fixtures missed UI state and dispatch.",
+  "RemovedFeatures": [
+    "Model Summary",
+    "Type Inventory",
+    "Level Constraint Audit"
+  ],
+  "PreservedShared": [
+    "ExternalEvent / Busy gate",
+    "Native document/session identity",
+    "LinkSummary DTO for MCP",
+    "Typed geometry and element navigation",
+    "Productization Registry",
+    "Self-Test Lab / installer"
+  ],
+  "CapabilityBoundary": [
+    "Centerline vs solid only; excludes fittings, insulation and grazing collisions",
+    "BeamPenetration is always review-only, not RC/SC/SRC approval",
+    "Sleeve classification and structural approval disabled",
+    "Opening dimensions require explicit per-project session clearance",
+    "Unknown opening bottom remains null",
+    "Multiple solid intersections produce one row; length and point identify first segment with warning",
+    "Arbitrary rotation/mirroring not certified by this fixture"
+  ],
+  "Assertions": {
+    "C": [
+      {
+        "TestName": "pipe_wall_count",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Fixture wall and crossing pipe"
+      },
+      {
+        "TestName": "opening_diameter",
+        "Expected": "150",
+        "Actual": "150",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "100 mm + 2 * 25 mm"
+      },
+      {
+        "TestName": "element_readback",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "UniqueId read-back"
+      },
+      {
+        "TestName": "review_honesty",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Unknown solid edge and opening bottom remain warnings"
+      },
+      {
+        "TestName": "pipe_beam_count",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Generated structural-category family"
+      },
+      {
+        "TestName": "beam_review",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Beam review code required"
+      },
+      {
+        "TestName": "duct_floor_count",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Vertical duct through slab"
+      },
+      {
+        "TestName": "conduit_no_clash",
+        "Expected": "0",
+        "Actual": "0",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Remote conduit"
+      },
+      {
+        "TestName": "level_scope",
+        "Expected": "0",
+        "Actual": "0",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Pre-geometry MEP reference-level filter"
+      },
+      {
+        "TestName": "clash_scan",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Clash workflow does not require clearance"
+      },
+      {
+        "TestName": "oblique_review",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Non-orthogonal pipe through wall"
+      },
+      {
+        "TestName": "explicit_truncation",
+        "Expected": "total=2, returned=1, truncated=true",
+        "Actual": "2/1/True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Total includes matches beyond display cap"
+      },
+      {
+        "TestName": "translated_link",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "MEP link translated +100 ft; pipe center resolves to host origin"
+      },
+      {
+        "TestName": "translated_point",
+        "Expected": "0",
+        "Actual": "0",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Host-coordinate center mm"
+      },
+      {
+        "TestName": "translated_host_link",
+        "Expected": "2",
+        "Actual": "2",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Main pipes against translated host wall"
+      },
+      {
+        "TestName": "wall_classification",
+        "Expected": "True",
+        "Actual": "OpeningCandidate",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "One interaction, one opening row with clash evidence"
+      },
+      {
+        "TestName": "beam_classification",
+        "Expected": "True",
+        "Actual": "BeamPenetration",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Always manual review"
+      },
+      {
+        "TestName": "fixture_saved",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "MCP/Core/CoordinationService.cs",
+        "Evidence": "Disposable artifact only"
+      }
+    ],
+    "C2": [
+      {
+        "TestName": "initial_scan_disabled",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "initial_settings_disabled",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "initialize_queues_external_work",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "initialize_idempotent",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "document_identity",
+        "Expected": "A",
+        "Actual": "A",
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "sources_main_and_link",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "main_source_default",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "no_geometry_on_initialize",
+        "Expected": 0,
+        "Actual": 0,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "levels_main",
+        "Expected": true,
+        "Actual": "全部,FL1,FL2",
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "no_arbitrary_host",
+        "Expected": true,
+        "Actual": "請選擇主體分類。",
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "clash_only_without_clearance",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "opening_setting_required",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "reject_negative_clearance",
+        "Expected": null,
+        "Actual": null,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "save_explicit_setting",
+        "Expected": 25,
+        "Actual": 25,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "canexecute_ready",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "request_fields",
+        "Expected": true,
+        "Actual": {
+          "MepLinkId": 0,
+          "HostLinkId": 0,
+          "MepCategory": "Pipes",
+          "HostCategory": "Walls",
+          "LevelName": "",
+          "LevelId": 11,
+          "SystemContains": "Fixture",
+          "MaxResults": 1,
+          "OpeningCandidates": true,
+          "ClearanceMm": 25
+        },
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "busy_gate",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "dispatcher_scan_executed",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "result_binding",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "summary_total",
+        "Expected": true,
+        "Actual": "掃描 3 個 MEP；總問題 2；開孔 1；穿梁 1；碰撞 0；需複核 2；顯示 2，篩選後 2",
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "filter_kind",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "empty_filter_disables_navigation",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "highlight",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "next_visible_row",
+        "Expected": true,
+        "Actual": 2,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "previous_visible_row",
+        "Expected": true,
+        "Actual": 1,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "unified_csv_schema",
+        "Expected": 15,
+        "Actual": 15,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "csv_formula_escape",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "filters_no_rescan",
+        "Expected": 1,
+        "Actual": 1,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "source_change_invalidates",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "linked_levels_reload",
+        "Expected": true,
+        "Actual": [
+          "全部",
+          "LINK-FL1"
+        ],
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "source_change_resets_system",
+        "Expected": true,
+        "Actual": "",
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "link_request",
+        "Expected": 9,
+        "Actual": 9,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "document_change_invalidates",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "automatic_document_refresh",
+        "Expected": "B",
+        "Actual": "B",
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "settings_project_isolation",
+        "Expected": null,
+        "Actual": null,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "stale_queued_scan_not_run",
+        "Expected": 2,
+        "Actual": 2,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "stale_anchor_auto_recovery",
+        "Expected": true,
+        "Actual": 2,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "return_project_settings",
+        "Expected": 25,
+        "Actual": 25,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "same_document_content_change_refresh",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "no_levels_reason",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "refresh_failure_actionable",
+        "Expected": true,
+        "Actual": "無法重新讀取模型來源，請按重新整理。 fixture failure",
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "refresh_retry",
+        "Expected": true,
+        "Actual": true,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      },
+      {
+        "TestName": "queue_rejection",
+        "Expected": false,
+        "Actual": false,
+        "Passed": true,
+        "Evidence": "Executed production CoordinationViewModel with queued ICoordinationHost"
+      }
+    ],
+    "C3": [
+      {
+        "TestName": "production_view_data_context",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 0"
+      },
+      {
+        "TestName": "active_document_identity",
+        "Expected": "True",
+        "Actual": "b976cbfeeba844c7b040b695b61240d4",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 1"
+      },
+      {
+        "TestName": "auto_sources",
+        "Expected": "3",
+        "Actual": "3",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 1"
+      },
+      {
+        "TestName": "host_levels",
+        "Expected": "FL1/FL2",
+        "Actual": "全部/FL1/FL2",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 1"
+      },
+      {
+        "TestName": "no_arbitrary_host",
+        "Expected": "",
+        "Actual": "",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 1"
+      },
+      {
+        "TestName": "missing_setting_disabled",
+        "Expected": "False",
+        "Actual": "False",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 1"
+      },
+      {
+        "TestName": "project_units_setting",
+        "Expected": "25",
+        "Actual": "25",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 2"
+      },
+      {
+        "TestName": "can_scan",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 2"
+      },
+      {
+        "TestName": "request_fields",
+        "Expected": "True",
+        "Actual": "{\"MepLinkId\":0,\"HostLinkId\":0,\"MepCategory\":\"Pipes\",\"HostCategory\":\"Walls\",\"LevelName\":\"\",\"LevelId\":13071,\"SystemContains\":\"\",\"MaxResults\":200,\"OpeningCandidates\":true,\"ClearanceMm\":25.0}",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 2"
+      },
+      {
+        "TestName": "native_wall_results",
+        "Expected": "2",
+        "Actual": "2",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 3"
+      },
+      {
+        "TestName": "native_classification",
+        "Expected": "True",
+        "Actual": "OpeningCandidate,OpeningCandidate",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 3"
+      },
+      {
+        "TestName": "native_summary",
+        "Expected": "True",
+        "Actual": "掃描 3 個 MEP；總問題 2；開孔 2；穿梁 0；碰撞 0；需複核 2；顯示 2，篩選後 2",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 3"
+      },
+      {
+        "TestName": "native_size",
+        "Expected": "150",
+        "Actual": "150",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 3"
+      },
+      {
+        "TestName": "native_selection_readback",
+        "Expected": "True",
+        "Actual": "212247,212258",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 4"
+      },
+      {
+        "TestName": "view_change_preserves_results",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 4"
+      },
+      {
+        "TestName": "native_next_navigation",
+        "Expected": "True",
+        "Actual": "212271",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 5"
+      },
+      {
+        "TestName": "source_change_clear_results",
+        "Expected": "True",
+        "Actual": "True",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 6"
+      },
+      {
+        "TestName": "link_levels",
+        "Expected": "True",
+        "Actual": "全部,LINK-FL1,Level 2",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 6"
+      },
+      {
+        "TestName": "native_link_scan",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 7"
+      },
+      {
+        "TestName": "link_navigation_instance",
+        "Expected": "True",
+        "Actual": "212247,212276",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 8"
+      },
+      {
+        "TestName": "csv_schema",
+        "Expected": "15",
+        "Actual": "15",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 8"
+      },
+      {
+        "TestName": "native_translated_host",
+        "Expected": "2",
+        "Actual": "2",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 10"
+      },
+      {
+        "TestName": "native_beam_review",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 11"
+      },
+      {
+        "TestName": "one_pair_multiple_solids",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 11"
+      },
+      {
+        "TestName": "native_filter",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 11"
+      },
+      {
+        "TestName": "native_duct_floor",
+        "Expected": "1",
+        "Actual": "1",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 12"
+      },
+      {
+        "TestName": "native_no_clash",
+        "Expected": "0",
+        "Actual": "0",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 13"
+      },
+      {
+        "TestName": "document_switch_refresh",
+        "Expected": "True",
+        "Actual": "af9c268c91d54172b9871c724c672295",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 14"
+      },
+      {
+        "TestName": "return_document_settings",
+        "Expected": "25",
+        "Actual": "25",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 15"
+      },
+      {
+        "TestName": "document_changed_event_refresh",
+        "Expected": "True",
+        "Actual": "全部,FL1,FL2,C3_EDIT",
+        "Passed": true,
+        "AffectedDomain": "mep-opening-candidate-scan",
+        "AffectedTool": "scan_opening_candidates / detect_clashes shared geometry",
+        "AffectedBackend": "CoordinationViewModel / RevitCoordinationHost / PanelReadOnlyDispatcher",
+        "Evidence": "Real ActiveUIDocument; actual queued ExternalEvent; step 16"
+      }
+    ]
+  },
+  "NextRecommendedBatch": "Optional short UAT only; stop until a new task is authorized.",
+  "FinalCommit": {
+    "Value": "SELF_COMMIT",
+    "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
+    "Reason": "A tracked file cannot contain its own commit hash. Literal receipt is local test-artifacts/v041/final.json after push."
+  }
+}

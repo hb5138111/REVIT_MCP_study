@@ -10,7 +10,7 @@
 - BLOCKED: 15
 - META_ONLY: 13
 
-協調 Native 子流程已通過 coordination-1 fixture；完整 Domain 的上色、外部輸出、後續開孔/結構核准仍按各自 scope 管理。完整證據見 [JSON](matrix.json)。
+協調 Native runtime 證據以目前 DLL hash 對應 JSON 為準；C2/C3 必須另外通過。Model Summary、Type Inventory、Level Constraint Audit 已標記 RETIRED_NATIVE_UI。完整 Domain 的上色、外部輸出、後續開孔/結構核准仍按各自 scope 管理。完整證據見 [JSON](matrix.json)。
 
 | Domain | Skill | Tools | Backend | Status | Priority | Blocker | UI Pattern |
 |---|---|---|---|---|---|---|---|

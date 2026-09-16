@@ -1,5 +1,5 @@
 {
-  "SchemaVersion": 2,
+  "SchemaVersion": 3,
   "Inventory": [
     {
       "Path": ".claude/skills/align-views-on-sheets/SKILL.md",
@@ -943,8 +943,8 @@
     },
     {
       "Path": "MCP/Application.cs",
-      "Sha256": "c157380c4710d3ddf97d86e1d8cf36d1b26dfc19d2200c3b7abfadfa1858faa5",
-      "Bytes": 10254
+      "Sha256": "9b314d02303c99141f9f1d89926ebfeb2d588d8daf6354ae63db14fa6bc44a6a",
+      "Bytes": 10596
     },
     {
       "Path": "MCP/Commands/MCPCommands.cs",
@@ -963,8 +963,8 @@
     },
     {
       "Path": "MCP/Commands/ShowBimConstructionPanelCommand.cs",
-      "Sha256": "8717437b2c18f02219e00fc82829293993a69d148d32ea6a58828092a2dd53c5",
-      "Bytes": 678
+      "Sha256": "623ee8ddb38088e6b71144cde6c55d3c8ceee1c28ab229f73a033f6b32932932",
+      "Bytes": 735
     },
     {
       "Path": "MCP/Configuration/ConfigManager.cs",
@@ -1293,13 +1293,23 @@
     },
     {
       "Path": "MCP/Core/CoordinationSelfTest.cs",
-      "Sha256": "3c2669b78104080b394ecc97d0b7855a86b4d66debd34c82547cae79217b1b46",
-      "Bytes": 16354
+      "Sha256": "849ed0415b47277e3ab637cde6aa2f8e0f2325138044f5babfea0bcb7e359b6c",
+      "Bytes": 19377
     },
     {
       "Path": "MCP/Core/CoordinationService.cs",
-      "Sha256": "dc427aec7a485f71bb5f549ca680d52c01f90c09874576a135446090d8114a08",
-      "Bytes": 11205
+      "Sha256": "4d57dea0f31ca921c501da4d4fe76108385b596cf3ed72586fa55685f0a4b15a",
+      "Bytes": 14484
+    },
+    {
+      "Path": "MCP/Core/CoordinationWorkflowSelfTest.cs",
+      "Sha256": "e4652d463975f595f4323e0238b1fd6a238868856ee5558059d7c919810f5a9f",
+      "Bytes": 14015
+    },
+    {
+      "Path": "MCP/Core/DocumentSessionIdentity.cs",
+      "Sha256": "a221f2d82b341e654eab17321ea56aba0401b9db435555af43d05bfd2482443c",
+      "Bytes": 925
     },
     {
       "Path": "MCP/Core/DwgBeamExecutor.cs",
@@ -1342,11 +1352,6 @@
       "Bytes": 46680
     },
     {
-      "Path": "MCP/Core/LevelConstraintAuditService.cs",
-      "Sha256": "8a928e2ba8b1e4d5bf7a8dad163fc43cbcf32428c9800a99c9c18d330aba086e",
-      "Bytes": 15647
-    },
-    {
       "Path": "MCP/Core/LinkedModelHelper.cs",
       "Sha256": "15deda5fa44e5cf9e8f3b0859f8bb3a0ffe77258c3788aab3946ef0ac0a54ab0",
       "Bytes": 23528
@@ -1360,11 +1365,6 @@
       "Path": "MCP/Core/LogViewerWindow.cs",
       "Sha256": "4cf47b8292b3c7560212cb2a877d001a395e65fb185fd5dcfb025792508f28f3",
       "Bytes": 3296
-    },
-    {
-      "Path": "MCP/Core/ModelSummaryService.cs",
-      "Sha256": "4e8336725a9d13cf6dcecf9129aa6e9834fc58b8a9278c2aee874ed28b3e1029",
-      "Bytes": 6438
     },
     {
       "Path": "MCP/Core/OpeningCandidateScanner.cs",
@@ -1392,16 +1392,6 @@
       "Bytes": 1247
     },
     {
-      "Path": "MCP/Core/TypeInstanceLocatorService.cs",
-      "Sha256": "24019296b3ba262aaf18f76ea81b2a8394761882bd80a12d1b1b43ee02fb3909",
-      "Bytes": 1614
-    },
-    {
-      "Path": "MCP/Core/TypeInventoryService.cs",
-      "Sha256": "cca3e4f8c14be94b0a8dcfe96f56d8fbba5f9a187fca0e18e782224984c8a226",
-      "Bytes": 7502
-    },
-    {
       "Path": "MCP/Core/WarningSwallower.cs",
       "Sha256": "ec90bf522e0e1b37a762549bc24044db20e58faf4561ff2a11f23d20b3cf4840",
       "Bytes": 1255
@@ -1413,28 +1403,18 @@
     },
     {
       "Path": "MCP/Models/CoordinationModels.cs",
-      "Sha256": "3d99b9a13c40efc81cf711d71652f60ad59429dc78d6ac999ee14ede67452e38",
-      "Bytes": 7299
+      "Sha256": "4c752d95c2d2d6235d62584d05c92f2c0e2e5eb7b82c1da2200119189e2c07ea",
+      "Bytes": 9165
     },
     {
-      "Path": "MCP/Models/LevelConstraintAuditModels.cs",
-      "Sha256": "0c717d1bc2329294b4ec48eed6878180fe68723e194376d05fc8a10a04e4ad3f",
-      "Bytes": 5805
-    },
-    {
-      "Path": "MCP/Models/ModelSummaryModels.cs",
-      "Sha256": "592e19ac3834efa8effb2a7438a7fd7ff992151aa2d25f45b8ddd4410aeb5cb6",
-      "Bytes": 2878
-    },
-    {
-      "Path": "MCP/Models/TypeInventoryModels.cs",
-      "Sha256": "1f4cd363598ea39ff33d5fbf5d40f0f44d19bd4ea1031276c05fa27b35e98208",
-      "Bytes": 2190
+      "Path": "MCP/Models/LinkSummary.cs",
+      "Sha256": "06281e857420724de00b20a50441186a85d77d9de91fbd0c2de841e573de90e6",
+      "Bytes": 605
     },
     {
       "Path": "MCP/Models/WorkflowDefinition.cs",
-      "Sha256": "e3f97726b92645bd1ad2770ec3978662053f614d6f448a5bc5ba094df6f08160",
-      "Bytes": 5107
+      "Sha256": "15b78bf4fcb977fa7095c6895f49ee99120414e4f05ffda01644fc6e34bfc995",
+      "Bytes": 4615
     },
     {
       "Path": "MCP/Properties/AssemblyInfo.cs",
@@ -1443,38 +1423,33 @@
     },
     {
       "Path": "MCP/UI/BimConstructionPanelPage.cs",
-      "Sha256": "020621a377786056bc528f8f2ba6141d8b002489a9156953d3da99e59dffc2de",
-      "Bytes": 29809
+      "Sha256": "62ca8c11c89b01ac174e86ccd31af036cb6aff8d756f7cdbcf9b385209db5384",
+      "Bytes": 940
     },
     {
       "Path": "MCP/UI/BimConstructionPanelViewModel.cs",
-      "Sha256": "524369f1cc8c7d603ad2414578eecf0eb0e7915cebaf48c14f812b2db8cbb9d6",
-      "Bytes": 4590
+      "Sha256": "4f5e41f197a361482c51968ef850e9279e049f56e6be357ef6a63a3e3282d05b",
+      "Bytes": 1079
     },
     {
       "Path": "MCP/UI/CoordinationViewModel.cs",
-      "Sha256": "a1e3cb6ff99acad3bd2a9e25fea25121506ea26a2622130a40046bc9f019cea5",
-      "Bytes": 12649
+      "Sha256": "90010987d7a4a2235d08a2719ca15bf9827a0ccd5f8dc264c53d39464d821c9c",
+      "Bytes": 17471
     },
     {
       "Path": "MCP/UI/DetectReviewWorkflowControl.cs",
-      "Sha256": "524454be478900b04ee29c582cf62231e03302eba250796ff71ede546b7ad92b",
-      "Bytes": 5507
-    },
-    {
-      "Path": "MCP/UI/LevelConstraintAuditViewModel.cs",
-      "Sha256": "4e06043c5b0eb1959c48bedf3e5418e54db44b69dfb68f391cc9c8556aeaa4ac",
-      "Bytes": 17191
+      "Sha256": "3895c5196f146b9566038808606491282915f8d55dd5faedb5d2a7bfa350d6e0",
+      "Bytes": 8167
     },
     {
       "Path": "MCP/UI/PanelReadOnlyDispatcher.cs",
-      "Sha256": "e897d00b0bd8300757749835e1cc759c9d82b42346f06ec43156ee0384e13a7e",
-      "Bytes": 2711
+      "Sha256": "38ee282c1d1a3c8f28102e0a23d728e99a75c8d7883611170f034ea28a5b33fa",
+      "Bytes": 2525
     },
     {
-      "Path": "MCP/UI/TypeInventoryViewModel.cs",
-      "Sha256": "504f6e27fbcde3a8f31a17b9093e2f7f492884677b3dddc66f076d06772a1cfc",
-      "Bytes": 17745
+      "Path": "MCP/UI/RevitCoordinationHost.cs",
+      "Sha256": "bc78bb7e831b909d88d7119d419683bcab1e28860882b2be387569accca4ac54",
+      "Bytes": 3108
     }
   ],
   "RuntimeTools": [
@@ -69935,7 +69910,7 @@
       "RequiredSettings": [],
       "RuntimeCapability": "8 command mappings; 40 reachable methods. Method graph is conservative across branches.",
       "NativeUiStatus": "Implemented: typed read-only coordination subworkflow; release gated",
-      "FixtureTestStatus": "PASS: coordination-1, 15 assertions (native scan subset only)",
+      "FixtureTestStatus": "PASS: coordination-2, 18 assertions (native scan subset only)",
       "ProductizationStatus": "ADAPTER_READY",
       "Priority": "P1",
       "Blockers": [
@@ -70312,7 +70287,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-02386310ad7d4938884ad97922c4dffd/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059/runtime.json",
+      "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -71604,7 +71581,7 @@
       ],
       "RuntimeCapability": "6 command mappings; 45 reachable methods. Method graph is conservative across branches.",
       "NativeUiStatus": "Implemented: typed read-only coordination subworkflow; release gated",
-      "FixtureTestStatus": "PASS: coordination-1, 15 assertions (native scan subset only)",
+      "FixtureTestStatus": "PASS: coordination-2, 18 assertions (native scan subset only)",
       "ProductizationStatus": "PROJECT_CONFIG_REQUIRED",
       "Priority": "P1",
       "Blockers": [
@@ -72149,7 +72126,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-02386310ad7d4938884ad97922c4dffd/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059/runtime.json",
+      "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-4e8ce063ddc24e05999ac6369b213059/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -92363,12 +92342,51 @@
       }
     }
   ],
+  "NativeFeatures": [
+    {
+      "Id": "model-summary",
+      "Status": "RETIRED_NATIVE_UI",
+      "Reason": "Removed low-value Native workflow; Domain and runtime tools retained"
+    },
+    {
+      "Id": "type-inventory",
+      "Status": "RETIRED_NATIVE_UI",
+      "Reason": "Removed Native inventory and navigation; generic link DTO and identity extracted"
+    },
+    {
+      "Id": "level-constraint-audit",
+      "Status": "RETIRED_NATIVE_UI",
+      "Reason": "Removed Native audit; Domain and runtime tools retained"
+    },
+    {
+      "Id": "coordination",
+      "Status": "RUNTIME_VERIFIED",
+      "Workflow": "One DetectReview workbench",
+      "Kinds": [
+        "Clash",
+        "OpeningCandidate",
+        "BeamPenetration",
+        "ReviewRequired"
+      ],
+      "RequiredGates": [
+        "A",
+        "B",
+        "C",
+        "C2",
+        "C3"
+      ],
+      "Limitations": [
+        "No automatic sleeve or structural approval",
+        "Centerline crossing only"
+      ]
+    }
+  ],
   "Audit": {
     "Status": "COMPLETE_STATIC_CAPABILITY_MAPPING",
     "CompilerDiagnostics": 0,
     "DomainCoverage": 84,
     "RuntimeToolCoverage": 192,
-    "MethodCount": 1322,
+    "MethodCount": 1251,
     "Limitations": [
       "Branch union is conservative, not runtime proof.",
       "Unbound external invocations are retained in backend evidence.",
