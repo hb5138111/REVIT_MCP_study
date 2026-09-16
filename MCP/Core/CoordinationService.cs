@@ -42,23 +42,44 @@ namespace RevitMCP.Core
         }
         public IReadOnlyList<string> GetLevels(Document project, long linkId) => new FilteredElementCollector(Resolve(project, linkId).Document)
             .OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).Select(l => l.Name).ToArray();
+        public IReadOnlyList<CoordinationLevel> GetLevelOptions(Document project, long linkId) => new FilteredElementCollector(Resolve(project, linkId).Document)
+            .OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).ThenBy(l => l.Id.GetIdValue())
+            .Select(l => new CoordinationLevel { Id = l.Id.GetIdValue(), Name = l.Name }).ToArray();
+        public IReadOnlyList<string> GetMepCategories(Document project, long linkId)
+        {
+            var document = Resolve(project, linkId).Document;
+            return new[] { "Pipes", "Ducts", "CableTrays", "Conduits" }.Where(category =>
+                new FilteredElementCollector(document).OfCategory(LinkedModelHelper.ResolveBuiltInCategory(category))
+                    .WhereElementIsNotElementType().FirstElementId() != ElementId.InvalidElementId).ToArray();
+        }
 
         public CoordinationResult Scan(Document project, CoordinationRequest request)
         {
             CoordinationRules.Validate(request);
-            var result = new CoordinationResult { DocumentIdentity = TypeInstanceLocatorService.GetDocumentIdentity(project) };
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            var result = new CoordinationResult { DocumentIdentity = DocumentSessionIdentity.GetDocumentIdentity(project), Scope = request };
             var mep = Resolve(project, request.MepLinkId);
             var host = Resolve(project, request.HostLinkId);
-            var pipes = Collect(mep.Document, request.MepCategory).Where(e => LevelName(e) == request.LevelName)
+            if (request.LevelId.HasValue && !(mep.Document.GetElement(Id(request.LevelId.Value)) is Level))
+                throw new InvalidOperationException("來源樓層已失效，請重新整理。");
+            var pipes = Collect(mep.Document, request.MepCategory).Where(e => request.LevelId.HasValue
+                    ? LevelId(e) == request.LevelId.Value : string.IsNullOrEmpty(request.LevelName) || LevelName(e) == request.LevelName)
                 .Where(e => string.IsNullOrWhiteSpace(request.SystemContains) || SystemName(e).IndexOf(request.SystemContains, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
             var hosts = Collect(host.Document, request.HostCategory);
             if ((long)pipes.Count * hosts.Count > PairBudget)
                 throw new InvalidOperationException("掃描範圍過大，請縮小 MEP 樓層、系統或主體分類。");
-            var boxes = hosts.ToDictionary(e => e.Id.GetIdValue(), e => ClashDetector.GetTransformedBBox(e, host.Transform));
+            if (pipes.Count == 0 || hosts.Count == 0) { result.TotalScanned = pipes.Count; return result; }
+            var boxes = hosts.ToDictionary(e => e.Id.GetIdValue(), e =>
+            {
+                if (timer.Elapsed.TotalSeconds > 15) throw new InvalidOperationException("來源準備超過安全時間，請縮小範圍。");
+                return ClashDetector.GetTransformedBBox(e, host.Transform);
+            });
             var solids = new Dictionary<long, List<Solid>>();
-            var timer = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
             foreach (var pipe in pipes)
             {
+                result.TotalScanned++;
                 using (var curve = ClashDetector.GetElementCurve(pipe, mep.Transform))
                 {
                     var box = ClashDetector.GetTransformedBBox(pipe, mep.Transform);
@@ -75,6 +96,8 @@ namespace RevitMCP.Core
                             solids[key] = geometry;
                         }
                         if (geometry.Count == 0) { result.Warnings.Add("部分主體缺少實體幾何，未能檢查。"); continue; }
+                        CoordinationRow? issue = null;
+                        int segments = 0;
                         foreach (var solid in geometry)
                         {
                             try
@@ -85,9 +108,8 @@ namespace RevitMCP.Core
                                     {
                                         using (var segment = intersection.GetCurveSegment(i))
                                         {
-                                            result.TotalMatchedCount++;
-                                            if (result.Rows.Count >= request.MaxResults) continue;
-                                            result.Rows.Add(Map(pipe, structure, mep, host, segment, solid, request));
+                                            segments++;
+                                            if (issue == null) issue = Map(pipe, structure, mep, host, segment, solid, request);
                                         }
                                     }
                                 }
@@ -95,9 +117,21 @@ namespace RevitMCP.Core
                             catch (Autodesk.Revit.Exceptions.InvalidOperationException)
                             { result.Warnings.Add("部分幾何交集無法解析，請人工複核。"); }
                         }
+                        if (issue != null)
+                        {
+                            if (segments > 1) issue.WarningCodes.Add("multiple_intersections");
+                            result.TotalMatchedCount++;
+                            result.CountsByKind.TryGetValue(issue.ResultKind, out int kindCount);
+                            result.CountsByKind[issue.ResultKind] = kindCount + 1;
+                            result.CountsByStatus.TryGetValue(issue.Status, out int statusCount);
+                            result.CountsByStatus[issue.Status] = statusCount + 1;
+                            if (result.Rows.Count < request.MaxResults) result.Rows.Add(issue);
+                        }
                     }
                 }
             }
+            }
+            finally { foreach (var solid in solids.Values.SelectMany(value => value)) solid.Dispose(); }
             result.Warnings = result.Warnings.Distinct().ToList();
             result.Warnings.Add("採中心線穿越法，不包含管件、保溫及未穿過中心線的實體擦碰。");
             return result;
@@ -106,9 +140,12 @@ namespace RevitMCP.Core
         {
             if (!new[] { "Pipes", "Ducts", "CableTrays", "Conduits", "Walls", "Floors", "StructuralFraming", "StructuralColumns" }.Contains(category))
                 throw new ArgumentException("不支援的構件分類。");
-            return new FilteredElementCollector(doc).OfCategory(LinkedModelHelper.ResolveBuiltInCategory(category))
-                .WhereElementIsNotElementType().OrderBy(e => e.Id.GetIdValue()).ToList();
+            var elements = new FilteredElementCollector(doc).OfCategory(LinkedModelHelper.ResolveBuiltInCategory(category))
+                .WhereElementIsNotElementType().Take((int)PairBudget + 1).ToList();
+            if (elements.Count > PairBudget) throw new InvalidOperationException("單一分類超過安全上限，請以較小模型來源執行。");
+            return elements.OrderBy(e => e.Id.GetIdValue()).ToList();
         }
+        private static long LevelId(Element e) => ((e as MEPCurve)?.ReferenceLevel?.Id ?? e.LevelId).GetIdValue();
         private static string LevelName(Element e)
         {
             var id = (e as MEPCurve)?.ReferenceLevel?.Id ?? e.LevelId;
@@ -118,7 +155,7 @@ namespace RevitMCP.Core
         private static CoordinationLookup Lookup(Element e, Source s) => new CoordinationLookup
         {
             ElementId = e.Id.GetIdValue(), LinkInstanceId = s.LinkId, UniqueId = e.UniqueId,
-            SourceDocumentIdentity = TypeInstanceLocatorService.GetDocumentIdentity(s.Document)
+            SourceDocumentIdentity = DocumentSessionIdentity.GetDocumentIdentity(s.Document)
         };
         private static double? Length(Element e, BuiltInParameter parameter)
         {
@@ -137,6 +174,12 @@ namespace RevitMCP.Core
                 if (projection != null && projection.Distance < 1e-6) { dot = direction.DotProduct(planar.FaceNormal.Normalize()); break; }
             }
             var row = new CoordinationRow { Mep = Lookup(pipe, mep), Host = Lookup(structure, host),
+                MepSource = mep.LinkId == 0 ? "主模型" : "Link " + mep.LinkId,
+                HostSource = host.LinkId == 0 ? "主模型" : "Link " + host.LinkId,
+                MepLabel = pipe.Name, HostLabel = structure.Name,
+                ResultKind = request.HostCategory == "StructuralFraming" ? CoordinationKind.BeamPenetration
+                    : request.HostCategory == "StructuralColumns" ? CoordinationKind.ReviewRequired
+                    : request.OpeningCandidates ? CoordinationKind.OpeningCandidate : CoordinationKind.Clash,
                 MepCategory = request.MepCategory, HostCategory = request.HostCategory, Level = LevelName(pipe), System = SystemName(pipe),
                 Xmm = center.X * 304.8, Ymm = center.Y * 304.8, Zmm = center.Z * 304.8, IntersectionLengthMm = segment.Length * 304.8 };
             bool round = request.MepCategory == "Pipes" || request.MepCategory == "Conduits";
@@ -160,7 +203,7 @@ namespace RevitMCP.Core
         public static Element ResolveNavigation(Document project, CoordinationLookup lookup)
         {
             var source = Resolve(project, lookup.LinkInstanceId);
-            if (TypeInstanceLocatorService.GetDocumentIdentity(source.Document) != lookup.SourceDocumentIdentity)
+            if (DocumentSessionIdentity.GetDocumentIdentity(source.Document) != lookup.SourceDocumentIdentity)
                 throw new InvalidOperationException("來源模型已變更，請重新掃描。");
             var element = source.Document.GetElement(Id(lookup.ElementId));
             if (element == null || element.UniqueId != lookup.UniqueId) throw new InvalidOperationException("元素已失效，請重新掃描。");

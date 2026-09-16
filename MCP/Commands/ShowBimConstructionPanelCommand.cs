@@ -17,7 +17,7 @@ namespace RevitMCP.Commands
             if (pane.IsShown())
                 pane.Hide();
             else
-                pane.Show();
+                { pane.Show(); RevitMCP.Application.ConstructionPanel.Initialize(); }
 
             return Result.Succeeded;
         }

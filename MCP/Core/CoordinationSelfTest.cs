@@ -18,7 +18,7 @@ namespace RevitMCP.Core
     /// <summary>Runs only on documents created here; never acquires ActiveUIDocument.</summary>
     internal static class CoordinationSelfTest
     {
-        internal const string FixtureVersion = "coordination-1";
+        internal const string FixtureVersion = "coordination-2";
         internal sealed class Assertion
         {
             public string TestName { get; set; } = string.Empty;
@@ -129,7 +129,7 @@ namespace RevitMCP.Core
                     using(var tx=new Transaction(linkDoc,"Create disposable link"))
                     {
                         tx.Start();
-                        var lev=new FilteredElementCollector(linkDoc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l=>l.Elevation).First();lev.Name="FL1";
+                        var lev=new FilteredElementCollector(linkDoc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l=>l.Elevation).First();lev.Name="LINK-FL1";
                         var pt=new FilteredElementCollector(linkDoc).OfClass(typeof(PipeType)).FirstElement();
                         var sys=new FilteredElementCollector(linkDoc).OfClass(typeof(PipingSystemType)).FirstElement();
                         Pipe.Create(linkDoc,sys.Id,pt.Id,lev.Id,new XYZ(-103,0,3),new XYZ(-97,0,3));tx.Commit();
@@ -145,10 +145,37 @@ namespace RevitMCP.Core
                     var instance=RevitLinkInstance.Create(doc,loaded.ElementId);
                     ElementTransformUtils.MoveElement(doc,instance.Id,new XYZ(100,0,0));linkId=instance.Id.GetIdValue();tx.Commit();
                 }
-                var linked=Query("Pipes","Walls");linked.MepLinkId=linkId;
+                var linked=Query("Pipes","Walls");linked.MepLinkId=linkId;linked.LevelName="LINK-FL1";
                 var linkedResult=service.Scan(doc,linked);
                 Check("translated_link",1,linkedResult.TotalMatchedCount,linkedResult.TotalMatchedCount==1,"MEP link translated +100 ft; pipe center resolves to host origin");
                 Check("translated_point",0,linkedResult.Rows.FirstOrDefault()?.Xmm,linkedResult.Rows.Count==1&&Math.Abs(linkedResult.Rows[0].Xmm)<1,"Host-coordinate center mm");
+                Document hostLinkDoc=app.NewProjectDocument(template);
+                string hostLinkPath=Path.Combine(root,"translated-host.rvt");
+                try
+                {
+                    using(var tx=new Transaction(hostLinkDoc,"Create disposable host link"))
+                    {
+                        tx.Start(); var lev=new FilteredElementCollector(hostLinkDoc).OfClass(typeof(Level)).Cast<Level>().First();
+                        var wt=new FilteredElementCollector(hostLinkDoc).OfClass(typeof(WallType)).Cast<WallType>().First(t=>t.Kind==WallKind.Basic);
+                        Wall.Create(hostLinkDoc,Line.CreateBound(new XYZ(-100,-5,0),new XYZ(-100,5,0)),wt.Id,lev.Id,10,0,false,false);tx.Commit();
+                    }
+                    hostLinkDoc.SaveAs(hostLinkPath,new SaveAsOptions());
+                }
+                finally { hostLinkDoc.Close(false); }
+                long hostLinkId;
+                using(var tx=new Transaction(doc,"Load disposable host link"))
+                {
+                    tx.Start();var loaded=RevitLinkType.Create(doc,ModelPathUtils.ConvertUserVisiblePathToModelPath(hostLinkPath),new RevitLinkOptions(false));
+                    var instance=RevitLinkInstance.Create(doc,loaded.ElementId);ElementTransformUtils.MoveElement(doc,instance.Id,new XYZ(100,0,0));hostLinkId=instance.Id.GetIdValue();tx.Commit();
+                }
+                var hostLinked=Query("Pipes","Walls");hostLinked.HostLinkId=hostLinkId;
+                var hostLinkedResult=service.Scan(doc,hostLinked);
+                Check("translated_host_link",2,hostLinkedResult.TotalIssues,hostLinkedResult.TotalIssues==2&&hostLinkedResult.Rows.All(r=>r.Host.LinkInstanceId==hostLinkId),"Main pipes against translated host wall");
+                Check("wall_classification",true,walls.Rows[0].ResultKind,walls.Rows[0].ResultKind==CoordinationKind.OpeningCandidate&&walls.Rows[0].HasClash,"One interaction, one opening row with clash evidence");
+                Check("beam_classification",true,service.Scan(doc,Query("Pipes","StructuralFraming")).Rows[0].ResultKind,service.Scan(doc,Query("Pipes","StructuralFraming")).Rows[0].ResultKind==CoordinationKind.BeamPenetration,"Always manual review");
+                Document switchDoc=app.NewProjectDocument(template);
+                try { switchDoc.SaveAs(Path.Combine(root,"WorkflowSwitch.rvt"),new SaveAsOptions()); }
+                finally { switchDoc.Close(false); }
                 string fixturePath=Path.Combine(root,"CoordinationFixture.rvt");doc.SaveAs(fixturePath,new SaveAsOptions { OverwriteExistingFile=false });
                 Check("fixture_saved",true,File.Exists(fixturePath),File.Exists(fixturePath),"Disposable artifact only");
             }
@@ -185,7 +212,15 @@ namespace RevitMCP.Core
                     var curves=new CurveArray();foreach(var curve in Rectangle(0,-width/2,length,width/2,0))curves.Append(curve);
                     var profile=new CurveArrArray();profile.Append(curves);
                     var plane=SketchPlane.Create(family,Plane.CreateByNormalAndOrigin(XYZ.BasisZ,XYZ.Zero));
-                    family.FamilyCreate.NewExtrusion(true,profile,plane,height);tx.Commit();
+                    family.FamilyCreate.NewExtrusion(true,profile,plane,height);
+                    if (name == "FixtureBeam")
+                    {
+                        // One host with two disconnected solids: one interaction must still be one row.
+                        var extra = new CurveArray(); foreach (var edge in Rectangle(0,1.5,length,2,0)) extra.Append(edge);
+                        var extraProfile = new CurveArrArray(); extraProfile.Append(extra);
+                        family.FamilyCreate.NewExtrusion(true,extraProfile,plane,height);
+                    }
+                    tx.Commit();
                 }
                 family.SaveAs(file,new SaveAsOptions { OverwriteExistingFile=false });
             }

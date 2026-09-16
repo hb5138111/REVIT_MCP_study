@@ -44,20 +44,16 @@ namespace RevitMCP.Models
     {
         public static IReadOnlyList<WorkflowDefinition> Definitions { get; } = new[]
         {
-            new WorkflowDefinition { Id = "clashes", Title = "碰撞檢查", DomainPath = "domain/mep-csa-clash-detection.md",
+            new WorkflowDefinition { Id = "coordination", Title = "協調掃描", DomainPath = "domain/mep-opening-candidate-scan.md",
                 Category = WorkflowCategory.Coordination, Pattern = WorkflowUiPattern.DetectReviewPattern,
                 Risk = WorkflowRiskLevel.ReadOnly, Capabilities = WorkflowCapability.Host | WorkflowCapability.Link | WorkflowCapability.Navigation | WorkflowCapability.Export,
-                Enabled = true, Limitation = "中心線穿越檢查；不包含管件及實體邊緣擦碰。" },
-            new WorkflowDefinition { Id = "openings", Title = "開孔候選", DomainPath = "domain/mep-opening-candidate-scan.md",
-                Category = WorkflowCategory.Coordination, Pattern = WorkflowUiPattern.DetectReviewPattern,
-                Risk = WorkflowRiskLevel.ReadOnly, Capabilities = WorkflowCapability.Host | WorkflowCapability.Link | WorkflowCapability.Navigation | WorkflowCapability.Export,
-                RequiredSettings = new[] { "OpeningClearance" }, Enabled = true, Limitation = "候選僅供人工複核，不代表結構核准。" },
+                Enabled = true, Limitation = "同次掃描分類碰撞、開孔與穿梁候選；中心線法不含管件、保溫與擦碰，不代表結構核准。" },
             new WorkflowDefinition { Id = "sleeves", Title = "套管分類", DomainPath = "domain/sleeve-classification-protocol.md",
                 Category = WorkflowCategory.Coordination, Pattern = WorkflowUiPattern.CompliancePattern,
                 Enabled = false, Limitation = "缺少完整套管實體分類與邊距驗證。" },
             new WorkflowDefinition { Id = "beam-compliance", Title = "穿梁規則檢查", DomainPath = "domain/beam-penetration-rc.md",
                 Category = WorkflowCategory.Coordination, Pattern = WorkflowUiPattern.CompliancePattern,
-                Enabled = false, Limitation = "既有演算法未完整覆蓋 RC／SC／SRC 規則；穿梁候選於開孔頁標記需人工複核。" }
+                Enabled = false, Limitation = "既有演算法未完整覆蓋 RC／SC／SRC 規則；穿梁候選整合於協調掃描，均需人工複核。" }
         };
 
         public static IReadOnlyList<WorkflowPatternDefinition> Patterns { get; } =

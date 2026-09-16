@@ -5,6 +5,13 @@ using System.Linq;
 
 namespace RevitMCP.Models
 {
+    public enum CoordinationKind { Clash, OpeningCandidate, BeamPenetration, ReviewRequired }
+    public sealed class CoordinationLevel
+    {
+        public long? Id { get; set; }
+        public string Name { get; set; } = "全部";
+        public override string ToString() => Name;
+    }
     public sealed class CoordinationSource
     {
         public long LinkInstanceId { get; set; }
@@ -18,6 +25,7 @@ namespace RevitMCP.Models
         public string MepCategory { get; set; } = string.Empty;
         public string HostCategory { get; set; } = string.Empty;
         public string LevelName { get; set; } = string.Empty;
+        public long? LevelId { get; set; }
         public string SystemContains { get; set; } = string.Empty;
         public int MaxResults { get; set; } = 200;
         public bool OpeningCandidates { get; set; }
@@ -38,6 +46,15 @@ namespace RevitMCP.Models
     }
     public sealed class CoordinationRow
     {
+        public CoordinationKind ResultKind { get; set; }
+        public bool HasClash { get; set; } = true;
+        public string MepSource { get; set; } = string.Empty;
+        public string HostSource { get; set; } = string.Empty;
+        public string MepLabel { get; set; } = string.Empty;
+        public string HostLabel { get; set; } = string.Empty;
+        public string KindDisplay => ResultKind == CoordinationKind.OpeningCandidate ? "開孔候選" : ResultKind == CoordinationKind.BeamPenetration ? "穿梁候選" : ResultKind == CoordinationKind.ReviewRequired ? "需人工複核" : "一般碰撞";
+        public string Explanation => KindDisplay + "；" + Warnings;
+        public string Detail => $"MEP {MepSource} [{Mep}]；主體 {HostSource} [{Host}]；交點 {PointDisplay}";
         public CoordinationLookup Mep { get; set; } = new CoordinationLookup();
         public CoordinationLookup Host { get; set; } = new CoordinationLookup();
         public string MepCategory { get; set; } = string.Empty;
@@ -63,7 +80,7 @@ namespace RevitMCP.Models
         public string NominalSizeDisplay => Size(NominalDiameterMm, NominalWidthMm, NominalHeightMm);
         public List<string> WarningCodes { get; set; } = new List<string>();
         public bool ReviewRequired => WarningCodes.Count > 0;
-        public string Status => ReviewRequired ? "需人工複核" : "開孔候選";
+        public string Status => ReviewRequired ? "需人工複核" : "候選";
         public string Warnings => string.Join("；", WarningCodes.Select(CoordinationRules.WarningText));
         private static string Size(double? d, double? w, double? h) => d.HasValue ? $"Ø {d:F1} mm" : w.HasValue && h.HasValue ? $"{w:F1} × {h:F1} mm" : "—";
         private static string CategoryDisplay(string category)
@@ -84,6 +101,11 @@ namespace RevitMCP.Models
     }
     public sealed class CoordinationResult
     {
+        public CoordinationRequest Scope { get; set; } = new CoordinationRequest();
+        public int TotalScanned { get; set; }
+        public int TotalIssues => TotalMatchedCount;
+        public Dictionary<CoordinationKind, int> CountsByKind { get; set; } = new Dictionary<CoordinationKind, int>();
+        public Dictionary<string, int> CountsByStatus { get; set; } = new Dictionary<string, int>();
         public string DocumentIdentity { get; set; } = string.Empty;
         public int TotalMatchedCount { get; set; }
         public int ReturnedCount => Rows.Count;
@@ -103,8 +125,11 @@ namespace RevitMCP.Models
         public static void Validate(CoordinationRequest request)
         {
             if (request.MaxResults < 1 || request.MaxResults > 1000) throw new ArgumentException("顯示上限須為 1 至 1000。");
-            if (string.IsNullOrWhiteSpace(request.MepCategory) || string.IsNullOrWhiteSpace(request.HostCategory) || string.IsNullOrWhiteSpace(request.LevelName))
-                throw new ArgumentException("請指定來源、分類及 MEP 來源樓層，縮小掃描範圍。");
+            if (!new[] { "Pipes", "Ducts", "CableTrays", "Conduits" }.Contains(request.MepCategory) ||
+                !new[] { "Walls", "Floors", "StructuralFraming", "StructuralColumns" }.Contains(request.HostCategory))
+                throw new ArgumentException("請各選一個 MEP 與主體分類。");
+            if (request.MepLinkId < 0 || request.HostLinkId < 0 || request.LevelId <= 0)
+                throw new ArgumentException("來源或樓層識別碼無效。");
             if (request.OpeningCandidates)
             {
                 if (!request.ClearanceMm.HasValue) throw new ArgumentException("請先設定本專案開孔預留量。");
@@ -134,6 +159,7 @@ namespace RevitMCP.Models
                 case "size_data_missing": return "必要標稱尺寸缺失";
                 case "opening_bottom_unresolved": return "開孔下緣尚無可靠量測";
                 case "solid_edge_unknown": return "中心線法未檢驗實體邊距";
+                case "multiple_intersections": return "同一對元素有多段交集；表列長度與交點為第一段，需逐段複核";
                 default: return "幾何資料不完整，請人工複核";
             }
         }

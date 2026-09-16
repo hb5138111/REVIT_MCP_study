@@ -5,15 +5,9 @@ namespace RevitMCP.UI
 {
     internal enum PanelReadOnlyRequestKind
     {
-        ModelSummary,
-        TypeInventory,
-        HighlightTypeInstances,
-        NavigationPrevious,
-        NavigationNext,
-        LevelConstraintAudit,
-        LevelConstraintHighlight,
-        LevelConstraintPrevious,
-        LevelConstraintNext,
+        RefreshSources,
+        ProjectSettings,
+        Navigation,
         CoordinationScan
     }
 

@@ -12,6 +12,7 @@ namespace RevitMCP
         private static SocketService _socketService;
         private static UIApplication _uiApp;
         private static BimConstructionPanelPage _bimConstructionPanelPage;
+        internal static BimConstructionPanelViewModel ConstructionPanel { get; private set; }
 
         public static SocketService SocketService => _socketService;
         public static UIApplication UIApp => _uiApp;
@@ -23,20 +24,21 @@ namespace RevitMCP
                 string? selfTestDirectory = Environment.GetEnvironmentVariable("REVIT_MCP_SELFTEST_DIR");
                 if (!string.IsNullOrWhiteSpace(selfTestDirectory))
                 {
+                    var workflowTest = new CoordinationWorkflowSelfTest(application, selfTestDirectory);
                     application.ControlledApplication.ApplicationInitialized += (sender, args) =>
                     {
                         if (sender is Autodesk.Revit.ApplicationServices.Application app)
                         {
                             // Only the isolated, document-free test session may exit automatically.
                             bool isolated = app.Documents.Size == 0;
-                            try { CoordinationSelfTest.Run(app, selfTestDirectory); }
+                            try { CoordinationSelfTest.Run(app, selfTestDirectory); workflowTest.Start(); }
                             catch (Exception ex)
                             {
                                 System.IO.File.WriteAllText(System.IO.Path.Combine(selfTestDirectory, "startup-error.txt"), ex.ToString());
                             }
                             finally
                             {
-                                if (isolated && app.Documents.Size == 0)
+                                if (isolated && app.Documents.Size == 0 && !workflowTest.Started)
                                 {
                                     var ui = new UIApplication(app);
                                     var exit = RevitCommandId.LookupPostableCommandId(PostableCommand.ExitRevit);
@@ -96,6 +98,8 @@ namespace RevitMCP
 
                 // 5. BIM Construction Panel（原生 DockablePane；不經 MCP/WebSocket）
                 var panelViewModel = new BimConstructionPanelViewModel();
+                ConstructionPanel = panelViewModel;
+                panelViewModel.AttachLifecycle(application);
                 _bimConstructionPanelPage = new BimConstructionPanelPage(panelViewModel);
                 application.RegisterDockablePane(
                     BimConstructionPanelPage.PaneId,
@@ -107,7 +111,7 @@ namespace RevitMCP
                     "營造 BIM\n工具",
                     assemblyPath,
                     "RevitMCP.Commands.ShowBimConstructionPanelCommand");
-                constructionPanelButtonData.ToolTip = "顯示或隱藏營造 BIM 工具的模型摘要面板";
+                constructionPanelButtonData.ToolTip = "顯示或隱藏施工協調工作台";
                 panel.AddItem(constructionPanelButtonData);
 
                 // 初始化 ExternalEventManager (必須在 UI 執行緒建立)
