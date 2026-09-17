@@ -4,7 +4,7 @@
 
 - NATIVE_READY: 0
 - ADAPTER_READY: 18
-- RULE_READY: 4
+- RULE_READY: 5
 - PROJECT_CONFIG_REQUIRED: 18
 - REVIEW_ONLY: 17
 - BLOCKED: 15
@@ -28,6 +28,7 @@
 | beam-penetration-src |  |  |  | REVIEW_ONLY | P1 | Review output is not formal engineering/regulatory approval; project applicability and uncovered rules require review.; No complete registered command chain for this domain. | CompliancePattern |
 | beam-slab-alignment | .claude/skills/ifc-structural-sync/SKILL.md |  | MCP/Core/CommandExecutor.cs, MCP/Core/Commands/CommandExecutor.IfcStructuralSync.cs, MCP/Core/Commands/CommandExecutor.ReclaimedHelpers.cs, MCP/Core/LinkedModelHelper.cs, MCP/Core/RevitCompatibility.cs | BLOCKED | P3 | Documented names not registered (may include historical/external functions): align_beams_top_to_floor_bottom; Explicit user/project inputs: FloorSelectionPolicy, ReferenceLevel, HeightAdjustmentPolicy | PreviewApplyPattern |
 | cad-block-point-placement |  | create_level, modify_element_parameter, get_dwg_block_instances, preview_family_instances_from_dwg_blocks, create_family_instances_from_dwg_blocks, link_cad_to_view, link_cads_by_floor | MCP/Core/CadBlockPlacementExecutor.cs, MCP/Core/CadLinkExecutor.cs, MCP/Core/CommandExecutor.cs, MCP/Core/Commands/CommandExecutor.Level.cs, MCP/Core/RevitCompatibility.cs, MCP/Core/TransactionHelper.cs | BLOCKED | P3 | Documented names not registered (may include historical/external functions): duplicate_existing, duplicate_in_batch; Explicit user/project inputs: BlockToFamilyTypeMapping, LevelMapping, PlacementMode | PreviewApplyPattern |
+| construction-drawing-production |  |  |  | RULE_READY | P1 | Full Domain is not certified: per-field merge, adoption, multi-main topology and reference/dimension automation remain disabled | PreviewApplyPattern |
 | core-reload-boundary | .claude/skills/core-reload-dev/SKILL.md | get_project_info | MCP/Core/CommandExecutor.cs | META_ONLY | P4 |  | N/A |
 | corridor-analysis-protocol | .claude/skills/fire-safety-check/SKILL.md | analyze_corridor_width, get_rooms_by_level, create_corridor_dimension | MCP/Core/CommandExecutor.cs, MCP/Core/RevitCompatibility.cs | REVIEW_ONLY | P3 | Review output is not formal engineering/regulatory approval; project applicability and uncovered rules require review. | CompliancePattern |
 | curtain-wall-elevation-workflow |  | delete_element, create_curtain_wall_elevations, diagnose_curtain_wall_elevation_direction, diagnose_curtain_wall_elevation_directions, diagnose_curtain_wall_elevation_dimensions | MCP/Core/CommandExecutor.cs, MCP/Core/Commands/CommandExecutor.CurtainWall.cs, MCP/Core/Commands/CommandExecutor.CurtainWallDimensions.cs, MCP/Core/Commands/CommandExecutor.DoorWindowLegend.cs, MCP/Core/RevitCompatibility.cs, MCP/Core/TransactionHelper.cs | ADAPTER_READY | P1 | Reusable command implementation exists; typed orchestration and domain-specific fixture are still required before enabling this domain. | PreviewApplyPattern |

@@ -70,3 +70,5 @@
 ## Native 基地／土方
 
 [site-terrain-earthwork.md](site-terrain-earthwork.md)：CSV/TXT 測量點、明確座標基準、確認後 Toposolid 建立、開挖與 TIN 土方稽核；由 Native typed workflow 使用，無新增 MCP Tool。
+
+[construction-drawing-production.md](construction-drawing-production.md)：樣板圖紙、出圖包、人工修改保護、圖面 QA；Native typed workflow，無新增 MCP Tool。

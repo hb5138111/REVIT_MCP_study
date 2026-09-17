@@ -1,10 +1,9 @@
 {
-  "SchemaVersion": 2,
-  "Task": "v0.6",
+  "Version": "v0.6",
+  "Task": "施工圖生產中心",
   "Branch": "bim-custom",
   "Status": "READY_FOR_OPTIONAL_UAT",
-  "StatusScope": "Only the enabled current-document workflow; limitations listed explicitly. Full Domain is not certified.",
-  "UpdatedAt": "2026-09-17T07:45:07.506Z",
+  "Timestamp": "2026-09-17T07:45:07.506Z",
   "Gates": {
     "A": {
       "Status": "PASS",
@@ -89,14 +88,74 @@
     }
   },
   "BuildSHA256": "5944347E0BC64EF13449944F8ECF447C59998F5EBDBF8F6CF0DCA9D3384E4042",
-  "InstalledVersion": "v0.6",
-  "ProductionDeployment": "PASS — FORMAL_V06_RELEASE",
-  "InstalledSHA256": "5944347E0BC64EF13449944F8ECF447C59998F5EBDBF8F6CF0DCA9D3384E4042",
-  "PreviousStable": {
-    "Version": "v0.5.2.1",
-    "SHA256": "AC00D4CB4DF616C4F9FEB0A916E8B53AE8E74A6DB4BF402A1A176DB9F2F0943F",
-    "Report": "docs/productization/v0521-report.json"
+  "SourceFingerprintVerified": true,
+  "Scope": "Current document; same TitleBlock Type; one main plan viewport; optional reusable Legend/Schedule",
+  "FormalDeployment": {
+    "Kind": "FORMAL_V06_RELEASE",
+    "Status": "PASS",
+    "BuildSHA256": "5944347E0BC64EF13449944F8ECF447C59998F5EBDBF8F6CF0DCA9D3384E4042",
+    "Timestamp": "2026-09-17T07:43:52.2975503+00:00",
+    "Backup": "test-artifacts\\reversible-b1d2b736a14144e7a46a8ed26a43c67f",
+    "Rollback": "NOT_NEEDED",
+    "DeployedSHA256": "5944347E0BC64EF13449944F8ECF447C59998F5EBDBF8F6CF0DCA9D3384E4042",
+    "HashMatch": true,
+    "RequiredDllSet": "PASS",
+    "RequiredDllCount": 8,
+    "Files": [
+      {
+        "File": "ClosedXML.dll",
+        "BuildSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C",
+        "DeployedSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C"
+      },
+      {
+        "File": "DocumentFormat.OpenXml.dll",
+        "BuildSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974",
+        "DeployedSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974"
+      },
+      {
+        "File": "ExcelNumberFormat.dll",
+        "BuildSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507",
+        "DeployedSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507"
+      },
+      {
+        "File": "Irony.dll",
+        "BuildSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD",
+        "DeployedSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD"
+      },
+      {
+        "File": "Newtonsoft.Json.dll",
+        "BuildSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07",
+        "DeployedSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07"
+      },
+      {
+        "File": "RevitMCP.dll",
+        "BuildSHA256": "5944347E0BC64EF13449944F8ECF447C59998F5EBDBF8F6CF0DCA9D3384E4042",
+        "DeployedSHA256": "5944347E0BC64EF13449944F8ECF447C59998F5EBDBF8F6CF0DCA9D3384E4042"
+      },
+      {
+        "File": "SixLabors.Fonts.dll",
+        "BuildSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F",
+        "DeployedSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F"
+      },
+      {
+        "File": "XLParser.dll",
+        "BuildSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C",
+        "DeployedSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C"
+      }
+    ],
+    "ManifestCount": 1,
+    "Assembly": "RevitMCP\\RevitMCP.dll",
+    "FullClassName": "RevitMCP.Application"
   },
+  "Limits": [
+    "No adoption of user-owned sheets",
+    "No per-field merge inside one sheet",
+    "No per-row distinct profile/zone",
+    "No rotated grids or adaptive titleblock layout",
+    "DuplicateWithDetailing, guide grid, dependent crop source, arbitrary details disabled",
+    "Matchline/View Reference and auto dimensions PARTIAL / NOT ENABLED",
+    "300-sheet runtime benchmark and title text envelopes not certified"
+  ],
   "SourceFingerprints": [
     {
       "Path": "MCP/Application.cs",
@@ -613,18 +672,8 @@
   ],
   "FinalCommit": {
     "Value": "SELF_COMMIT",
-    "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
+    "Resolve": "git log -1 --format=%H -- docs/productization/v06-report.json",
     "LiteralReceipt": "test-artifacts/v06/final.json"
   },
-  "RemainingLimitations": [
-    "No adoption of user-owned sheets",
-    "No per-field merge inside one sheet",
-    "No per-row distinct profile/zone",
-    "No rotated grids or adaptive titleblock layout",
-    "DuplicateWithDetailing, guide grid, dependent crop source, arbitrary details disabled",
-    "Matchline/View Reference and auto dimensions PARTIAL / NOT ENABLED",
-    "300-sheet runtime benchmark and title text envelopes not certified"
-  ],
-  "NextAction": "Optional UAT of enabled scope only; stop. Do not start v0.7.",
-  "Report": "docs/productization/v06-report.json"
+  "StatusScope": "Only the enabled current-document workflow; limitations listed explicitly. Full Domain is not certified."
 }

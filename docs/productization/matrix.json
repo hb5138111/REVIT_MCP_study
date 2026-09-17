@@ -352,6 +352,11 @@
       "Bytes": 28081
     },
     {
+      "Path": "domain/construction-drawing-production.md",
+      "Sha256": "8379a0bff5058f8be16bc4632fe73edf360292ecfe6bcac39970443405eab965",
+      "Bytes": 5857
+    },
+    {
       "Path": "domain/core-reload-boundary.md",
       "Sha256": "3d48858d709869a6b17fee4600d1ec6e80c2a25d698b7e47b5ef4e3cc2792225",
       "Bytes": 5972
@@ -588,8 +593,8 @@
     },
     {
       "Path": "domain/README.md",
-      "Sha256": "aa3a37f0f7df13039952008cb90171f1d7ec004860168f78c9be5f5ce47a5c10",
-      "Bytes": 5818
+      "Sha256": "3a85fd0e273eafafe5ce67f67d18e4e4827bd106302c015cb26ea9a59523c22c",
+      "Bytes": 5999
     },
     {
       "Path": "domain/references/building-code-tw.md",
@@ -948,8 +953,8 @@
     },
     {
       "Path": "MCP/Application.cs",
-      "Sha256": "8fac9bdcb8045f38f7ab4b52b76292e3c050b609f9ad284aa836aa6f9b8a2d23",
-      "Bytes": 11913
+      "Sha256": "9a6836f3d34c2897eace70838b1ecc4ec94c49dc0a90ba8144b1f005d7f52109",
+      "Bytes": 12539
     },
     {
       "Path": "MCP/Commands/MCPCommands.cs",
@@ -1322,6 +1327,21 @@
       "Bytes": 925
     },
     {
+      "Path": "MCP/Core/Drawing/DrawingModels.cs",
+      "Sha256": "cec8a80c0b8cae7502da034bc54879d3cf1b2b4aa0cf8909e8d49c9e3d7dd808",
+      "Bytes": 16115
+    },
+    {
+      "Path": "MCP/Core/Drawing/DrawingProductionFixture.cs",
+      "Sha256": "7f74c20517bb6990d0bc0730ac76399af13d3c9f636e9a736013af1efecdc182",
+      "Bytes": 21993
+    },
+    {
+      "Path": "MCP/Core/Drawing/RevitDrawingService.cs",
+      "Sha256": "62e3c8430f71856a707eef749f4e5df2aff7a2d0dcb7d7687d2d5ab0c0eb45f9",
+      "Bytes": 47390
+    },
+    {
       "Path": "MCP/Core/DwgBeamExecutor.cs",
       "Sha256": "932a58a99c09e8bad15e57d9a689d4daabb74cf39d9bc12fb73664af1ce1a075",
       "Bytes": 31209
@@ -1488,13 +1508,13 @@
     },
     {
       "Path": "MCP/UI/BimConstructionPanelPage.cs",
-      "Sha256": "6e4534ccc376ca359fda2be08f79e0cef5285d44519cca9cc066c72a23499684",
-      "Bytes": 1311
+      "Sha256": "5d456414dbec64ab9bbc3d04090e8d2459925a3eaa75e00595bc01fcf1d14ced",
+      "Bytes": 1442
     },
     {
       "Path": "MCP/UI/BimConstructionPanelViewModel.cs",
-      "Sha256": "0283136e9d1403b87ab071fc41963b6dd4ad9ba4cc85920101dee849532a3cd1",
-      "Bytes": 1889
+      "Sha256": "0354713298214e5d3a7347b4793e46eea823b200145edee238e6f782d9515454",
+      "Bytes": 2594
     },
     {
       "Path": "MCP/UI/CoordinationViewModel.cs",
@@ -1505,6 +1525,16 @@
       "Path": "MCP/UI/DetectReviewWorkflowControl.cs",
       "Sha256": "81620472d0e1e0278e11a689cc2be0d96568109daecbf3a6694dd7088cbc2191",
       "Bytes": 10785
+    },
+    {
+      "Path": "MCP/UI/DrawingProductionControl.cs",
+      "Sha256": "5d407f5dabf4b6ab51e9ae6185d4629ce288ceec5af010d1f9eef85bd1826a05",
+      "Bytes": 19997
+    },
+    {
+      "Path": "MCP/UI/DrawingProductionViewModel.cs",
+      "Sha256": "ce3178fbae17ca1158c99c9b4fd96d4a7dc3c39daa714ec7edaab59b5f95a519",
+      "Bytes": 7680
     },
     {
       "Path": "MCP/UI/EarthworkControl.cs",
@@ -1535,6 +1565,11 @@
       "Path": "MCP/UI/RevitCoordinationHost.cs",
       "Sha256": "2724ce29386c08855b15ba6e5dce91827c97c48a479e00d557f419e3e248f9a4",
       "Bytes": 3025
+    },
+    {
+      "Path": "MCP/UI/RevitDrawingHost.cs",
+      "Sha256": "7b6b4c159694182979b0d157286bf05ef9e03607ff4e332593f028e3f5b7c77f",
+      "Bytes": 3608
     },
     {
       "Path": "MCP/UI/RevitSiteHost.cs",
@@ -40482,7 +40517,7 @@
   "Counts": {
     "NATIVE_READY": 0,
     "ADAPTER_READY": 18,
-    "RULE_READY": 4,
+    "RULE_READY": 5,
     "PROJECT_CONFIG_REQUIRED": 18,
     "REVIEW_ONLY": 17,
     "BLOCKED": 15,
@@ -44837,6 +44872,7 @@
         "domain/anti-lessons.md",
         "domain/auto-dimension-workflow.md",
         "domain/beam-slab-alignment.md",
+        "domain/construction-drawing-production.md",
         "domain/core-reload-boundary.md",
         "domain/corridor-analysis-protocol.md",
         "domain/curtain-wall-pattern.md",
@@ -45696,12 +45732,16 @@
         {
           "Line": 70,
           "Text": "## Native 基地／土方"
+        },
+        {
+          "Line": 74,
+          "Text": "[construction-drawing-production.md](construction-drawing-production.md)：樣板圖紙、出圖包、人工修改保護、圖面 QA；Native typed workflow，無新增 MCP Tool。"
         }
       ],
       "SourceReview": {
         "Status": "ASSESSED",
         "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
-        "DomainSha256": "aa3a37f0f7df13039952008cb90171f1d7ec004860168f78c9be5f5ce47a5c10",
+        "DomainSha256": "3a85fd0e273eafafe5ce67f67d18e4e4827bd106302c015cb26ea9a59523c22c",
         "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
       }
     },
@@ -49066,6 +49106,172 @@
         "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
         "DomainSha256": "e46bc1c6e70d8fcd816129bce6c46b70712554e2232d58274d93fa648111092c",
         "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
+      }
+    },
+    {
+      "DomainId": "construction-drawing-production",
+      "DomainPath": "domain/construction-drawing-production.md",
+      "Description": "施工圖生產中心 SOP：從既有 Sheet 擷取 Blueprint、保存出圖樣板、規劃樓層分區圖紙、確認建立更新並執行 QA 與 read-back。適用 construction drawing production、Cartoon Set、Drawing Package、人工修改保護。",
+      "Tags": [
+        "施工圖",
+        "drawing",
+        "sheet",
+        "viewport",
+        "blueprint",
+        "package",
+        "QA"
+      ],
+      "RelatedDomains": [
+        "domain/auto-dimension-workflow.md",
+        "domain/dependent-view-crop-workflow.md",
+        "domain/detail-component-sync.md",
+        "domain/matchline-automation.md",
+        "domain/sheet-viewport-management.md",
+        "domain/viewport-type-scale-sync.md"
+      ],
+      "SkillPath": [],
+      "Tools": [],
+      "CommandNames": [],
+      "TypeScriptSchemas": [],
+      "BackendFiles": [],
+      "CommandEvidence": [],
+      "RevitApiEvidence": [],
+      "MutationLevel": "UnresolvedImplementation",
+      "ReadOnly": null,
+      "TransactionRequired": null,
+      "NativeWorkflowReadOnly": false,
+      "BackendFileContainsTransaction": false,
+      "HostSupport": "No complete runtime mapping",
+      "LinkSupport": "No reachable Link-document/transform evidence; host-only assumption for product design",
+      "RequiresProjectSettings": false,
+      "RequiredSettings": [],
+      "RuntimeCapability": "Typed Native C# service; no new MCP transport",
+      "NativeUiStatus": "Implemented: five-step current-document Sheet Blueprint / Package workflow",
+      "FixtureTestStatus": "PASS: 46 assertions; scoped drawing workflow",
+      "ProductizationStatus": "RULE_READY",
+      "Priority": "P1",
+      "Blockers": [
+        "Full Domain is not certified: per-field merge, adoption, multi-main topology and reference/dimension automation remain disabled"
+      ],
+      "RecommendedUiPattern": "PreviewApplyPattern",
+      "LargeModelRisk": "Explicit queries; deterministic complete plan; virtualized table; no geometry extraction; actual 300-sheet runtime benchmark not claimed",
+      "Testability": "Contract inspection; domain-specific fixtures pending",
+      "DomainTools": [],
+      "SkillSupportTools": [],
+      "DocumentedToolCandidates": [],
+      "UnregisteredToolReferences": [],
+      "ReachableMethods": [],
+      "MutationAssessmentScope": "Skill tool chain (no direct domain tool references)",
+      "TransactionEvidence": [],
+      "LinkMethodEvidence": [],
+      "RuleEvidence": [
+        {
+          "Line": 3,
+          "Text": "description: \"施工圖生產中心 SOP：從既有 Sheet 擷取 Blueprint、保存出圖樣板、規劃樓層分區圖紙、確認建立更新並執行 QA 與 read-back。適用 construction drawing production、Cartoon Set、Drawing Package、人工修改保護。\""
+        },
+        {
+          "Line": 13,
+          "Text": "# 施工圖生產／Construction drawing production"
+        },
+        {
+          "Line": 17,
+          "Text": "## 五步驟"
+        },
+        {
+          "Line": 21,
+          "Text": "3. 圖紙計畫：以明確 token 規則產生 Cartoon Set；檢查空值、未知 token、數值格式、重複圖號、既有圖號、保留圖號、視圖名稱及版面。來源已放置的模型視圖必須複製或建立從屬視圖。"
+        },
+        {
+          "Line": 22,
+          "Text": "4. 預覽建立：無衝突才可確認；Confirm 綁定計畫與模型 freshness。以 TransactionGroup 包住每張 Transaction，任何實作／read-back 失敗整批回復。Native UI 直接呼叫 typed service，不經 MCP／TS。"
+        },
+        {
+          "Line": 25,
+          "Text": "## Blueprint 與版本"
+        },
+        {
+          "Line": 28,
+          "Text": "同圖框 Type 沿用 placement coordinates；跨圖框轉換需獨立驗證，未通過不得直接套用 absolute coordinates。圖框 bounds 不是經認證 printable area；不自行發明 margin。"
+        },
+        {
+          "Line": 29,
+          "Text": "Scope Box 優先。網格分區若啟用，必須驗證每條網格存在、軸向可靠，padding 明確輸入且只能加一次。從屬視圖沿用母視圖的比例與樣板，不能為了出圖偷偷更改既有母視圖。"
+        },
+        {
+          "Line": 31,
+          "Text": "## 複製政策"
+        },
+        {
+          "Line": 33,
+          "Text": "NEVER_COPY：Revision、Revision Cloud、issue state、工具 metadata、未知受保護內建參數。Sheet Number／Name 禁止從來源複製，屬 GENERATED，由計畫設定。"
+        },
+        {
+          "Line": 35,
+          "Text": "Profile 可將 Level、Zone、DrawingType、Discipline、Phase 映射至勾選的既有文字參數；不建立 Shared Parameter。View 參數映射只允許獨立複製視圖，避免改寫既有母視圖；缺少參數或映射值必須明示，不能默默略過。"
+        },
+        {
+          "Line": 38,
+          "Text": "## 所有權與更新"
+        },
+        {
+          "Line": 40,
+          "Text": "PackageGuid＋Level／Zone 穩定 key 對應 GeneratedSheetGuid、Sheet UniqueId、ProfileGuid／Version 及最後一次完整 read-back baseline，保存在工具 Extensible Storage，不新增公司 shared parameters。"
+        },
+        {
+          "Line": 42,
+          "Text": "MANUAL_OVERRIDE 預設保留且提示需人工複核；套用樣板必須明確選擇、重新預覽並確認。遺失元素不能默默重建；內容拓樸變更不得偷偷刪除已有視埠／註記。"
+        },
+        {
+          "Line": 43,
+          "Text": "v0.6 支援整張或逐張保留／重套；尚未提供同張圖紙逐欄合併。既有公司圖紙納管尚未啟用，因此所有非工具圖紙均保持 Preview only／同號衝突，不透過名稱自動接管。"
+        },
+        {
+          "Line": 46,
+          "Text": "## QA 與性能"
+        },
+        {
+          "Line": 48,
+          "Text": "ERROR 阻擋 Ready：遺失主要視圖／圖框、圖號衝突、超框、版面重疊、實際寫入不符。WARNING：人工修改、樣板過期；INFO：明確停用的選用共用內容。Ready 只代表工具 QA，不等於正式核准或 Issued for Construction。"
+        },
+        {
+          "Line": 49,
+          "Text": "圖紙目錄使用工具記錄與實際 Sheet read-back 顯示圖號、圖名、Level、Zone、DrawingType 及 Draft／NeedsReview／Ready，不為目錄增加模型參數。畫面預覽的標題點僅是示意，不代表文字包絡或 printable area 已認證。"
+        },
+        {
+          "Line": 50,
+          "Text": "大型模型按使用者操作查詢，先 summary／count、再計畫明細；同批一次建立必要字典，不逐張全模型 collector。UI 表格 virtualization，不 silent truncation。純邏輯可背景執行，所有 Revit API 必須在 ExternalEvent context。"
+        },
+        {
+          "Line": 51,
+          "Text": "測試只使用 disposable fixture；必須包含 Template extraction、建立、重跑、人工移動保留／套用、V2、圖號衝突、QA negative cases 及真實 ViewModel→Dispatcher→read-back 工作流。"
+        }
+      ],
+      "SourceReview": {
+        "Status": "ASSESSED",
+        "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
+        "DomainSha256": "8379a0bff5058f8be16bc4632fe73edf360292ecfe6bcac39970443405eab965",
+        "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
+      },
+      "NativeBackendFiles": [
+        "MCP/Core/Drawing/DrawingModels.cs",
+        "MCP/Core/Drawing/RevitDrawingService.cs",
+        "MCP/UI/DrawingProductionViewModel.cs",
+        "MCP/UI/RevitDrawingHost.cs"
+      ],
+      "FixtureEvidence": "test-artifacts/revit-selftest-96db92e059574e9090f668d79ea46402/drawing-runtime.json",
+      "NativeWorkflowTestStatus": "PASS: ViewModel / ExternalEvent / real Revit read-back",
+      "NativeScope": {
+        "Mutation": "ConfirmedWrite",
+        "TransactionRequired": true,
+        "Readback": true,
+        "RequiresConfirmation": true,
+        "Limits": [
+          "Same TitleBlock Type, one main plan viewport",
+          "No adoption of user-owned sheets",
+          "Custom text mapping only; no new shared parameters",
+          "Guide Grid and arbitrary annotation copy disabled",
+          "Matchline / View Reference and auto dimension PARTIAL / NOT ENABLED"
+        ]
       }
     },
     {
@@ -70397,9 +70603,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-364a274f16a649a68015d4daec6a5521/runtime.json",
-      "NativeWorkflowTestStatus": "NOT_TESTED",
-      "NativeWorkflowEvidence": null,
+      "FixtureEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/runtime.json",
+      "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -72236,9 +72442,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-364a274f16a649a68015d4daec6a5521/runtime.json",
-      "NativeWorkflowTestStatus": "NOT_TESTED",
-      "NativeWorkflowEvidence": null,
+      "FixtureEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/runtime.json",
+      "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -82505,7 +82711,7 @@
         "MCP/UI/SiteTerrainWorkflow.cs",
         "MCP/UI/RevitSiteHost.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-364a274f16a649a68015d4daec6a5521/terrain-runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/terrain-runtime.json",
       "NativeScope": {
         "Mutation": "ConfirmedWrite",
         "TransactionRequired": true,
@@ -92644,6 +92850,25 @@
   ],
   "NativeFeatures": [
     {
+      "Id": "construction-drawing-production",
+      "Status": "RUNTIME_VERIFIED",
+      "RequiredGates": [
+        "A",
+        "B",
+        "C",
+        "C2",
+        "C3",
+        "DrawingRuntime"
+      ],
+      "FixtureEvidence": "test-artifacts/revit-selftest-96db92e059574e9090f668d79ea46402/drawing-runtime.json",
+      "Limits": [
+        "Supported current-document workflow only",
+        "Same TitleBlock Type; one main plan viewport",
+        "Manual overrides default preserve; per-sheet explicit reapply",
+        "Auto dimension / Matchline / View Reference PARTIAL and disabled"
+      ]
+    },
+    {
       "Id": "site-terrain-earthwork",
       "Status": "RUNTIME_VERIFIED",
       "RequiredGates": [
@@ -92680,7 +92905,7 @@
     },
     {
       "Id": "coordination",
-      "Status": "RELEASE_GATED",
+      "Status": "RUNTIME_VERIFIED",
       "Workflow": "One DetectReview workbench",
       "Kinds": [
         "Clash",
@@ -92704,9 +92929,9 @@
   "Audit": {
     "Status": "COMPLETE_STATIC_CAPABILITY_MAPPING",
     "CompilerDiagnostics": 0,
-    "DomainCoverage": 85,
+    "DomainCoverage": 86,
     "RuntimeToolCoverage": 192,
-    "MethodCount": 1493,
+    "MethodCount": 1614,
     "Limitations": [
       "Branch union is conservative, not runtime proof.",
       "Unbound external invocations are retained in backend evidence.",
