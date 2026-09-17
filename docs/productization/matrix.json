@@ -658,8 +658,8 @@
     },
     {
       "Path": "domain/site-terrain-earthwork.md",
-      "Sha256": "14284a9778921af8fd746020456c4ba244efd0c33f4b6d3d5782027ccf54b920",
-      "Bytes": 12169
+      "Sha256": "a09c208edeea05c57e70883c195ce87696ca90ca70a4a55fc712f63382746d89",
+      "Bytes": 15159
     },
     {
       "Path": "domain/skill-authoring-standard.md",
@@ -1412,19 +1412,24 @@
       "Bytes": 3335
     },
     {
+      "Path": "MCP/Core/Site/EarthworkProfiles.cs",
+      "Sha256": "5219aa53251aa13258500ac3cc27b13e73bafd0d435c0c5755ad206e3fb2685f",
+      "Bytes": 5330
+    },
+    {
       "Path": "MCP/Core/Site/EarthworkRecords.cs",
-      "Sha256": "d114db5285ae40fd48cfae29695ce7bebadacdd8aea386aacae00bf432bcb84c",
-      "Bytes": 9949
+      "Sha256": "36ab7955284b3887d2d4835c555079dc8d9e673ed41a0edaccdc9759350bd24f",
+      "Bytes": 10877
     },
     {
       "Path": "MCP/Core/Site/EarthworkWorkflowSelfTest.cs",
-      "Sha256": "5f05d79cfbb6e8163f7f8be906faa91276ced00daef79c343e1981b646583903",
-      "Bytes": 18257
+      "Sha256": "aaa0e757b56377888f52d7ba2176c172435903967c1ac186318942cf3d4d1638",
+      "Bytes": 25688
     },
     {
       "Path": "MCP/Core/Site/RevitEarthworkRecords.cs",
-      "Sha256": "5d82120e93a41152a2a0e0e652414afd4221baf47c2e6c4678b8955debe53551",
-      "Bytes": 21541
+      "Sha256": "5ff9999fe33b52bff8185d6e63cb1f1d03dd958708452f37e8f24c7bcee7643f",
+      "Bytes": 27265
     },
     {
       "Path": "MCP/Core/Site/RevitTerrainService.cs",
@@ -1503,18 +1508,23 @@
     },
     {
       "Path": "MCP/UI/EarthworkControl.cs",
-      "Sha256": "08f15be844f041b096d79a0752c48824fe427f059cddc0dc2d00b2983fc3416b",
-      "Bytes": 10982
+      "Sha256": "530ca0b3110c8d654a8ad0946177dbc263fac581631bc64a715f397350244357",
+      "Bytes": 12865
+    },
+    {
+      "Path": "MCP/UI/EarthworkProfileEditor.cs",
+      "Sha256": "28f8ff8b7e8491c66d8a2326422bb852fd7c632520db160af23c623878fc83c9",
+      "Bytes": 4001
     },
     {
       "Path": "MCP/UI/EarthworkProfileWindow.cs",
-      "Sha256": "2c177bb4a15111c450450c4abe43ef0026fe6ec67ce8b40721af2e0ac7154aa1",
-      "Bytes": 4543
+      "Sha256": "c2fb2fff4c1effd23de3921d354e8607ee98d0465136db05ea4c34f42fd3dea0",
+      "Bytes": 5955
     },
     {
       "Path": "MCP/UI/EarthworkViewModel.cs",
-      "Sha256": "66ce50bd9ef60adc8c3e1f90a6f9af47f49795731ee51b255f783429e1e5354f",
-      "Bytes": 15231
+      "Sha256": "ba39f6818fa41a5c2dd4c7f45d81d9c2874d2e8e1acfdaa955159a291cb6a39b",
+      "Bytes": 20391
     },
     {
       "Path": "MCP/UI/PanelReadOnlyDispatcher.cs",
@@ -1528,8 +1538,8 @@
     },
     {
       "Path": "MCP/UI/RevitSiteHost.cs",
-      "Sha256": "704d14befd12111134b4977f0153541878da6e6c38eec868426a413126c364ae",
-      "Bytes": 13232
+      "Sha256": "52c25faa225fab1edcab4d4a882351cc002df05586fed298bdca610322cc229c",
+      "Bytes": 14346
     },
     {
       "Path": "MCP/UI/SiteTerrainControl.cs",
@@ -1538,8 +1548,8 @@
     },
     {
       "Path": "MCP/UI/SiteTerrainViewModel.cs",
-      "Sha256": "a956692d5ea031a21932cf436047bcf5b56c1ab634806a6b001830c49b3c12f2",
-      "Bytes": 18682
+      "Sha256": "c696e3d793c0da3ded764e3b8b2ada598eb1ff7504aa318cda592cd7667b7c7c",
+      "Bytes": 19261
     },
     {
       "Path": "MCP/UI/SiteTerrainWorkflow.cs",
@@ -70010,7 +70020,7 @@
       "RequiredSettings": [],
       "RuntimeCapability": "8 command mappings; 40 reachable methods. Method graph is conservative across branches.",
       "NativeUiStatus": "Implemented: typed read-only coordination subworkflow; release gated",
-      "FixtureTestStatus": "NOT_TESTED: no matching build runtime report",
+      "FixtureTestStatus": "PASS: coordination-2, 20 assertions (native scan subset only)",
       "ProductizationStatus": "ADAPTER_READY",
       "Priority": "P1",
       "Blockers": [
@@ -70387,12 +70397,12 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": null,
+      "FixtureEvidence": "test-artifacts/revit-selftest-364a274f16a649a68015d4daec6a5521/runtime.json",
       "NativeWorkflowTestStatus": "NOT_TESTED",
       "NativeWorkflowEvidence": null,
       "NativeScope": {
         "Host": true,
-        "Link": "Source mapping only; runtime not verified",
+        "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
         "Mutation": "ReadOnly",
         "TransactionRequired": false,
         "UI": "DetectReviewPattern",
@@ -71681,7 +71691,7 @@
       ],
       "RuntimeCapability": "6 command mappings; 45 reachable methods. Method graph is conservative across branches.",
       "NativeUiStatus": "Implemented: typed read-only coordination subworkflow; release gated",
-      "FixtureTestStatus": "NOT_TESTED: no matching build runtime report",
+      "FixtureTestStatus": "PASS: coordination-2, 20 assertions (native scan subset only)",
       "ProductizationStatus": "PROJECT_CONFIG_REQUIRED",
       "Priority": "P1",
       "Blockers": [
@@ -72226,12 +72236,12 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": null,
+      "FixtureEvidence": "test-artifacts/revit-selftest-364a274f16a649a68015d4daec6a5521/runtime.json",
       "NativeWorkflowTestStatus": "NOT_TESTED",
       "NativeWorkflowEvidence": null,
       "NativeScope": {
         "Host": true,
-        "Link": "Source mapping only; runtime not verified",
+        "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
         "Mutation": "ReadOnly",
         "TransactionRequired": false,
         "UI": "DetectReviewPattern",
@@ -82353,7 +82363,7 @@
       "RequiredSettings": [],
       "RuntimeCapability": "Typed Native C# workflow; no additional MCP interface",
       "NativeUiStatus": "Implemented: v0.5 site step workflow; confirmed writes and read-back",
-      "FixtureTestStatus": "NOT_TESTED: no matching-build TerrainFixture report",
+      "FixtureTestStatus": "PASS: terrain-1; 31 assertions (explicit supported subset)",
       "ProductizationStatus": "RULE_READY",
       "Priority": "P3",
       "Blockers": [
@@ -82462,12 +82472,28 @@
         {
           "Line": 82,
           "Text": "建立／更新前列出 Schedule、參數及新增／更新 GUID，明確 Confirm 後單一 transaction group 寫入；欄位、GUID、record count、schedule membership 及每個數量／成本值 read-back 全部一致才成功。使用 `CanTotal` 驗證可加總欄位，grand total 標示各區可能重疊。既有未受工具管理的同名明細表不覆寫，改用安全名稱。來源 Element.VersionGuid 不符時必須重新計算，不以舊數量更新。失敗 rollback 完整 transaction group。"
+        },
+        {
+          "Line": 86,
+          "Text": "## 10. 成本設定檔與成果治理（v0.5.2.1）"
+        },
+        {
+          "Line": 92,
+          "Text": "每個計算結果持有不可變 EarthworkProfileSnapshot，含完整設定值、GUID、名稱、版本及 hash。修改設定檔只標記 CostProfileOutdated／Stale，不動歷史成本。使用者按「使用最新設定重新計算」後才產生新 snapshot，確認儲存才更新同 ZoneGuid。歷史區可繼續顯示舊版本及明細；過期來源或設定不得直接標記已複核。"
+        },
+        {
+          "Line": 94,
+          "Text": "CalculationStatus 區分尚未計算、已計算、結果已過期、計算失敗；ReviewStatus 區分待複核、已複核、有警告。Warnings 存在時顯示有警告，不因人工複核而隱藏。標記已複核只改工具 review metadata，不重新計算；不代表工程數量、合約或測量核准。重新計算回到待複核。"
+        },
+        {
+          "Line": 96,
+          "Text": "UI 再利用率與裝載率使用百分數，ViewModel 轉換為 fraction 一次。再利用率允許 0～100%；裝載率須大於 0 且不超過 100%，維持有效容量必須大於 0 的既有公式。設定檔分為基本設定、土方性質、運輸、單價及其他成本；每項價格旁明示幣別／體積或車次基準，衍生容量預覽不寫模型。"
         }
       ],
       "SourceReview": {
         "Status": "ASSESSED",
         "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
-        "DomainSha256": "14284a9778921af8fd746020456c4ba244efd0c33f4b6d3d5782027ccf54b920",
+        "DomainSha256": "a09c208edeea05c57e70883c195ce87696ca90ca70a4a55fc712f63382746d89",
         "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
       },
       "NativeBackendFiles": [
@@ -82479,7 +82505,7 @@
         "MCP/UI/SiteTerrainWorkflow.cs",
         "MCP/UI/RevitSiteHost.cs"
       ],
-      "FixtureEvidence": null,
+      "FixtureEvidence": "test-artifacts/revit-selftest-364a274f16a649a68015d4daec6a5521/terrain-runtime.json",
       "NativeScope": {
         "Mutation": "ConfirmedWrite",
         "TransactionRequired": true,
@@ -92619,7 +92645,7 @@
   "NativeFeatures": [
     {
       "Id": "site-terrain-earthwork",
-      "Status": "RELEASE_GATED",
+      "Status": "RUNTIME_VERIFIED",
       "RequiredGates": [
         "A",
         "B",
@@ -92630,7 +92656,7 @@
         "TerrainRuntime",
         "CadRuntime"
       ],
-      "CadFixtureStatus": "NOT_TESTED",
+      "CadFixtureStatus": "PASS",
       "Limits": [
         "Supported subset only; full Domain remains RULE_READY",
         "Explicit confirmation and read-back required",
@@ -92680,7 +92706,7 @@
     "CompilerDiagnostics": 0,
     "DomainCoverage": 85,
     "RuntimeToolCoverage": 192,
-    "MethodCount": 1456,
+    "MethodCount": 1493,
     "Limitations": [
       "Branch union is conservative, not runtime proof.",
       "Unbound external invocations are retained in backend evidence.",

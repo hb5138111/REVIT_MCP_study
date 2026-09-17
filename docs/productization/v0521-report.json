@@ -1,0 +1,166 @@
+{
+  "Version": "v0.5.2.1",
+  "Task": "土方成果／成本設定／明細表 UX Refinement",
+  "Branch": "bim-custom",
+  "Status": "READY_FOR_OPTIONAL_UAT",
+  "Timestamp": "2026-09-17T02:29:06.707Z",
+  "Gates": {
+    "A": {
+      "Status": "PASS",
+      "Passed": 489,
+      "Failed": 0
+    },
+    "B": {
+      "Status": "PASS",
+      "Passed": 20,
+      "Failed": 0
+    },
+    "C": {
+      "Status": "PASS",
+      "Passed": 20,
+      "Failed": 0
+    },
+    "C2": {
+      "Status": "PASS",
+      "Passed": 65,
+      "Failed": 0
+    },
+    "C3": {
+      "Status": "PASS",
+      "Passed": 48,
+      "Failed": 0
+    },
+    "TerrainLogic": {
+      "Status": "PASS",
+      "Passed": 211,
+      "Failed": 0
+    },
+    "TerrainRuntime": {
+      "Status": "PASS",
+      "Passed": 31,
+      "Failed": 0
+    },
+    "CadRuntime": {
+      "Status": "PASS",
+      "Passed": 47,
+      "Failed": 0
+    },
+    "EarthworkNative": {
+      "Status": "PASS",
+      "Passed": 61,
+      "Failed": 0
+    },
+    "Build": {
+      "Status": "PASS"
+    },
+    "QAQC": {
+      "Status": "PASS"
+    },
+    "Rollback": {
+      "Status": "PASS"
+    }
+  },
+  "BuildSHA256": "AC00D4CB4DF616C4F9FEB0A916E8B53AE8E74A6DB4BF402A1A176DB9F2F0943F",
+  "SourceFingerprintVerified": true,
+  "FormalDeployment": {
+    "Kind": "FORMAL_V0521_RELEASE",
+    "Status": "PASS",
+    "BuildSHA256": "AC00D4CB4DF616C4F9FEB0A916E8B53AE8E74A6DB4BF402A1A176DB9F2F0943F",
+    "Timestamp": "2026-09-17T02:28:42.8264808+00:00",
+    "Backup": "test-artifacts\\reversible-1900f5c34a0747a5b19e4d52514e30d7",
+    "Rollback": "NOT_NEEDED",
+    "DeployedSHA256": "AC00D4CB4DF616C4F9FEB0A916E8B53AE8E74A6DB4BF402A1A176DB9F2F0943F",
+    "HashMatch": true,
+    "RequiredDllSet": "PASS",
+    "RequiredDllCount": 8,
+    "Files": [
+      {
+        "File": "ClosedXML.dll",
+        "BuildSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C",
+        "DeployedSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C"
+      },
+      {
+        "File": "DocumentFormat.OpenXml.dll",
+        "BuildSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974",
+        "DeployedSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974"
+      },
+      {
+        "File": "ExcelNumberFormat.dll",
+        "BuildSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507",
+        "DeployedSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507"
+      },
+      {
+        "File": "Irony.dll",
+        "BuildSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD",
+        "DeployedSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD"
+      },
+      {
+        "File": "Newtonsoft.Json.dll",
+        "BuildSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07",
+        "DeployedSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07"
+      },
+      {
+        "File": "RevitMCP.dll",
+        "BuildSHA256": "AC00D4CB4DF616C4F9FEB0A916E8B53AE8E74A6DB4BF402A1A176DB9F2F0943F",
+        "DeployedSHA256": "AC00D4CB4DF616C4F9FEB0A916E8B53AE8E74A6DB4BF402A1A176DB9F2F0943F"
+      },
+      {
+        "File": "SixLabors.Fonts.dll",
+        "BuildSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F",
+        "DeployedSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F"
+      },
+      {
+        "File": "XLParser.dll",
+        "BuildSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C",
+        "DeployedSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C"
+      }
+    ],
+    "ManifestCount": 1,
+    "Assembly": "RevitMCP\\RevitMCP.dll",
+    "FullClassName": "RevitMCP.Application"
+  },
+  "Fixtures": {
+    "Earthwork": "earthwork-native-2",
+    "Terrain": "terrain-1",
+    "CAD": "cad-terrain-1",
+    "Coordination": "coordination-2"
+  },
+  "Evidence": {
+    "Native": "test-artifacts/revit-selftest-81c1b56558944f61b1292b627432a293",
+    "Regression": "test-artifacts/revit-selftest-364a274f16a649a68015d4daec6a5521",
+    "Rollback": "Both complete stable deployment snapshots verified"
+  },
+  "KnownResults": {
+    "NativeAreaSquareMetres": 25,
+    "NativeCutAtZeroCubicMetres": 50,
+    "NativeCutAt100cmCubicMetres": 25,
+    "CutterCubicMetres": 57.5,
+    "ScheduleRecords": 2,
+    "SummaryScheduleFields": 15,
+    "DetailScheduleFields": 46,
+    "UpdatedCutCubicMetres": 37.5,
+    "UpdatedExportCubicMetres": 45,
+    "HistoricalV1Cost": 162,
+    "UpdatedCostTestCurrency": 485.5,
+    "FormattedCosts": [
+      "174.50",
+      "311.00"
+    ]
+  },
+  "Limits": [
+    "Boundary TIN requires a convex planar boundary and planar design elevation; Existing/Proposed remains experimental.",
+    "Cutter provides trial excavation volume only; area/depth unavailable and design fill not analyzed are explicit warnings.",
+    "Zones may overlap; project totals sum saved records and do not prove non-overlap.",
+    "Cost is based solely on user project profiles; it is not a market quote or approved contract sum. Mobilization is per zone.",
+    "One geometry-free Generic Model record per Schedule zone; category-bound shared parameters and DataStorage are disclosed model writes.",
+    "Schedule field format, member values and totals are verified through Revit API read-back; optional visual UAT remains.",
+    "CSV labels SI units explicitly; Native quantities use Project Units, profile capacity/prices explicitly use m³ or ft³.",
+    "Optional visual UAT remains; no production model was used. Existing nullable warnings are retained."
+  ],
+  "FinalCommit": {
+    "Value": "SELF_COMMIT",
+    "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
+    "LiteralReceipt": "test-artifacts/v0521/final.json"
+  },
+  "NextRecommendedBatch": "Optional UAT only; stop."
+}

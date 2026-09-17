@@ -1,9 +1,9 @@
 {
   "SchemaVersion": 2,
-  "Task": "v0.5.2",
+  "Task": "v0.5.2.1",
   "Branch": "bim-custom",
   "Status": "READY_FOR_OPTIONAL_UAT",
-  "UpdatedAt": "2026-09-17T01:19:26.985Z",
+  "UpdatedAt": "2026-09-17T02:29:06.707Z",
   "Gates": {
     "A": {
       "Status": "PASS",
@@ -32,7 +32,7 @@
     },
     "TerrainLogic": {
       "Status": "PASS",
-      "Passed": 184,
+      "Passed": 211,
       "Failed": 0
     },
     "TerrainRuntime": {
@@ -47,7 +47,7 @@
     },
     "EarthworkNative": {
       "Status": "PASS",
-      "Passed": 38,
+      "Passed": 61,
       "Failed": 0
     },
     "Build": {
@@ -60,10 +60,10 @@
       "Status": "PASS"
     }
   },
-  "BuildSHA256": "42987353E7479B66F982F5983AB5FA3131DC9ABC532D4398C49ECD953086581E",
-  "InstalledVersion": "v0.5.2",
-  "ProductionDeployment": "PASS — FORMAL_V052_RELEASE",
-  "InstalledSHA256": "42987353E7479B66F982F5983AB5FA3131DC9ABC532D4398C49ECD953086581E",
+  "BuildSHA256": "AC00D4CB4DF616C4F9FEB0A916E8B53AE8E74A6DB4BF402A1A176DB9F2F0943F",
+  "InstalledVersion": "v0.5.2.1",
+  "ProductionDeployment": "PASS — FORMAL_V0521_RELEASE",
+  "InstalledSHA256": "AC00D4CB4DF616C4F9FEB0A916E8B53AE8E74A6DB4BF402A1A176DB9F2F0943F",
   "SourceFingerprints": [
     {
       "Path": "MCP/Application.cs",
@@ -438,16 +438,20 @@
       "Sha256": "c7339ecce466626ec2fa7d1a1c341f48cbfe9844f6abbb0f683bd6d5ab16e4b4"
     },
     {
+      "Path": "MCP/Core/Site/EarthworkProfiles.cs",
+      "Sha256": "5219aa53251aa13258500ac3cc27b13e73bafd0d435c0c5755ad206e3fb2685f"
+    },
+    {
       "Path": "MCP/Core/Site/EarthworkRecords.cs",
-      "Sha256": "d114db5285ae40fd48cfae29695ce7bebadacdd8aea386aacae00bf432bcb84c"
+      "Sha256": "36ab7955284b3887d2d4835c555079dc8d9e673ed41a0edaccdc9759350bd24f"
     },
     {
       "Path": "MCP/Core/Site/EarthworkWorkflowSelfTest.cs",
-      "Sha256": "5f05d79cfbb6e8163f7f8be906faa91276ced00daef79c343e1981b646583903"
+      "Sha256": "aaa0e757b56377888f52d7ba2176c172435903967c1ac186318942cf3d4d1638"
     },
     {
       "Path": "MCP/Core/Site/RevitEarthworkRecords.cs",
-      "Sha256": "5d82120e93a41152a2a0e0e652414afd4221baf47c2e6c4678b8955debe53551"
+      "Sha256": "5ff9999fe33b52bff8185d6e63cb1f1d03dd958708452f37e8f24c7bcee7643f"
     },
     {
       "Path": "MCP/Core/Site/RevitTerrainService.cs",
@@ -511,15 +515,19 @@
     },
     {
       "Path": "MCP/UI/EarthworkControl.cs",
-      "Sha256": "08f15be844f041b096d79a0752c48824fe427f059cddc0dc2d00b2983fc3416b"
+      "Sha256": "530ca0b3110c8d654a8ad0946177dbc263fac581631bc64a715f397350244357"
+    },
+    {
+      "Path": "MCP/UI/EarthworkProfileEditor.cs",
+      "Sha256": "28f8ff8b7e8491c66d8a2326422bb852fd7c632520db160af23c623878fc83c9"
     },
     {
       "Path": "MCP/UI/EarthworkProfileWindow.cs",
-      "Sha256": "2c177bb4a15111c450450c4abe43ef0026fe6ec67ce8b40721af2e0ac7154aa1"
+      "Sha256": "c2fb2fff4c1effd23de3921d354e8607ee98d0465136db05ea4c34f42fd3dea0"
     },
     {
       "Path": "MCP/UI/EarthworkViewModel.cs",
-      "Sha256": "66ce50bd9ef60adc8c3e1f90a6f9af47f49795731ee51b255f783429e1e5354f"
+      "Sha256": "ba39f6818fa41a5c2dd4c7f45d81d9c2874d2e8e1acfdaa955159a291cb6a39b"
     },
     {
       "Path": "MCP/UI/PanelReadOnlyDispatcher.cs",
@@ -531,7 +539,7 @@
     },
     {
       "Path": "MCP/UI/RevitSiteHost.cs",
-      "Sha256": "704d14befd12111134b4977f0153541878da6e6c38eec868426a413126c364ae"
+      "Sha256": "52c25faa225fab1edcab4d4a882351cc002df05586fed298bdca610322cc229c"
     },
     {
       "Path": "MCP/UI/SiteTerrainControl.cs",
@@ -539,7 +547,7 @@
     },
     {
       "Path": "MCP/UI/SiteTerrainViewModel.cs",
-      "Sha256": "a956692d5ea031a21932cf436047bcf5b56c1ab634806a6b001830c49b3c12f2"
+      "Sha256": "c696e3d793c0da3ded764e3b8b2ada598eb1ff7504aa318cda592cd7667b7c7c"
     },
     {
       "Path": "MCP/UI/SiteTerrainWorkflow.cs",
@@ -549,8 +557,8 @@
   "FinalCommit": {
     "Value": "SELF_COMMIT",
     "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
-    "LiteralReceipt": "test-artifacts/v052/final.json"
+    "LiteralReceipt": "test-artifacts/v0521/final.json"
   },
   "NextAction": "Optional UAT only; stop.",
-  "Report": "docs/productization/v052-report.json"
+  "Report": "docs/productization/v0521-report.json"
 }
