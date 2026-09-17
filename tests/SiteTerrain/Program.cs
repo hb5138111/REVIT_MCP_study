@@ -136,7 +136,7 @@ earthVm.TargetElevationText="0";Check("explicit_zero_allowed",true,earthVm.CanCa
 earthVm.Boundary="";Check("missing_boundary_blocked",false,earthVm.CanCalculate,!earthVm.CanCalculate);
 earthVm.DocumentChanged("other");Check("new_document_clears_target",true,earthVm.TargetElevationText,earthVm.TargetElevationText==""&&!earthVm.CanCalculate);
 
-var profile=new EarthworkProjectSettings{ProfileName="Fixture only",Currency="TEST",SwellFactor=1.2,FillLooseFactor=1.1,ReusableRate=0,TruckName="Fixture truck",TruckCapacity=10,TruckLoadUtilization=1,ExcavationUnitCost=2,LoadingUnitCost=3,HaulCostPerTrip=4,DisposalCostPerVolume=5,ImportedFillCostPerVolume=6,BackfillPlacementCostPerVolume=7,CompactionCostPerVolume=8,MobilizationCost=9};
+var profile=new EarthworkProjectProfile{ProfileName="Fixture only",Currency="TEST",SwellFactor=1.2,FillLooseFactor=1.1,ReusableRate=0,TruckName="Fixture truck",TruckCapacity=10,TruckLoadUtilization=1,ExcavationUnitCost=2,LoadingUnitCost=3,HaulCostPerTrip=4,DisposalCostPerVolume=5,ImportedFillCostPerVolume=6,BackfillPlacementCostPerVolume=7,CompactionCostPerVolume=8,MobilizationCost=9};
 var zone=new EarthworkZone{ZoneNumber="A",ZoneName="Fixture A",ExistingTerrainId=123,LastCalculatedAt=DateTimeOffset.UtcNow};
 var request=new EarthworkCalculationRequest(zone,.01,null,"Internal axes / metres");
 var caseA=EarthworkEstimator.Calculate(request,new(100,100,0,1),profile);
@@ -151,7 +151,7 @@ Near("logistics_D_effective_capacity",9,caseD.Logistics.EffectiveTruckCapacity);
 Near("cost_E_excavation",200,(double)caseB.Cost.ExcavationCost);Near("cost_E_loading",195,(double)caseB.Cost.LoadingCost);Near("cost_E_haul",28,(double)caseB.Cost.HaulCost);Near("cost_E_disposal",325,(double)caseB.Cost.DisposalCost);Near("cost_E_import",294,(double)caseC.Cost.ImportedFillMaterialCost);Near("cost_E_backfill",350,(double)caseB.Cost.BackfillPlacementCost);Near("cost_E_compaction",400,(double)caseB.Cost.CompactionCost);Near("cost_E_mobilization",9,(double)caseB.Cost.MobilizationCost);Near("cost_E_total",1507,(double)caseB.Cost.TotalEstimatedCost);
 var imperial=EarthworkEstimator.Calculate(request,new(null,EarthworkUnits.ToCubicMetres(100,EarthworkVolumeUnit.CubicFeet),0,null),profile with{VolumeUnit=EarthworkVolumeUnit.CubicFeet});
 Near("profile_cubic_feet_truck",12,imperial.Logistics.ExportTruckTrips);Near("profile_cubic_feet_cost",200,(double)imperial.Cost.ExcavationCost);
-Reject("profile_no_default_prices",()=>new EarthworkProjectSettings().Validate());
+Reject("profile_no_default_prices",()=>new EarthworkProjectProfile().Validate());
 Reject("profile_zero_capacity",()=>(profile with{TruckCapacity=0}).Validate());Reject("profile_zero_utilization",()=>(profile with{TruckLoadUtilization=0}).Validate());Reject("profile_invalid_reuse",()=>(profile with{ReusableRate=1.01}).Validate());Reject("profile_missing_price",()=>(profile with{LoadingUnitCost=null}).Validate());Reject("profile_negative_price",()=>(profile with{LoadingUnitCost=-1}).Validate());Reject("profile_nan_factor",()=>(profile with{SwellFactor=double.NaN}).Validate());
 var records=EarthworkEstimator.Upsert(Array.Empty<EarthworkRecord>(),caseA);records=EarthworkEstimator.Upsert(records,caseB);
 Check("stable_zone_updates_single_record",1,records.Count,records.Count==1&&records[0].Quantity.FillDesignVolume==50);
@@ -176,6 +176,30 @@ estimateVm.RefreshContext();Check("state_unit_refresh_requires_new_input",true,e
 estimateVm.DocumentChanged("new model");Check("state_document_clears_project_records",0,estimateVm.EarthworkRecords.Count,estimateVm.EarthworkRecords.Count==0&&estimateVm.EarthworkProfiles.Count==0);
 Check("csv_formula_text_escaped",true,EarthworkExport.Csv(new[]{caseA with{Request=request with{Zone=zone with{ZoneName="=1+1"}}}}),EarthworkExport.Csv(new[]{caseA with{Request=request with{Zone=zone with{ZoneName="=1+1"}}}}).Contains("'="));
 
+var v1=EarthworkProfiles.Save(profile,null);var v2=EarthworkProfiles.Save(v1 with{ExcavationUnitCost=3},v1);
+Check("profile_version_increment",2,v2.ProfileVersion,v2.ProfileVersion==2&&v1.ProfileVersion==1);
+Check("profile_metadata_hash_stable",true,EarthworkProfiles.Hash(v1),EarthworkProfiles.Hash(v1)==EarthworkProfiles.Hash(v1 with{ProfileName="renamed",UpdatedAt=DateTimeOffset.UtcNow.AddDays(1),TruckName="renamed truck"}));
+Check("profile_decimal_scale_hash_stable",true,EarthworkProfiles.Hash(v1),EarthworkProfiles.Hash(v1)==EarthworkProfiles.Hash(v1 with{ExcavationUnitCost=2.00m}));
+var clone=EarthworkProfiles.Clone(v2);Check("profile_clone_identity",true,clone.ProfileGuid,clone.ProfileGuid!=v2.ProfileGuid&&clone.ProfileVersion==1&&!clone.IsArchived);
+Check("profile_production_visible",true,EarthworkProfiles.Visible(v1,false),EarthworkProfiles.Visible(v1,false));
+Check("profile_fixture_hidden",false,EarthworkProfiles.Visible(v1 with{ProfileKind=EarthworkProfileKind.TestFixture},false),!EarthworkProfiles.Visible(v1 with{ProfileKind=EarthworkProfileKind.TestFixture},false));
+Check("profile_archive_hidden",false,EarthworkProfiles.Visible(v1 with{IsArchived=true},false),!EarthworkProfiles.Visible(v1 with{IsArchived=true},false));
+var historicalRecord=EarthworkEstimator.Calculate(request,new(25,12.5,0,1),v1);var staleRecord=EarthworkProfiles.Refresh(historicalRecord,new[]{v2});
+Check("snapshot_historical_integrity",true,staleRecord.Cost.TotalEstimatedCost,staleRecord.Cost==historicalRecord.Cost&&staleRecord.ProfileSnapshot.ProfileVersion==1&&staleRecord.CostProfileOutdated&&staleRecord.CalculationStatus==CalculationStatus.Stale);
+var newRecord=EarthworkEstimator.Calculate(request,historicalRecord.Quantity,v2);Check("snapshot_explicit_recalculate",2,newRecord.ProfileSnapshot.ProfileVersion,newRecord.ProfileSnapshot.ProfileVersion==2&&newRecord.Cost!=historicalRecord.Cost);
+var editor=new RevitMCP.UI.EarthworkProfileEditor(v1);editor.Values["Reuse"]="50";editor.Values["Util"]="90";var edited=editor.Build();Near("percent_ui_to_domain",.5,edited.ReusableRate!.Value);Near("util_percent_ui_to_domain",.9,edited.TruckLoadUtilization!.Value);Check("truck_derived_preview",true,editor.TruckPreview,editor.TruckPreview.Contains("9.00"));
+Check("editor_cancel_keeps_original",1,v1.TruckLoadUtilization!,v1.TruckLoadUtilization==1);
+editor.Values["Util"]="0";Reject("editor_zero_util_rejected",()=>editor.Build());editor.Values["Util"]="101";Reject("editor_over_100_rejected",()=>editor.Build());editor.Values["Util"]="90";editor.Values["Reuse"]="-1";Reject("editor_negative_reuse_rejected",()=>editor.Build());
+foreach(var pair in new[]{(161.999999m,"162.00"),(310.999996m,"311.00"),(472.999996m,"473.00")})Check("currency_round_"+pair.Item2,pair.Item2,EarthworkPresentation.Money(pair.Item1,"TWD"),EarthworkPresentation.Money(pair.Item1,"TWD").Contains(pair.Item2));
+var historyHost=new TestHost();historyHost.Context.Data=new(new[]{v1},new[]{historicalRecord});var historyVm=new RevitMCP.UI.SiteTerrainViewModel(historyHost);historyVm.RefreshContext();historyVm.SelectEarthworkZone(historyVm.EarthworkRecords[0],false);historyVm.SaveEarthworkProfile(v1 with{ExcavationUnitCost=3},true);
+Check("ui_profile_edit_no_silent_result_change",historicalRecord.Cost.TotalEstimatedCost,historyVm.EarthworkRecords[0].Cost.TotalEstimatedCost,historyVm.EarthworkRecords[0].Cost==historicalRecord.Cost&&historyVm.EarthworkRecords[0].CostProfileOutdated);
+historyVm.MarkEarthworkReviewed(historicalRecord.ZoneGuid,true);Check("ui_stale_review_rejected",ReviewStatus.PendingReview,historyVm.EarthworkRecords[0].ReviewStatus,historyVm.EarthworkRecords[0].ReviewStatus==ReviewStatus.PendingReview);
+historyVm.CloneEarthworkProfile(true);Check("ui_clone_saved",2,historyHost.Context.Data.Profiles.Count,historyHost.Context.Data.Profiles.Count==2&&historyVm.EarthworkProfiles.Count==2);
+historyVm.ArchiveEarthworkProfile(true);Check("ui_archive_preserves_storage",2,historyHost.Context.Data.Profiles.Count,historyHost.Context.Data.Profiles.Count==2&&historyVm.EarthworkProfiles.Count==1&&historyHost.Context.Data.Profiles.Any(p=>p.IsArchived));
+Check("archive_preserves_history",historicalRecord.Cost.TotalEstimatedCost,historyVm.EarthworkRecords[0].Cost.TotalEstimatedCost,historyVm.EarthworkRecords[0].Cost==historicalRecord.Cost);
+var legacyProfile=v1 with{ProfileName="Runtime fixture only",Currency="TEST",TruckName="Fixture truck",CreatedAt=default};Check("legacy_fixture_classification",EarthworkProfileKind.TestFixture,EarthworkProfiles.NormalizeLegacy(legacyProfile).ProfileKind,EarthworkProfiles.NormalizeLegacy(legacyProfile).ProfileKind==EarthworkProfileKind.TestFixture);
+var roundTrip=JsonSerializer.Deserialize<EarthworkRecord>(JsonSerializer.Serialize(historicalRecord))!;Check("snapshot_serialization_roundtrip",historicalRecord.ProfileSnapshot.ProfileHash,roundTrip.ProfileSnapshot.ProfileHash,roundTrip.ProfileSnapshot==historicalRecord.ProfileSnapshot&&roundTrip.Cost==historicalRecord.Cost);
+Check("review_warning_precedence","有警告",(historicalRecord with{ReviewStatus=ReviewStatus.Reviewed,Request=request with{Zone=zone with{Warnings=new[]{"TEST_WARNING"}}}}).ReviewLabel,(historicalRecord with{ReviewStatus=ReviewStatus.Reviewed,Request=request with{Zone=zone with{Warnings=new[]{"TEST_WARNING"}}}}).ReviewLabel=="有警告");
 File.WriteAllText(Path.Combine(output,"terrain-logic.json"),JsonSerializer.Serialize(new{Status=failed==0?"PASS":"FAIL",Passed=checks.Count-failed,Failed=failed,Assertions=checks,Benchmarks=benches},new JsonSerializerOptions{WriteIndented=true}));
 Console.WriteLine($"Terrain logic: {checks.Count-failed} PASS / {failed} FAIL");return failed==0?0:1;
 
@@ -194,7 +218,7 @@ sealed class TestContext:RevitMCP.UI.ISiteContext
     public double CalculatedTarget;
     public double MetresPerUnit=1;
     public double LevelElevation;
-    public EarthworkProjectData Data=new(Array.Empty<EarthworkProjectSettings>(),Array.Empty<EarthworkRecord>());
+    public EarthworkProjectData Data=new(Array.Empty<EarthworkProjectProfile>(),Array.Empty<EarthworkRecord>());
     public int ScheduleWrites;
     public EarthworkProjectData LoadEarthwork()=>Data;
     public EarthworkProjectData SaveEarthwork(EarthworkProjectData data,bool confirmed){if(!confirmed)throw new Exception("Confirmation required");return Data=data;}

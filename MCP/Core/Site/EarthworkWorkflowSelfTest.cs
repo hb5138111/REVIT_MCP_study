@@ -36,6 +36,7 @@ namespace RevitMCP.Core.Site
         public EarthworkWorkflowSelfTest(UIControlledApplication app,string directory,SiteTerrainViewModel vm,SiteTerrainControl control)
         {
             root=Path.GetFullPath(directory);this.vm=vm;this.control=control;
+            vm.EarthworkTestMode=true;
             next=ExternalEvent.Create(this);timer=new DispatcherTimer{Interval=TimeSpan.FromMilliseconds(250)};
             timer.Tick+=(_,__)=>{if(!finished&&!queued&&!vm.Busy)queued=next.Raise()==ExternalEventRequest.Accepted;};
             app.ControlledApplication.ApplicationInitialized+=(_,__)=>{deadline=DateTime.UtcNow.AddMinutes(2);timer.Start();};
@@ -137,7 +138,7 @@ namespace RevitMCP.Core.Site
                         Check("level_offset_can_calculate",true,vm.CanCalculate,vm.CanCalculate);vm.CalculateBoundary();break;
                     case 13:
                         Check("profile_missing_blocks_save",false,vm.CanSaveZone,!vm.CanSaveZone);
-                        vm.SaveEarthworkProfile(new EarthworkProjectSettings{ProfileName="Runtime fixture only",Currency="TEST",SwellFactor=1.2,FillLooseFactor=1.1,ReusableRate=0,TruckName="Fixture truck",TruckCapacity=10.1,TruckLoadUtilization=1,ExcavationUnitCost=2,LoadingUnitCost=3,HaulCostPerTrip=4,DisposalCostPerVolume=5,ImportedFillCostPerVolume=6,BackfillPlacementCostPerVolume=7,CompactionCostPerVolume=8,MobilizationCost=9},true);break;
+                        vm.SaveEarthworkProfile(new EarthworkProjectProfile{ProfileName="Runtime fixture only",ProfileKind=EarthworkProfileKind.TestFixture,Currency="TEST",SwellFactor=1.2,FillLooseFactor=1.1,ReusableRate=0,TruckName="Fixture truck",TruckCapacity=10.1,TruckLoadUtilization=1,ExcavationUnitCost=2,LoadingUnitCost=3,HaulCostPerTrip=4,DisposalCostPerVolume=5,ImportedFillCostPerVolume=6,BackfillPlacementCostPerVolume=7,CompactionCostPerVolume=8,MobilizationCost=9},true);break;
                     case 14:
                         Require(vm.CurrentEarthwork!=null,"Missing estimated record: "+vm.Status+" / "+vm.EstimateStatus);zoneA=vm.CurrentEarthwork.ZoneGuid;
                         Near("native_profile_cut",50,vm.CurrentEarthwork.Quantity.CutBankVolume);Near("native_profile_export",60,vm.CurrentEarthwork.Logistics.ExportLooseVolume);Near("native_profile_trips",6,vm.CurrentEarthwork.Logistics.ExportTruckTrips);Near("native_profile_cost",613,(double)vm.CurrentEarthwork.Cost.TotalEstimatedCost);
@@ -171,7 +172,61 @@ namespace RevitMCP.Core.Site
                         try{RevitEarthworkRecords.WriteSchedule(ui.ActiveUIDocument.Document,rows,preview,true,()=>throw new IOException("Injected schedule read-back failure"));}catch(IOException){rolledBack=true;}
                         var after=RevitEarthworkRecords.ReadBack(ui.ActiveUIDocument.Document,rows);Check("schedule_failure_rollback",true,after.ReadBack,rolledBack&&after.RecordIds.All(p=>originalRecordIds![p.Key]==p.Value));
                         EarthworkExport.Write(Path.Combine(root,"earthwork-records.csv"),rows,1);EarthworkExport.Write(Path.Combine(root,"earthwork-records.json"),rows,2);EarthworkExport.Write(Path.Combine(root,"earthwork-records.md"),rows,3);
-                        Check("record_exports",true,"CSV / JSON / Markdown",new[]{"csv","json","md"}.All(ext=>new FileInfo(Path.Combine(root,"earthwork-records."+ext)).Length>0));Finish(ui);break;
+                        Check("record_exports",true,"CSV / JSON / Markdown",new[]{"csv","json","md"}.All(ext=>new FileInfo(Path.Combine(root,"earthwork-records."+ext)).Length>0));
+                        vm.EarthworkTestMode=false;vm.RefreshContext();break;
+                    case 25:
+                        Check("production_hides_fixture_profiles",0,vm.EarthworkProfiles.Count,vm.EarthworkProfiles.Count==0);
+                        Check("production_hides_fixture_results",0,vm.EarthworkRecords.Count,vm.EarthworkRecords.Count==0);
+                        Check("production_selector_hides_fixture",0,control.FixtureProfileNames.Length,control.FixtureProfileNames.Length==0); var seed=RevitEarthworkRecords.Load(ui.ActiveUIDocument.Document).Profiles.First();
+                        vm.SaveEarthworkProfile(EarthworkProfiles.Clone(seed) with{ProfileKind=EarthworkProfileKind.Production,ProfileName="一般土方",Currency="TWD",TruckName="一般車型"},true);break;
+                    case 26:
+                        Check("production_profile_visible",1,vm.EarthworkProfiles.Count,vm.EarthworkProfiles.Count==1&&vm.EarthworkProfiles[0].ProfileName=="一般土方");
+                        Check("production_ui_no_fixture_data",true,vm.EstimateSummary,!vm.EstimateSummary.Contains("Fixture truck")&&!vm.EstimateSummary.Contains("TEST")&&vm.EarthworkRecords.Count==0);
+                        Check("production_selector_actual_items","一般土方",string.Join(",",control.FixtureProfileNames),control.FixtureProfileNames.SequenceEqual(new[]{"一般土方"})); vm.EarthworkTestMode=true;vm.RefreshContext();break;
+                    case 27:
+                        vm.SelectEarthworkZone(vm.EarthworkRecords.Single(r=>r.ZoneGuid==zoneA),false);
+                        var old=vm.EarthworkProfiles.Single(p=>p.ProfileGuid==vm.CurrentEarthwork!.Profile.ProfileGuid);
+                        vm.SaveEarthworkProfile(old with{ExcavationUnitCost=old.ExcavationUnitCost+1},true);break;
+                    case 28:
+                        var historical=vm.EarthworkRecords.Single(r=>r.ZoneGuid==zoneA);
+                        Check("profile_version_2",2,vm.EarthworkProfiles.Max(p=>p.ProfileVersion),vm.EarthworkProfiles.Max(p=>p.ProfileVersion)==2);
+                        Check("historical_snapshot_v1",1,historical.ProfileSnapshot.ProfileVersion,historical.ProfileSnapshot.ProfileVersion==1&&historical.Profile.ExcavationUnitCost==2);
+                        Check("historical_stale_without_recalculation",true,historical.Status,historical.CostProfileOutdated&&historical.CalculationStatus==CalculationStatus.Stale);
+                        Near("historical_cost_unchanged",162,(double)historical.Cost.TotalEstimatedCost);
+                        vm.PreviewEarthworkSchedule();break;
+                    case 29: vm.ConfirmEarthworkSchedule(true);break;
+                    case 30:
+                        RevitEarthworkRecords.ReadBack(ui.ActiveUIDocument.Document,vm.EarthworkRecords.ToArray());
+                        Check("schedule_preserves_snapshot_v1",1,vm.EarthworkRecords.First(r=>r.ZoneGuid==zoneA).ProfileSnapshot.ProfileVersion,vm.EarthworkRecords.First(r=>r.ZoneGuid==zoneA).ProfileSnapshot.ProfileVersion==1);
+                        vm.MarkEarthworkReviewed(zoneA,true);break;
+                    case 31:
+                        Check("stale_review_blocked",ReviewStatus.PendingReview,vm.EarthworkRecords.First(r=>r.ZoneGuid==zoneA).ReviewStatus,vm.EarthworkRecords.First(r=>r.ZoneGuid==zoneA).ReviewStatus==ReviewStatus.PendingReview);
+                        vm.RecalculateLatestProfile();break;
+                    case 32:
+                        Require(vm.CurrentEarthwork!=null,"Latest profile calculation failed: "+vm.Status);
+                        Check("recalculation_new_snapshot",2,vm.CurrentEarthwork.ProfileSnapshot.ProfileVersion,vm.CurrentEarthwork.ProfileSnapshot.ProfileVersion==2&&!vm.CurrentEarthwork.CostProfileOutdated);
+                        Near("recalculation_geometry_unchanged",12.5,vm.CurrentEarthwork.Quantity.CutBankVolume);vm.SaveEarthworkZone(true);break;
+                    case 33: vm.MarkEarthworkReviewed(zoneA,true);break;
+                    case 34:
+                        Check("review_without_recalculation",ReviewStatus.Reviewed,vm.EarthworkRecords.First(r=>r.ZoneGuid==zoneA).ReviewStatus,vm.EarthworkRecords.First(r=>r.ZoneGuid==zoneA).ReviewStatus==ReviewStatus.Reviewed);
+                        using(var tx=new Transaction(ui.ActiveUIDocument.Document,"Disposable foreign summary")){tx.Start();var foreign=ViewSchedule.CreateSchedule(ui.ActiveUIDocument.Document,new ElementId(BuiltInCategory.OST_GenericModel));foreign.Name="土方工程摘要 (BIM)";tx.Commit();}
+                        vm.PreviewEarthworkSchedule(EarthworkScheduleKind.Summary);break;
+                    case 35:
+                        Require(vm.SchedulePreview!=null,"Summary preview missing");Check("summary_foreign_name_protected","土方工程摘要 (BIM) 1",vm.SchedulePreview.ScheduleName,vm.SchedulePreview.ScheduleName=="土方工程摘要 (BIM) 1");vm.ConfirmEarthworkSchedule(true);break;
+                    case 36:
+                        var currentRows=vm.EarthworkRecords.ToArray();var summaryRead=RevitEarthworkRecords.ReadBack(ui.ActiveUIDocument.Document,currentRows,EarthworkScheduleKind.Summary);
+                        var detailRead=RevitEarthworkRecords.ReadBack(ui.ActiveUIDocument.Document,currentRows,EarthworkScheduleKind.Detail);
+                        Check("summary_fields_and_two_rows",15,summaryRead.FieldCount,summaryRead.FieldCount==15&&summaryRead.RecordIds.Count==2);
+                        Check("summary_detail_distinct_owned_views",true,summaryRead.ScheduleId!=detailRead.ScheduleId,summaryRead.ScheduleId!=detailRead.ScheduleId);
+                        Check("v2_update_same_record_ids",true,summaryRead.ReadBack,summaryRead.RecordIds.All(p=>originalRecordIds![p.Key]==p.Value));
+                        var summaryView=(ViewSchedule)ui.ActiveUIDocument.Document.GetElement(new ElementId(summaryRead.ScheduleId));var body=summaryView.GetTableData().GetSectionData(SectionType.Body);var cells=new List<string>();
+                        for(int row=body.FirstRowNumber;row<=body.LastRowNumber;row++)for(int column=body.FirstColumnNumber;column<=body.LastColumnNumber;column++)cells.Add(summaryView.GetCellText(SectionType.Body,row,column));
+                        foreach(var record in currentRows){string amount=record.Cost.TotalEstimatedCost.ToString("F2",System.Globalization.CultureInfo.InvariantCulture);Check("schedule_formatted_cost_"+record.ZoneNumber,amount,string.Join(" | ",cells),cells.Any(cell=>cell.Replace(",","").Contains(amount)));}
+                        Check("summary_grand_total",true,summaryView.Definition.ShowGrandTotal,summaryView.Definition.ShowGrandTotal);
+                        var summaryPreview=RevitEarthworkRecords.Preview(ui.ActiveUIDocument.Document,currentRows,EarthworkScheduleKind.Summary);bool summaryRollback=false;
+                        try{RevitEarthworkRecords.WriteSchedule(ui.ActiveUIDocument.Document,currentRows,summaryPreview,true,()=>throw new IOException("Injected summary failure"));}catch(IOException){summaryRollback=true;}
+                        Check("summary_failure_rollback",true,summaryRollback,summaryRollback&&RevitEarthworkRecords.ReadBack(ui.ActiveUIDocument.Document,currentRows,EarthworkScheduleKind.Summary).RecordIds.Count==2);
+                        Finish(ui);break;
                 }
             }
             catch(Exception ex){Check("runtime_exception","none",ex.ToString(),false);Finish(ui);}
@@ -187,7 +242,7 @@ namespace RevitMCP.Core.Site
         private void Finish(UIApplication ui)
         {
             finished=true;timer.Stop();
-            var report=new{FixtureVersion="earthwork-native-1",Status=failed==0?"PASS":"FAIL",Passed=checks.Count-failed,Failed=failed,BuildSHA256=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(Assembly.GetExecutingAssembly().Location))),Assertions=checks};
+            var report=new{FixtureVersion="earthwork-native-2",Status=failed==0?"PASS":"FAIL",Passed=checks.Count-failed,Failed=failed,BuildSHA256=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(Assembly.GetExecutingAssembly().Location))),Assertions=checks};
             string json=JsonConvert.SerializeObject(report,Formatting.Indented);File.WriteAllText(Path.Combine(root,"earthwork-workflow.json"),json);File.WriteAllText(Path.Combine(root,"earthwork-workflow.md"),"# Earthwork Native Workflow\n\n```json\n"+json+"\n```\n");
             if(ui.Application.Documents.Size==1&&ui.ActiveUIDocument?.Document.PathName==fixture&&fixture.StartsWith(root+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))
             {

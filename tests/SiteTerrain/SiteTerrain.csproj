@@ -4,4 +4,6 @@
   <ItemGroup><Compile Include="../../MCP/Core/Site/EarthworkRecords.cs" Link="EarthworkRecords.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../MCP/UI/EarthworkViewModel.cs" Link="EarthworkViewModel.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../MCP/Core/Site/EarthworkExport.cs" Link="EarthworkExport.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../MCP/Core/Site/EarthworkProfiles.cs" Link="EarthworkProfiles.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../MCP/UI/EarthworkProfileEditor.cs" Link="EarthworkProfileEditor.cs" /></ItemGroup>
 </Project>
