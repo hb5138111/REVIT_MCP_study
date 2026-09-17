@@ -1,9 +1,9 @@
 {
   "SchemaVersion": 2,
-  "Task": "v0.5.1",
+  "Task": "v0.5.2",
   "Branch": "bim-custom",
   "Status": "READY_FOR_OPTIONAL_UAT",
-  "UpdatedAt": "2026-09-16T08:19:38.092Z",
+  "UpdatedAt": "2026-09-17T01:19:26.985Z",
   "Gates": {
     "A": {
       "Status": "PASS",
@@ -32,7 +32,7 @@
     },
     "TerrainLogic": {
       "Status": "PASS",
-      "Passed": 119,
+      "Passed": 184,
       "Failed": 0
     },
     "TerrainRuntime": {
@@ -45,6 +45,11 @@
       "Passed": 47,
       "Failed": 0
     },
+    "EarthworkNative": {
+      "Status": "PASS",
+      "Passed": 38,
+      "Failed": 0
+    },
     "Build": {
       "Status": "PASS"
     },
@@ -55,14 +60,14 @@
       "Status": "PASS"
     }
   },
-  "BuildSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F",
-  "InstalledVersion": "v0.5.1",
-  "ProductionDeployment": "PASS — FORMAL_V051_RELEASE",
-  "InstalledSHA256": "BD8477F9D2E4CF8EF524068B3586263EE7E46A91D4031CF8934BD7D43BBC0E8F",
+  "BuildSHA256": "42987353E7479B66F982F5983AB5FA3131DC9ABC532D4398C49ECD953086581E",
+  "InstalledVersion": "v0.5.2",
+  "ProductionDeployment": "PASS — FORMAL_V052_RELEASE",
+  "InstalledSHA256": "42987353E7479B66F982F5983AB5FA3131DC9ABC532D4398C49ECD953086581E",
   "SourceFingerprints": [
     {
       "Path": "MCP/Application.cs",
-      "Sha256": "1a997b164cc30e4cb1338f67c5641d7301f0df6e4f89b4e75ef873650447ab4e"
+      "Sha256": "8fac9bdcb8045f38f7ab4b52b76292e3c050b609f9ad284aa836aa6f9b8a2d23"
     },
     {
       "Path": "MCP/Commands/MCPCommands.cs",
@@ -429,6 +434,22 @@
       "Sha256": "1801a0aa6d65788a243268f0a0eae081f0dfefcb0d1af930256a64a977df7ce2"
     },
     {
+      "Path": "MCP/Core/Site/EarthworkExport.cs",
+      "Sha256": "c7339ecce466626ec2fa7d1a1c341f48cbfe9844f6abbb0f683bd6d5ab16e4b4"
+    },
+    {
+      "Path": "MCP/Core/Site/EarthworkRecords.cs",
+      "Sha256": "d114db5285ae40fd48cfae29695ce7bebadacdd8aea386aacae00bf432bcb84c"
+    },
+    {
+      "Path": "MCP/Core/Site/EarthworkWorkflowSelfTest.cs",
+      "Sha256": "5f05d79cfbb6e8163f7f8be906faa91276ced00daef79c343e1981b646583903"
+    },
+    {
+      "Path": "MCP/Core/Site/RevitEarthworkRecords.cs",
+      "Sha256": "5d82120e93a41152a2a0e0e652414afd4221baf47c2e6c4678b8955debe53551"
+    },
+    {
       "Path": "MCP/Core/Site/RevitTerrainService.cs",
       "Sha256": "1970be3fc8b519e17f01c289aa6ef863befac9f5f57c0a21e8674ec09b96521f"
     },
@@ -489,6 +510,18 @@
       "Sha256": "81620472d0e1e0278e11a689cc2be0d96568109daecbf3a6694dd7088cbc2191"
     },
     {
+      "Path": "MCP/UI/EarthworkControl.cs",
+      "Sha256": "08f15be844f041b096d79a0752c48824fe427f059cddc0dc2d00b2983fc3416b"
+    },
+    {
+      "Path": "MCP/UI/EarthworkProfileWindow.cs",
+      "Sha256": "2c177bb4a15111c450450c4abe43ef0026fe6ec67ce8b40721af2e0ac7154aa1"
+    },
+    {
+      "Path": "MCP/UI/EarthworkViewModel.cs",
+      "Sha256": "66ce50bd9ef60adc8c3e1f90a6f9af47f49795731ee51b255f783429e1e5354f"
+    },
+    {
       "Path": "MCP/UI/PanelReadOnlyDispatcher.cs",
       "Sha256": "38ee282c1d1a3c8f28102e0a23d728e99a75c8d7883611170f034ea28a5b33fa"
     },
@@ -498,26 +531,26 @@
     },
     {
       "Path": "MCP/UI/RevitSiteHost.cs",
-      "Sha256": "9b109ca688be59b839f07d6cc54ec166ef27becbfd7760f5e4a310c248d638f7"
+      "Sha256": "704d14befd12111134b4977f0153541878da6e6c38eec868426a413126c364ae"
     },
     {
       "Path": "MCP/UI/SiteTerrainControl.cs",
-      "Sha256": "5101feb8f41f6edcfd81b38a1bf67cd3e700e4c692f1fbd106319c0574262fff"
+      "Sha256": "b447df38cc982b19ce4cacccf427ecadfe665abbe525f30cd753e2e25af49be1"
     },
     {
       "Path": "MCP/UI/SiteTerrainViewModel.cs",
-      "Sha256": "6cc96544f3bb5aaabae8bb894180886d758c8e93ba4f35d85c7a1e3f17980122"
+      "Sha256": "a956692d5ea031a21932cf436047bcf5b56c1ab634806a6b001830c49b3c12f2"
     },
     {
       "Path": "MCP/UI/SiteTerrainWorkflow.cs",
-      "Sha256": "1162eee1851effde801f5fb5346456e9b790dc276b615f7611b233eb6270d1d8"
+      "Sha256": "314351b8e340a9212bd2ac96e037ec81b1a583eddd4b8b1c5131d3197721d640"
     }
   ],
   "FinalCommit": {
     "Value": "SELF_COMMIT",
     "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
-    "LiteralReceipt": "test-artifacts/v051/final.json"
+    "LiteralReceipt": "test-artifacts/v052/final.json"
   },
   "NextAction": "Optional UAT only; stop.",
-  "Report": "docs/productization/v051-report.json"
+  "Report": "docs/productization/v052-report.json"
 }
