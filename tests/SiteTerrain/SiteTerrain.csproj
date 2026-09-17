@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><DefineConstants>$(DefineConstants);SITE_TESTS</DefineConstants></PropertyGroup>
   <ItemGroup><Compile Include="../../MCP/Core/Site/TerrainEngine.cs" Link="TerrainEngine.cs" /><Compile Include="../../MCP/Core/Site/CadTerrainData.cs" Link="CadTerrainData.cs" /><Compile Include="../../MCP/UI/SiteTerrainViewModel.cs" Link="SiteTerrainViewModel.cs" /><Compile Include="../../MCP/UI/SiteTerrainWorkflow.cs" Link="SiteTerrainWorkflow.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../MCP/Core/Site/EarthworkRecords.cs" Link="EarthworkRecords.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../MCP/UI/EarthworkViewModel.cs" Link="EarthworkViewModel.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../MCP/Core/Site/EarthworkExport.cs" Link="EarthworkExport.cs" /></ItemGroup>
 </Project>

@@ -6,7 +6,8 @@ param(
     [string]$RevitExe = 'C:\Program Files\Autodesk\Revit 2026\Revit.exe',
     [string]$ProjectTemplate = 'C:\ProgramData\Autodesk\RVT 2026\Templates\Default_M_ENU.rte',
     [string]$FamilyTemplate = 'C:\ProgramData\Autodesk\RVT 2026\Family Templates\English\Metric Generic Model.rft',
-    [switch]$CadOnly
+    [switch]$CadOnly,
+    [switch]$EarthworkWorkflowOnly
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
@@ -37,6 +38,7 @@ if ($registeredManifest.RevitAddIns.AddIn.FullClassName -ne 'RevitMCP.Applicatio
 $process = Start-Process -FilePath $RevitExe -ArgumentList '/nosplash','/language','ENU' -WindowStyle Hidden -PassThru -Environment @{
     REVIT_MCP_SELFTEST_DIR=$runRoot
     REVIT_MCP_SELFTEST_CAD_ONLY=([string][bool]$CadOnly)
+    REVIT_MCP_SELFTEST_EARTHWORK_WORKFLOW=([string][bool]$EarthworkWorkflowOnly)
 }
 @{ TestRunId=$runId; Timestamp=[DateTimeOffset]::UtcNow; ProcessId=$process.Id; BuildHash=$hash; GateC='RUNNING'; OutputDirectory=$runRoot } |
     ConvertTo-Json | Set-Content -LiteralPath (Join-Path $runRoot 'launch.json')

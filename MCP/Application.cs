@@ -22,7 +22,8 @@ namespace RevitMCP
             try
             {
                 string? selfTestDirectory = Environment.GetEnvironmentVariable("REVIT_MCP_SELFTEST_DIR");
-                if (!string.IsNullOrWhiteSpace(selfTestDirectory))
+                bool earthworkWorkflow=string.Equals(Environment.GetEnvironmentVariable("REVIT_MCP_SELFTEST_EARTHWORK_WORKFLOW"),"True",StringComparison.OrdinalIgnoreCase);
+                if (!string.IsNullOrWhiteSpace(selfTestDirectory)&&!earthworkWorkflow)
                 {
                     var workflowTest = new CoordinationWorkflowSelfTest(application, selfTestDirectory);
                     application.ControlledApplication.ApplicationInitialized += (sender, args) =>
@@ -135,6 +136,16 @@ namespace RevitMCP
                 AppDomain.CurrentDomain.ProcessExit += (s, e) => EmergencyStopSocket();
 
                 Logger.Info("RevitMCP Plugin 已成功載入");
+
+#if REVIT2026
+                if(earthworkWorkflow&&!string.IsNullOrWhiteSpace(selfTestDirectory))
+                {
+                    var tabs=(System.Windows.Controls.TabControl)_bimConstructionPanelPage.Content;
+                    tabs.SelectedIndex=1;
+                    _=new Core.Site.EarthworkWorkflowSelfTest(application,selfTestDirectory,panelViewModel.Site,(SiteTerrainControl)((System.Windows.Controls.TabItem)tabs.Items[1]).Content);
+                    return Result.Succeeded;
+                }
+#endif
 
                 TaskDialog.Show("RevitMCP", 
                     "RevitMCP Plugin 已載入\n\n" +
