@@ -8,7 +8,8 @@ param(
     [string]$FamilyTemplate = 'C:\ProgramData\Autodesk\RVT 2026\Family Templates\English\Metric Generic Model.rft',
     [switch]$CadOnly,
     [switch]$EarthworkWorkflowOnly,
-    [switch]$DrawingWorkflowOnly
+    [switch]$DrawingWorkflowOnly,
+    [switch]$DrawingJourneyOnly
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
@@ -40,6 +41,7 @@ $process = Start-Process -FilePath $RevitExe -ArgumentList '/nosplash','/languag
     REVIT_MCP_SELFTEST_DIR=$runRoot
     REVIT_MCP_SELFTEST_CAD_ONLY=([string][bool]$CadOnly)
     REVIT_MCP_SELFTEST_EARTHWORK_WORKFLOW=([string][bool]$EarthworkWorkflowOnly)
+    REVIT_MCP_SELFTEST_DRAWING_JOURNEY=([string][bool]$DrawingJourneyOnly)
     REVIT_MCP_SELFTEST_DRAWING_WORKFLOW=([string][bool]$DrawingWorkflowOnly)
 }
 @{ TestRunId=$runId; Timestamp=[DateTimeOffset]::UtcNow; ProcessId=$process.Id; BuildHash=$hash; GateC='RUNNING'; OutputDirectory=$runRoot } |

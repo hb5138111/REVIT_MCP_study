@@ -10,6 +10,23 @@ internal static class DrawingTests
         var package=new DrawingPackageDefinition{Discipline="A",DrawingType="Plan",Profile=new(){NumberingRule="{Discipline}-{Sequence:000}"},Levels=new(){new(3,"FL3",20),new(1,"FL1",0),new(2,"FL2",10)},Zones=new(){new(){ZoneId="B",ZoneName="B"},new(){ZoneId="A",ZoneName="A"}},SourceViewsByLevel=new(){{1,11},{2,12},{3,13}}};
         var plan=DrawingPlanner.Generate(package,Array.Empty<string>());
         Verify("six_sheets",plan.CanApply&&plan.Rows.Count==6);
+        var resolved=new Dictionary<long,long>{{2,99}};
+        LevelViewResolver.Resolve(package.Levels,new Dictionary<long,DrawingChoice[]>{{1,new[]{new DrawingChoice(11,"平面")}}, {2,new[]{new DrawingChoice(21,"建築"),new DrawingChoice(22,"結構")}}},resolved);
+        Verify("unique_source_auto_selected",resolved.TryGetValue(1,out var unique)&&unique==11);
+        Verify("ambiguous_and_missing_not_guessed",!resolved.ContainsKey(2)&&!resolved.ContainsKey(3));
+        var safeProfile=new DrawingTemplateProfile{Blueprint=new(){TitleBlockBounds=new(0,0,420/304.8,297/304.8)},MarginBottomMm=45};
+        Verify("safe_region_preserves_title_area",Math.Abs(AutoSheetLayoutService.SafeBounds(safeProfile).MinY-45/304.8)<1e-10);
+        safeProfile.MarginLeftMm=500;Throws("excess_margin_blocked",()=>AutoSheetLayoutService.SafeBounds(safeProfile));
+        Verify("a3_suggestion",AutoSheetLayoutService.SuggestSize(419.8,297.1)=="A3");
+        var noZone=new DrawingPackageDefinition{Levels=package.Levels.ToList(),SourceViewsByLevel=new(package.SourceViewsByLevel)};
+        var noZonePlan=DrawingPlanner.Generate(noZone,Array.Empty<string>());
+        Verify("no_zone_three_rows",noZonePlan.CanApply&&noZonePlan.Rows.Count==3&&noZonePlan.Rows.All(r=>r.Zone.IsUnzoned));
+        noZone.SourceViewsByLevel.Remove(2);noZonePlan=DrawingPlanner.Generate(noZone,Array.Empty<string>());
+        Verify("missing_source_keeps_other_rows",noZonePlan.Rows.Count==3&&noZonePlan.Rows.Count(r=>r.Change==DrawingChange.Add)==2&&noZonePlan.Rows.Single(r=>r.Level.Id==2).IssueText.Contains("來源視圖"));
+        var uninitialized=new DrawingProductionViewModel(new Host(noZone));uninitialized.GoToStep(2);
+        Verify("empty_plan_navigation_blocked",uninitialized.Step==0&&uninitialized.Status.Contains("尚未產生"));uninitialized.GoToStep(4);
+        Verify("uncreated_qa_navigation_blocked",uninitialized.Step==0&&uninitialized.Status.Contains("尚未建立"));
+        uninitialized.GoToStep(1);uninitialized.GeneratePlan();Verify("missing_template_reason",uninitialized.Step==1&&uninitialized.Status.Contains("圖框"));
         var mapping=new DrawingParameter{SemanticField="Zone"};Verify("parameter_zone_mapping",mapping.Resolve(package,plan.Rows[0])=="A");mapping.SemanticField="Bogus";Throws("unknown_mapping_blocked",()=>mapping.Resolve(package,plan.Rows[0]));
         Verify("elevation_order",plan.Rows[0].Level.Name=="FL1"&&plan.Rows[5].Level.Name=="FL3");
         Verify("deterministic_zone",plan.Rows[0].Zone.ZoneId=="A");
@@ -30,6 +47,7 @@ internal static class DrawingTests
         slots[1].Bounds=new(3,1,5,3);Verify("touching_not_overlap",DrawingSheetQaService.Layout(1,"A",new(0,0,10,10),slots).Count==0);
         slots[1].Role="LEGEND";slots[1].DetailNumber="1";Verify("detail_duplicate",DrawingSheetQaService.Layout(1,"A",new(0,0,10,10),slots).Any(q=>q.Code=="DETAIL_NUMBER_DUPLICATE"));
         Verify("nan_bounds",!new DrawingBounds(0,0,double.NaN,1).Valid);
+        package.Profile.Blueprint.TitleBlockTypeId=1;
         var host=new Host(package);var vm=new DrawingProductionViewModel(host);
         Verify("initial_no_write",!vm.CanApply&&host.Applies==0);vm.ConfirmAndApply();Verify("unpreviewed_no_write",host.Applies==0);
         vm.Refresh();Verify("dispatch_pending",vm.Busy);host.Drain();vm.UsePackage(package);vm.GeneratePlan();Verify("generation_queued",vm.Busy&&vm.Plan==null);host.Drain();
@@ -51,6 +69,7 @@ internal static class DrawingTests
         public DrawingChoice[] Sheets()=>Array.Empty<DrawingChoice>();
         public DrawingChoice[] Levels()=>Array.Empty<DrawingChoice>();
         public DrawingChoice[] Sources(long level)=>Array.Empty<DrawingChoice>();
+        public Dictionary<long,DrawingChoice[]> SourcesByLevel()=>new();
         public DrawingZone[] Zones()=>Array.Empty<DrawingZone>();
         public DrawingChoice[] Grids()=>Array.Empty<DrawingChoice>();
         public DrawingZone GridZone(string name,long[] grids,double paddingMm)=>new(){ZoneName=name};
@@ -58,6 +77,8 @@ internal static class DrawingTests
         public SheetTemplateBlueprint ConfigureViewRule(SheetTemplateBlueprint blueprint,long templateId,int? scale)=>blueprint;
         public DrawingProjectData Load()=>new();
         public SheetTemplateBlueprint Extract(long sheet)=>new();
+        public ExternalTitleBlockAnalysis AnalyzeExternal(string path,string unit,string rft)=>throw new NotSupportedException();
+        public SheetTemplateBlueprint LoadExternal(ExternalTitleBlockAnalysis analysis,string type,bool useExisting,bool confirmed)=>throw new NotSupportedException();
         public DrawingTemplateProfile SaveProfile(DrawingTemplateProfile profile)=>profile;
         public DrawingPlan Preview(DrawingPackageDefinition package)=>DrawingPlanner.Generate(package,Array.Empty<string>());
         public long[] Apply(DrawingPlan plan,bool confirmed){if(!confirmed||!plan.CanApply)throw new InvalidOperationException();Applies++;return new long[]{1};}

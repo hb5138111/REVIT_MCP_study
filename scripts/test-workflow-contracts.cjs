@@ -59,6 +59,13 @@ for(const domain of matrix.Domains){
 // Fail enabled coordination workflows if their mandatory schema fields drift.
 const openings=matrix.Domains.find(d=>d.DomainId==='mep-opening-candidate-scan').TypeScriptSchemas.find(t=>t.Tool==='scan_opening_candidates');
 for(const field of ['mepSource','structureSource','clearanceMm'])check('opening_required_'+field,true,openings.Required.includes(field),openings.Required.includes(field),openings.File);
+const drawingJourney=read('MCP/Core/Drawing/DrawingProductionJourneyFixture.cs'),drawingRelease=read('scripts/publish-v061.ps1'),externalTitle=read('MCP/Core/Drawing/ExternalTitleBlockService.cs');
+for(const token of ['panel.Initialize()','Vm.AnalyzeExternal()','Vm.LoadExternal(','Vm.SelectScope(','Vm.GeneratePlan()','Vm.ConfirmAndApply()','B_temp_files_cleaned','B_imported_cad_persists_in_loaded_family'])
+ check('drawing_c4_'+token,true,drawingJourney.includes(token),drawingJourney.includes(token),'C4 must drive the actual panel journey');
+check('drawing_c4_no_direct_apply',false,/service\.Apply|Service\.Create/.test(drawingJourney),!/service\.Apply|Service\.Create/.test(drawingJourney),'Do not replace UI journey with backend calls');
+check('drawing_c4_release_guard',true,drawingRelease.includes("$journey.GateC4 -ne 'PASS'")&&drawingRelease.includes("'A','B','C','D','E','F','G','H'"),drawingRelease.includes("$journey.GateC4 -ne 'PASS'")&&drawingRelease.includes("'A','B','C','D','E','F','G','H'"),'Every production case required');
+for(const token of ['RejectReplacement','family.Close(false)','probe.RollBack()','Directory.Delete(temp,true)','FileHash','RftHash'])
+ check('drawing_external_'+token,true,externalTitle.includes(token),externalTitle.includes(token),'External source safety');
 const drawingService=read('MCP/Core/Drawing/RevitDrawingService.cs'),drawingHost=read('MCP/UI/RevitDrawingHost.cs'),drawingVm=read('MCP/UI/DrawingProductionViewModel.cs');
 for(const token of ['TransactionGroup','group.RollBack()','fresh.Signature!=preview.Signature','record.Baseline','ViewDuplicateOption.AsDependent','DrawingSheetQaService.Layout','Verify(sheet,row,preview.Package)'])
  check('drawing_safety_'+token,true,drawingService.includes(token),drawingService.includes(token),'Drawing production transaction and read-back contracts');
