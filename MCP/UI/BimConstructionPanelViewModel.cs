@@ -9,6 +9,8 @@ namespace RevitMCP.UI
         public CoordinationViewModel Coordination { get; }
 #if REVIT2026
         public SiteTerrainViewModel Site { get; }
+        public DrawingProductionViewModel Drawing { get; }
+        private readonly RevitDrawingHost drawingHost;
         private readonly RevitSiteHost siteHost;
 #endif
         public BimConstructionPanelViewModel()
@@ -17,6 +19,8 @@ namespace RevitMCP.UI
 #if REVIT2026
             siteHost = new RevitSiteHost();
             Site = new SiteTerrainViewModel(siteHost);
+            drawingHost = new RevitDrawingHost();
+            Drawing = new DrawingProductionViewModel(drawingHost);
 #endif
         }
         public void Initialize() => Coordination.Initialize();
@@ -28,6 +32,7 @@ namespace RevitMCP.UI
                 Coordination.DocumentChanged(doc != null && doc.IsValidObject ? DocumentSessionIdentity.GetDocumentIdentity(doc) : "");
 #if REVIT2026
                 Site.DocumentChanged(doc != null && doc.IsValidObject ? DocumentSessionIdentity.GetDocumentIdentity(doc) : "");
+                Drawing.DocumentChanged(doc != null && doc.IsValidObject ? DocumentSessionIdentity.GetDocumentIdentity(doc) : "");
 #endif
             };
             application.ControlledApplication.DocumentChanged += (_, e) => Coordination.DocumentChanged(Coordination.DocumentIdentity, true);
@@ -35,6 +40,8 @@ namespace RevitMCP.UI
 #if REVIT2026
             application.ControlledApplication.DocumentChanged += (_, e) => { var identity=DocumentSessionIdentity.GetDocumentIdentity(e.GetDocument()); if(Site.Context?.DocumentIdentity==identity){siteHost.ModelChanged(); Site.DocumentChanged(identity, true);} };
             application.ControlledApplication.DocumentClosed += (_, e) => { siteHost.ModelChanged(); Site.DocumentChanged("", true); };
+            application.ControlledApplication.DocumentChanged += (_, e) => { drawingHost.ModelChanged(); Drawing.DocumentChanged(DocumentSessionIdentity.GetDocumentIdentity(e.GetDocument()), true); };
+            application.ControlledApplication.DocumentClosed += (_, e) => { drawingHost.ModelChanged(); Drawing.DocumentChanged("", true); };
 #endif
         }
     }

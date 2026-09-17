@@ -16,6 +16,7 @@ namespace RevitMCP.UI
             var tabs = new TabControl();
             tabs.Items.Add(new TabItem { Header = "施工協調", Content = new DetectReviewWorkflowControl { DataContext = viewModel.Coordination } });
             tabs.Items.Add(new TabItem { Header = "基地／土方", Content = new SiteTerrainControl(viewModel.Site) });
+            tabs.Items.Add(new TabItem { Header = "施工圖生產", Content = new DrawingProductionControl(viewModel.Drawing) });
             Content = tabs;
 #else
             Content = new DetectReviewWorkflowControl { DataContext = viewModel.Coordination };
