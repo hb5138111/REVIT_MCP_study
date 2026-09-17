@@ -23,7 +23,13 @@ namespace RevitMCP.UI
             Drawing = new DrawingProductionViewModel(drawingHost);
 #endif
         }
-        public void Initialize() => Coordination.Initialize();
+        public void Initialize()
+        {
+            Coordination.Initialize();
+#if REVIT2026
+            Drawing.Refresh();
+#endif
+        }
         internal void AttachLifecycle(UIControlledApplication application)
         {
             application.ViewActivated += (_, e) =>
@@ -40,8 +46,7 @@ namespace RevitMCP.UI
 #if REVIT2026
             application.ControlledApplication.DocumentChanged += (_, e) => { var identity=DocumentSessionIdentity.GetDocumentIdentity(e.GetDocument()); if(Site.Context?.DocumentIdentity==identity){siteHost.ModelChanged(); Site.DocumentChanged(identity, true);} };
             application.ControlledApplication.DocumentClosed += (_, e) => { siteHost.ModelChanged(); Site.DocumentChanged("", true); };
-            application.ControlledApplication.DocumentChanged += (_, e) => { drawingHost.ModelChanged(); Drawing.DocumentChanged(DocumentSessionIdentity.GetDocumentIdentity(e.GetDocument()), true); };
-            application.ControlledApplication.DocumentClosed += (_, e) => { drawingHost.ModelChanged(); Drawing.DocumentChanged("", true); };
+            application.ControlledApplication.DocumentChanged += (_, e) => { var id=DocumentSessionIdentity.GetDocumentIdentity(e.GetDocument()); if(Drawing.DocumentIdentity==id){drawingHost.ModelChanged(); Drawing.DocumentChanged(id, true);} };
 #endif
         }
     }

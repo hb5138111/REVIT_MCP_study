@@ -10,6 +10,54 @@ namespace RevitMCP.Core.Drawing
     public enum DrawingViewStrategy { Existing, Duplicate, Dependent }
     public enum DrawingChange { Add, Update, Unchanged, ManualOverride, Conflict, Missing }
     public enum DrawingCopyPolicy { NeverCopy, CopyDefault, UserSelectable, Generated }
+    public enum TemplateSourceKind { CurrentSheet, ExternalRfa, ExternalRvt, Cad }
+    public enum DrawingProfileKind { Production, Fixture }
+    public static class LevelViewResolver
+    {
+        public static void Resolve(IEnumerable<DrawingChoice> levels,IReadOnlyDictionary<long,DrawingChoice[]> candidates,Dictionary<long,long> selected)
+        {
+            foreach(var level in levels)
+            {
+                var choices=candidates.TryGetValue(level.Id,out var found)?found:Array.Empty<DrawingChoice>();
+                if(selected.TryGetValue(level.Id,out var current)&&choices.Any(v=>v.Id==current))continue;
+                selected.Remove(level.Id);if(choices.Length==1)selected[level.Id]=choices[0].Id;
+            }
+        }
+    }
+    public sealed class ExternalTitleBlockAnalysis
+    {
+        public string FilePath {get;set;}="";
+        public string FileHash {get;set;}="";
+        public string FamilyName {get;set;}="";
+        public string[] Types {get;set;}=Array.Empty<string>();
+        public string[] Parameters {get;set;}=Array.Empty<string>();
+        public Dictionary<string,DrawingBounds> TypeBounds {get;set;}=new();
+        public string[] Layers {get;set;}=Array.Empty<string>();
+        public DrawingBounds Bounds {get;set;}=new(0,0,1,1);
+        public string Unit {get;set;}="Auto";
+        public bool IsCad {get;set;}
+        public bool ExistingFamily {get;set;}
+        public string RftPath {get;set;}="";
+        public string RftHash {get;set;}="";
+        public string SizeSuggestion=>AutoSheetLayoutService.SuggestSize(Bounds.Width*304.8,Bounds.Height*304.8);
+    }
+    public static class AutoSheetLayoutService
+    {
+        public static (double Width,double Height) PaperSize(string name)=>name switch{"A0"=>(1189,841),"A1"=>(841,594),"A2"=>(594,420),"A3"=>(420,297),"A4"=>(297,210),_=>throw new ArgumentException("請選擇預期圖纸尺寸。")};
+        public static DrawingBounds SafeBounds(DrawingTemplateProfile profile)
+        {
+            var b=profile.Blueprint.TitleBlockBounds;
+            var values=new[]{profile.MarginLeftMm,profile.MarginRightMm,profile.MarginTopMm,profile.MarginBottomMm};
+            if(values.Any(v=>!double.IsFinite(v)||v<0))throw new ArgumentException("出圖區邊距需為非負數（mm）。");
+            var safe=new DrawingBounds(b.MinX+values[0]/304.8,b.MinY+values[3]/304.8,b.MaxX-values[1]/304.8,b.MaxY-values[2]/304.8);
+            if(!safe.Valid)throw new ArgumentException("邊距超過圖框範圍。");return safe;
+        }
+        public static string SuggestSize(double width,double height)
+        {
+            var sizes=new[]{("A0",1189d,841d),("A1",841d,594d),("A2",594d,420d),("A3",420d,297d),("A4",297d,210d)};
+            return sizes.OrderBy(s=>Math.Abs(Math.Max(width,height)-s.Item2)+Math.Abs(Math.Min(width,height)-s.Item3)).First().Item1;
+        }
+    }
     public sealed record DrawingPoint(double X, double Y);
     public sealed record DrawingBounds(double MinX, double MinY, double MaxX, double MaxY)
     {
@@ -62,6 +110,8 @@ namespace RevitMCP.Core.Drawing
     }
     public sealed class SheetTemplateBlueprint
     {
+        public TemplateSourceKind SourceKind {get;set;}
+        public bool AutoLayout=>SourceKind is TemplateSourceKind.ExternalRfa or TemplateSourceKind.Cad;
         public long SourceSheetId { get; set; }
         public string SourceSheetUniqueId { get; set; } = "";
         public string SourceSheetNumber { get; set; } = "";
@@ -69,6 +119,7 @@ namespace RevitMCP.Core.Drawing
         public string SourceDocumentIdentity { get; set; } = "";
         public long TitleBlockFamilyId { get; set; }
         public long TitleBlockTypeId { get; set; }
+        public string TitleBlockTypeUniqueId {get;set;}="";
         public string TitleBlockFamilyName { get; set; } = "";
         public string TitleBlockTypeName { get; set; } = "";
         public DrawingBounds TitleBlockBounds { get; set; } = new(0,0,1,1);
@@ -86,11 +137,18 @@ namespace RevitMCP.Core.Drawing
     }
     public sealed class DrawingTemplateProfile
     {
+        public DrawingProfileKind ProfileKind {get;set;}
+        public double MarginLeftMm {get;set;}
+        public double MarginRightMm {get;set;}
+        public double MarginTopMm {get;set;}
+        public double MarginBottomMm {get;set;}
+        public double OffsetXmm {get;set;}
+        public double OffsetYmm {get;set;}
         public Guid ProfileGuid { get; set; } = Guid.NewGuid();
         public string ProfileName { get; set; } = "";
         public int ProfileVersion { get; set; } = 1;
         public SheetTemplateBlueprint Blueprint { get; set; } = new();
-        public string NumberingRule { get; set; } = "";
+        public string NumberingRule { get; set; } = "A-{Level}{Zone}";
         public string NamingRule { get; set; } = "{Level} {Zone} {DrawingType}";
         public string ViewNamingRule { get; set; } = "{Level}-{Zone}-{DrawingType}";
         public DrawingViewStrategy ViewStrategy { get; set; } = DrawingViewStrategy.Dependent;
@@ -100,6 +158,8 @@ namespace RevitMCP.Core.Drawing
     }
     public sealed class DrawingZone
     {
+        public static DrawingZone Unzoned() => new(){ZoneId="none",ZoneName="",ScopeSource="None"};
+        public bool IsUnzoned => ScopeSource=="None";
         public string ZoneId { get; set; } = "";
         public string ZoneName { get; set; } = "";
         public string ScopeSource { get; set; } = "ScopeBox";
@@ -112,9 +172,9 @@ namespace RevitMCP.Core.Drawing
     public sealed class DrawingPackageDefinition
     {
         public Guid PackageGuid { get; set; } = Guid.NewGuid();
-        public string PackageName { get; set; } = "";
-        public string Discipline { get; set; } = "";
-        public string DrawingType { get; set; } = "";
+        public string PackageName { get; set; } = "建築施工平面";
+        public string Discipline { get; set; } = "建築";
+        public string DrawingType { get; set; } = "施工平面";
         public string Phase { get; set; } = "";
         public DrawingTemplateProfile Profile { get; set; } = new();
         public List<DrawingChoice> Levels { get; set; } = new();
@@ -152,6 +212,10 @@ namespace RevitMCP.Core.Drawing
     }
     public sealed class DrawingPlanRow
     {
+        public string SourceViewName {get;set;}="";
+        public string TitleBlockName {get;set;}="";
+        public string ProfileName {get;set;}="";
+        public DrawingBounds? PreviewBounds {get;set;}
         public string Key { get; set; } = "";
         public string SheetNumber { get; set; } = "";
         public string SheetName { get; set; } = "";
@@ -189,7 +253,7 @@ namespace RevitMCP.Core.Drawing
             {
                 string key=m.Groups[1].Value;
                 string value=key=="Sequence"?sequence.ToString(CultureInfo.InvariantCulture):values.TryGetValue(key,out var v)?v:throw new ArgumentException("未知 token："+key);
-                if(string.IsNullOrWhiteSpace(value))throw new ArgumentException("token 未提供值："+key);
+                if(string.IsNullOrWhiteSpace(value)&&key!="Zone")throw new ArgumentException("token 未提供值："+key);
                 if(m.Groups[2].Success)
                 {
                     if(!int.TryParse(value,NumberStyles.Integer,CultureInfo.InvariantCulture,out int n))throw new ArgumentException("數值格式需明確整數值："+key);
@@ -206,13 +270,14 @@ namespace RevitMCP.Core.Drawing
         public static DrawingPlan Generate(DrawingPackageDefinition package, IEnumerable<string> existingNumbers)
         {
             var plan=new DrawingPlan{Package=package};
-            if(package.Levels.Count==0||package.Zones.Count==0){plan.Errors.Add("請選擇樓層與分區。");return plan;}
+            if(package.Levels.Count==0){plan.Errors.Add("請選擇至少一個樓層。");return plan;}
+            var zones=package.Zones.Count==0?new[]{DrawingZone.Unzoned()}:package.Zones.ToArray();
             if(package.Levels.Select(l=>l.Id).Distinct().Count()!=package.Levels.Count||package.Zones.Select(z=>z.ZoneId).Distinct().Count()!=package.Zones.Count)
             {plan.Errors.Add("樓層或分區重複。");return plan;}
             var numbers=new HashSet<string>(existingNumbers,StringComparer.OrdinalIgnoreCase);
             int sequence=0;
             foreach(var level in package.Levels.OrderBy(l=>l.Elevation).ThenBy(l=>l.Id))
-            foreach(var zone in package.Zones.OrderBy(z=>z.ZoneId,StringComparer.Ordinal))
+            foreach(var zone in zones.OrderBy(z=>z.ZoneId,StringComparer.Ordinal))
             {
                 sequence++;
                 string key=level.Id.ToString(CultureInfo.InvariantCulture)+"/"+zone.ZoneId;
@@ -220,8 +285,8 @@ namespace RevitMCP.Core.Drawing
                 var row=new DrawingPlanRow{Key=key,Level=level,Zone=zone,Change=DrawingChange.Add};plan.Rows.Add(row);
                 try
                 {
-                    if(!zone.Bounds.Valid)throw new ArgumentException("分區缺少有效範圍。");
-                    if(!package.SourceViewsByKey.TryGetValue(key,out long source)&&!package.SourceViewsByLevel.TryGetValue(level.Id,out source)||source<=0)throw new ArgumentException("尚未指定此樓層的來源視圖。");
+                    if(!zone.IsUnzoned&&!zone.Bounds.Valid)throw new ArgumentException("分區缺少有效範圍。");
+                    if(!package.SourceViewsByKey.TryGetValue(key,out long source)&&!package.SourceViewsByLevel.TryGetValue(level.Id,out source)||source<=0)throw new ArgumentException(level.Name+"：缺少來源視圖或需要選擇來源視圖。");
                     row.SourceViewId=source;
                     var tokens=new Dictionary<string,string>{{"Discipline",package.Discipline},{"DrawingType",package.DrawingType},{"Level",level.Name},{"Zone",zone.ZoneName},{"Phase",package.Phase}};
                     row.SheetNumber=DrawingTokenEngine.Expand(package.Profile.NumberingRule,tokens,sequence);

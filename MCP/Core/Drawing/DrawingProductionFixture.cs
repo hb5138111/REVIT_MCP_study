@@ -41,6 +41,7 @@ namespace RevitMCP.Core.Drawing
         public void Execute(UIApplication app)
         {
             queued=false;
+            if(vm.Busy)return;
             try
             {
                 if(DateTime.UtcNow>deadline)throw new InvalidOperationException("Drawing fixture timeout.");
@@ -64,7 +65,7 @@ namespace RevitMCP.Core.Drawing
                             fixture.Regenerate();
                             var legendViewport=Viewport.Create(fixture,new ElementId(referenceSheet),legend.Id,new XYZ(.4,.4,0));
                             if(legendViewport==null)throw new InvalidOperationException("Legend viewport creation returned null.");
-                            fixture.Regenerate();
+                            fixture.Regenerate();DrawingFixtureIsolation.Mark(legend);
                             if(tx.Commit()!=TransactionStatus.Committed)throw new InvalidOperationException("Legend fixture transaction rolled back.");
                             Check("legend_viewport_persisted",fixture.GetElement(legendViewport.Id)!=null,legendViewport.Id.Value);
                             File.WriteAllText(Path.Combine(root,"legend-debug.json"),JsonConvert.SerializeObject(new{Legend=legend.Id.Value,Viewport=legendViewport.Id.Value,Sheet=referenceSheet,ViewportSheet=legendViewport.SheetId.Value,SheetViewports=((ViewSheet)fixture.GetElement(new ElementId(referenceSheet))).GetAllViewports().Select(id=>id.Value)}));
@@ -80,7 +81,7 @@ namespace RevitMCP.Core.Drawing
                         foreach(var parameter in blueprint.SheetParameterCopyPolicy.Where(p=>p.ParameterId==(long)BuiltInParameter.SHEET_DRAWN_BY))parameter.Selected=true;
                         foreach(var parameter in blueprint.SheetParameterCopyPolicy.Where(p=>p.ParameterId==(long)BuiltInParameter.SHEET_CHECKED_BY)){parameter.Selected=true;parameter.SemanticField="Level";}
                         Check("generated_number_policy",blueprint.SheetParameterCopyPolicy.Any(p=>p.ParameterId==(long)BuiltInParameter.SHEET_NUMBER&&p.Policy==DrawingCopyPolicy.Generated));
-                        vm.Package.Profile.ProfileName="Drawing Fixture";vm.Package.Profile.NumberingRule="DF-{Sequence:000}";vm.Package.Profile.ViewNamingRule="{Level}-{Zone}-Fixture";
+                        vm.Package.Profile.ProfileKind=DrawingProfileKind.Fixture;vm.Package.Profile.ProfileName="Drawing Fixture";vm.Package.Profile.NumberingRule="DF-{Sequence:000}";vm.Package.Profile.ViewNamingRule="{Level}-{Zone}-Fixture";
                         vm.Package.PackageName="Disposable Drawing Fixture";vm.Package.DrawingType="施工平面";vm.Package.Levels=levels.ToList();vm.Package.SourceViewsByLevel=sources;
                         vm.Package.Zones=new(){new(){ZoneId="fixture-grid-A",ZoneName="A",ScopeSource="GridRange",Bounds=new(0,0,10,10)},new(){ZoneId="fixture-grid-B",ZoneName="B",ScopeSource="GridRange",Bounds=new(10,0,20,10)}};
                         vm.SaveProfile();break;
@@ -157,6 +158,7 @@ namespace RevitMCP.Core.Drawing
                 var viewport=Viewport.Create(doc,sheet.Id,new ElementId(sources[levels[0].Id]),new XYZ(1,1,0));viewport.LabelOffset=new XYZ(0,-.02,0);viewport.LabelLineLength=.1;
                 var schedule=ViewSchedule.CreateSchedule(doc,new ElementId(BuiltInCategory.OST_Levels));schedule.Name="Fixture Levels";
                 var field=schedule.Definition.GetSchedulableFields().First(f=>f.ParameterId.Value==(long)BuiltInParameter.DATUM_TEXT);schedule.Definition.AddField(field);ScheduleSheetInstance.Create(doc,sheet.Id,schedule.Id,new XYZ(1.6,1.3,0));
+                foreach(var element in new FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements())DrawingFixtureIsolation.Mark(element);
                 doc.Regenerate();tx.Commit();
             }
             string path=Path.Combine(root,"DrawingProductionFixture.rvt");doc.SaveAs(path,new SaveAsOptions{OverwriteExistingFile=true});doc.Close(false);app.OpenAndActivateDocument(path);
@@ -177,7 +179,8 @@ namespace RevitMCP.Core.Drawing
                 using(var tx=new Transaction(doc,"Overlap fixture"))
                 {tx.Start();var legend=sheet.GetAllViewports().Select(id=>(Viewport)doc.GetElement(id)).Single(v=>((View)doc.GetElement(v.ViewId)).ViewType==ViewType.Legend);viewport.SetBoxCenter(legend.GetBoxCenter());tx.Commit();}
                 Check("qa_legend_overlap",service.Qa(vm.Package.PackageGuid).Any(q=>q.Code=="LAYOUT_OVERLAP"));
-                using(var tx=new Transaction(doc,"Scale fixture")){tx.Start();var target=(View)doc.GetElement(viewport.ViewId);var primary=target.GetPrimaryViewId();var source=primary==ElementId.InvalidElementId?target:(View)doc.GetElement(primary);source.ViewTemplateId=ElementId.InvalidElementId;source.Scale=50;doc.Regenerate();tx.Commit();}
+                using(var tx=new Transaction(doc,"Scale fixture")){tx.Start();var target=(View)doc.GetElement(viewport.ViewId);var primary=target.GetPrimaryViewId();var source=primary==ElementId.InvalidElementId?target:(View)doc.GetElement(primary);source.ViewTemplateId=ElementId.InvalidElementId;source.Scale=50;foreach(var element in new FilteredElementCollector(doc).WhereElementIsNotElementType().ToElements())DrawingFixtureIsolation.Mark(element);
+                doc.Regenerate();tx.Commit();}
                 var scaleIssues=service.Qa(vm.Package.PackageGuid);
                 Check("negative_scale_readback",((View)doc.GetElement(viewport.ViewId)).Scale==50,((View)doc.GetElement(viewport.ViewId)).Scale);
                 Check("qa_wrong_scale",scaleIssues.Any(q=>q.Code=="WRONG_VIEW_SCALE"),scaleIssues);

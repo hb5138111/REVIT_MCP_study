@@ -25,12 +25,40 @@ namespace RevitMCP.Core.Drawing
         private static DrawingPoint Point(XYZ point) => new(point.X,point.Y);
         private static XYZ Xyz(DrawingPoint point) => new(point.X,point.Y,0);
         private static double Round(double value) => Math.Round(value,7);
-        public DrawingChoice[] Sheets() => new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).Cast<ViewSheet>().Where(s=>!s.IsPlaceholder).OrderBy(s=>s.SheetNumber,StringComparer.Ordinal).Select(s=>new DrawingChoice(s.Id.Value,s.SheetNumber+" "+s.Name)).ToArray();
-        public DrawingChoice[] Levels() => new FilteredElementCollector(document).OfClass(typeof(Level)).Cast<Level>().OrderBy(l=>l.ProjectElevation).ThenBy(l=>l.Id.Value).Select(l=>new DrawingChoice(l.Id.Value,l.Name,l.ProjectElevation)).ToArray();
-        public DrawingChoice[] Sources(long level) => new FilteredElementCollector(document).OfClass(typeof(ViewPlan)).Cast<ViewPlan>().Where(v=>!v.IsTemplate&&v.GenLevel?.Id.Value==level).OrderBy(v=>v.Name,StringComparer.Ordinal).Select(v=>new DrawingChoice(v.Id.Value,v.Name)).ToArray();
+        private HashSet<long> HiddenFixtureIds()
+        {
+            var hidden=new HashSet<long>();if(DrawingFixtureIsolation.DeveloperMode)return hidden;
+            var data=Load();
+            foreach(var profile in data.Profiles.Concat(data.Packages.Select(p=>p.Profile)).Where(p=>!DrawingFixtureIsolation.Visible(p)))
+            {
+                hidden.Add(profile.Blueprint.SourceSheetId);hidden.Add(profile.Blueprint.TitleBlockTypeId);
+                foreach(var slot in profile.Blueprint.Slots){hidden.Add(slot.SourceViewId);hidden.Add(slot.ViewTemplateId);}
+                foreach(var package in data.Packages.Where(p=>p.Profile.ProfileGuid==profile.ProfileGuid))
+                {
+                    foreach(var level in package.Levels)hidden.Add(level.Id);
+                    foreach(var view in package.SourceViewsByLevel.Values)hidden.Add(view);
+                    foreach(var record in data.Records.Where(r=>r.DrawingPackageGuid==package.PackageGuid)){hidden.Add(record.SheetId);hidden.Add(record.ViewId);}
+                }
+            }
+            return hidden;
+        }
+        public DrawingChoice[] Sheets()
+        {
+            var hidden=HiddenFixtureIds();return new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).Cast<ViewSheet>().Where(s=>!s.IsPlaceholder&&DrawingFixtureIsolation.Visible(s)&&!hidden.Contains(s.Id.Value)).OrderBy(s=>s.SheetNumber,StringComparer.Ordinal).ThenBy(s=>s.Name,StringComparer.Ordinal).Select(s=>new DrawingChoice(s.Id.Value,s.SheetNumber+" | "+s.Name)).ToArray();
+        }
+        public DrawingChoice[] Levels()
+        {
+            var hidden=HiddenFixtureIds();return new FilteredElementCollector(document).OfClass(typeof(Level)).Cast<Level>().Where(l=>DrawingFixtureIsolation.Visible(l)&&!hidden.Contains(l.Id.Value)).OrderBy(l=>l.ProjectElevation).ThenBy(l=>l.Id.Value).Select(l=>new DrawingChoice(l.Id.Value,l.Name,l.ProjectElevation)).ToArray();
+        }
+        public Dictionary<long,DrawingChoice[]> SourcesByLevel()
+        {
+            var hidden=HiddenFixtureIds();var generated=Load().Records.Where(r=>r.ViewStrategy!=DrawingViewStrategy.Existing).Select(r=>r.ViewId).ToHashSet();
+            return new FilteredElementCollector(document).OfClass(typeof(ViewPlan)).Cast<ViewPlan>().Where(v=>!v.IsTemplate&&DrawingFixtureIsolation.Visible(v)&&!hidden.Contains(v.Id.Value)&&!generated.Contains(v.Id.Value)&&v.ViewType==ViewType.FloorPlan&&v.GenLevel!=null).GroupBy(v=>v.GenLevel.Id.Value).ToDictionary(g=>g.Key,g=>g.OrderBy(v=>v.Name,StringComparer.Ordinal).Select(v=>new DrawingChoice(v.Id.Value,v.Name)).ToArray());
+        }
+        public DrawingChoice[] Sources(long level) => SourcesByLevel().TryGetValue(level,out var views)?views:Array.Empty<DrawingChoice>();
         public DrawingZone[] Zones() => new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_VolumeOfInterest).WhereElementIsNotElementType().OrderBy(e=>e.Id.Value).Select(e=>new DrawingZone{ZoneId=e.UniqueId,ZoneName=e.Name,SourceId=e.Id.Value,Bounds=Box(e.get_BoundingBox(null)??throw new InvalidOperationException("Scope Box 缺少範圍。"))}).ToArray();
         public DrawingChoice[] Grids()=>new FilteredElementCollector(document).OfClass(typeof(Grid)).Cast<Grid>().OrderBy(g=>g.Name,StringComparer.Ordinal).Select(g=>new DrawingChoice(g.Id.Value,g.Name)).ToArray();
-        public DrawingChoice[] ViewTemplates()=>new[]{new DrawingChoice(-1,"不套用視圖樣板")}.Concat(new FilteredElementCollector(document).OfClass(typeof(View)).Cast<View>().Where(v=>v.IsTemplate).OrderBy(v=>v.Name,StringComparer.Ordinal).Select(v=>new DrawingChoice(v.Id.Value,v.Name))).ToArray();
+        public DrawingChoice[] ViewTemplates()=>new[]{new DrawingChoice(-1,"不套用視圖樣板")}.Concat(new FilteredElementCollector(document).OfClass(typeof(View)).Cast<View>().Where(v=>v.IsTemplate&&DrawingFixtureIsolation.Visible(v)).OrderBy(v=>v.Name,StringComparer.Ordinal).Select(v=>new DrawingChoice(v.Id.Value,v.Name))).ToArray();
         private static bool ControlsScale(View? template)=>template!=null&&template.GetTemplateParameterIds().Contains(new ElementId(BuiltInParameter.VIEW_SCALE))&&!template.GetNonControlledTemplateParameterIds().Contains(new ElementId(BuiltInParameter.VIEW_SCALE));
         public SheetTemplateBlueprint ConfigureViewRule(SheetTemplateBlueprint blueprint,long templateId,int? scale)
         {
@@ -57,6 +85,12 @@ namespace RevitMCP.Core.Drawing
             if(xs.Count!=2||ys.Count!=2||xs[0]==xs[1]||ys[0]==ys[1])throw new ArgumentException("需兩條 X 邊界與兩條 Y 邊界。");
             double padding=paddingMm/304.8;
             return new DrawingZone{ZoneId="grid:"+string.Join(",",gridIds.OrderBy(id=>id)),ZoneName=name,ScopeSource="GridRange",GridIds=gridIds.OrderBy(id=>id).ToArray(),PaddingMm=paddingMm,Bounds=new(xs.Min()-padding,ys.Min()-padding,xs.Max()+padding,ys.Max()+padding)};
+        }
+        public DrawingProjectData ProductionData()
+        {
+            var data=Load();data.Profiles=data.Profiles.Where(DrawingFixtureIsolation.Visible).ToList();
+            data.Packages=data.Packages.Where(p=>DrawingFixtureIsolation.Visible(p.Profile)).ToList();
+            var allowed=data.Packages.Select(p=>p.PackageGuid).ToHashSet();data.Records=data.Records.Where(r=>allowed.Contains(r.DrawingPackageGuid)).ToList();return data;
         }
         private FamilyInstance TitleBlock(ViewSheet sheet) => new FilteredElementCollector(document,sheet.Id).OfCategory(BuiltInCategory.OST_TitleBlocks).WhereElementIsNotElementType().Cast<FamilyInstance>().Single();
         public SheetTemplateBlueprint Extract(long sheetId)
@@ -147,7 +181,17 @@ namespace RevitMCP.Core.Drawing
             var ownedIds=records.Values.Select(r=>r.SheetId).ToHashSet();
             var plan=DrawingPlanner.Generate(package,sheets.Where(s=>!ownedIds.Contains(s.Id.Value)).Select(s=>s.SheetNumber));plan.DocumentIdentity=Identity;
             var blueprint=package.Profile.Blueprint;
-            if(document.GetElement(new ElementId(blueprint.SourceSheetId))?.UniqueId!=blueprint.SourceSheetUniqueId)plan.Errors.Add("樣板來源不屬於此模型或已遺失，請重新擷取。");
+            if(blueprint.AutoLayout)
+            {
+                try
+                {
+                    var safe=AutoSheetLayoutService.SafeBounds(package.Profile);var slot=blueprint.Viewports.Single();
+                    slot.AbsoluteX=(safe.MinX+safe.MaxX)/2+package.Profile.OffsetXmm/304.8;slot.AbsoluteY=(safe.MinY+safe.MaxY)/2+package.Profile.OffsetYmm/304.8;
+                    slot.Bounds=new(slot.AbsoluteX-.001,slot.AbsoluteY-.001,slot.AbsoluteX+.001,slot.AbsoluteY+.001);
+                    if(document.GetElement(new ElementId(blueprint.TitleBlockTypeId)) is not FamilySymbol symbol||symbol.Category.Id.Value!=(long)BuiltInCategory.OST_TitleBlocks||symbol.Family.Id.Value!=blueprint.TitleBlockFamilyId||symbol.UniqueId!=blueprint.TitleBlockTypeUniqueId)plan.Errors.Add("圖框類型已遺失，請重新載入。");
+                }catch(Exception e){plan.Errors.Add(e.Message);}
+            }
+            if(!blueprint.AutoLayout&&document.GetElement(new ElementId(blueprint.SourceSheetId))?.UniqueId!=blueprint.SourceSheetUniqueId)plan.Errors.Add("樣板來源不屬於此模型或已遺失，請重新擷取。");
             if(blueprint.Viewports.Count!=1)plan.Errors.Add("第一版需一個主要平面視埠；共用 Legend／Schedule 可多個。");
             var layout=DrawingSheetQaService.Layout(0,"",blueprint.TitleBlockBounds,blueprint.Slots.ToArray());plan.Errors.AddRange(layout.Where(q=>q.Severity=="ERROR").Select(q=>q.Message));
             foreach(var parameter in blueprint.SheetParameterCopyPolicy.Where(p=>p.Selected))
@@ -155,10 +199,12 @@ namespace RevitMCP.Core.Drawing
             var names=new FilteredElementCollector(document).OfClass(typeof(View)).Cast<View>().ToDictionary(v=>v.Id.Value,v=>v.Name);
             foreach(var row in plan.Rows)
             {
+                row.TitleBlockName=blueprint.TitleBlockFamilyName+" / "+blueprint.TitleBlockTypeName;row.ProfileName=package.Profile.ProfileName;
                 try
                 {
                     if(row.Change==DrawingChange.Conflict)continue;
                     var source=document.GetElement(new ElementId(row.SourceViewId)) as ViewPlan??throw new ArgumentException("來源必須是平面視圖。");
+                    row.SourceViewName=source.Name;
                     if(source.IsTemplate||source.GenLevel?.Id.Value!=row.Level.Id)throw new ArgumentException("來源視圖與樓層不符。");
                     foreach(var parameter in blueprint.SheetParameterCopyPolicy.Where(p=>p.Selected))
                     {
@@ -168,7 +214,7 @@ namespace RevitMCP.Core.Drawing
                     }
                     if(row.Zone.ScopeSource=="ScopeBox")
                     {var scope=document.GetElement(new ElementId(row.Zone.SourceId));if(scope?.UniqueId!=row.Zone.ZoneId)throw new ArgumentException("Scope Box 分區已遺失。");if(Box(scope.get_BoundingBox(null))!=row.Zone.Bounds)throw new ArgumentException("Scope Box 範圍已變更，請重新讀取。");}
-                    else if(row.Zone.ScopeSource!="GridRange"||!row.Zone.Bounds.Valid)throw new ArgumentException("不支援此分區來源。");
+                    else if(!row.Zone.IsUnzoned&&(row.Zone.ScopeSource!="GridRange"||!row.Zone.Bounds.Valid))throw new ArgumentException("不支援此分區來源。");
                     else if(row.Zone.GridIds.Length>0&&GridZone(row.Zone.ZoneName,row.Zone.GridIds,row.Zone.PaddingMm).Bounds!=row.Zone.Bounds)throw new ArgumentException("網格範圍已變更，請重新定義分區。");
                     var option=package.Profile.ViewStrategy==DrawingViewStrategy.Dependent?ViewDuplicateOption.AsDependent:ViewDuplicateOption.Duplicate;
                     if(package.Profile.ViewStrategy!=DrawingViewStrategy.Existing&&!source.CanViewBeDuplicated(option))throw new ArgumentException("來源不支援選定複製方式。");
@@ -177,15 +223,16 @@ namespace RevitMCP.Core.Drawing
                     if(slot.Scale<=0)throw new ArgumentException("比例無效。");
                     if(slot.ViewTemplateId!=-1&&!source.IsValidViewTemplate(new ElementId(slot.ViewTemplateId)))throw new ArgumentException("所選 View Template 不適用此視圖。");
                     var projected=Clone(slot);
-                    double width=Math.Max(slot.Bounds.Width,row.Zone.Bounds.Width/slot.Scale),height=Math.Max(slot.Bounds.Height,row.Zone.Bounds.Height/slot.Scale);
+                    double width=Math.Max(slot.Bounds.Width,row.Zone.IsUnzoned?source.Outline.Max.U-source.Outline.Min.U:row.Zone.Bounds.Width/slot.Scale),height=Math.Max(slot.Bounds.Height,row.Zone.IsUnzoned?source.Outline.Max.V-source.Outline.Min.V:row.Zone.Bounds.Height/slot.Scale);
                     projected.Bounds=new(slot.AbsoluteX-width/2,slot.AbsoluteY-height/2,slot.AbsoluteX+width/2,slot.AbsoluteY+height/2);
-                    var projectedIssues=DrawingSheetQaService.Layout(0,row.SheetNumber,blueprint.TitleBlockBounds,new[]{projected}.Concat(blueprint.Legends.Where(s=>s.Reuse)).Concat(blueprint.Schedules.Where(s=>s.Reuse)).ToArray());
+                    row.PreviewBounds=projected.Bounds;
+                    var projectedIssues=DrawingSheetQaService.Layout(0,row.SheetNumber,blueprint.AutoLayout?AutoSheetLayoutService.SafeBounds(package.Profile):blueprint.TitleBlockBounds,new[]{projected}.Concat(blueprint.Legends.Where(s=>s.Reuse)).Concat(blueprint.Schedules.Where(s=>s.Reuse)).ToArray());
                     if(projectedIssues.Count>0)throw new ArgumentException("分區按比例投影的版面衝突："+string.Join("；",projectedIssues.Select(q=>q.Message)));
                     if(source.ViewType.ToString()!=slot.ExpectedViewKind)throw new ArgumentException("來源視圖種類與樣板不符。");
                     if(package.Profile.ViewStrategy==DrawingViewStrategy.Existing)
                     {
                         row.ViewName=source.Name;
-                        if(source.Scale!=slot.Scale||source.ViewTemplateId.Value!=slot.ViewTemplateId||!source.CropBoxActive)throw new ArgumentException("現有視圖的比例／樣板／Crop 必須已符合樣板；工具不改寫此視圖。");
+                        if(source.Scale!=slot.Scale||source.ViewTemplateId.Value!=slot.ViewTemplateId||(!row.Zone.IsUnzoned&&!source.CropBoxActive))throw new ArgumentException("現有視圖的比例／樣板／Crop 必須已符合樣板；工具不改寫此視圖。");
                         if(row.Zone.ScopeSource=="ScopeBox"&&source.get_Parameter(BuiltInParameter.VIEWER_VOLUME_OF_INTEREST_CROP)?.AsElementId().Value!=row.Zone.SourceId)throw new ArgumentException("現有視圖 Scope Box 與分區不符。");
                         if(row.Zone.ScopeSource=="GridRange")
                         {
@@ -240,13 +287,14 @@ namespace RevitMCP.Core.Drawing
                 foreach(var row in plan.Rows.Where(r=>string.Equals(r.SheetNumber,sheet.SheetNumber,StringComparison.OrdinalIgnoreCase)&&r.ExistingSheetId!=sheet.Id.Value)){row.Change=DrawingChange.Conflict;row.Issues.Add("圖號與未更新圖紙衝突。");}
             plan.Signature=Signature(plan);return plan;
         }
-        private string Signature(DrawingPlan plan)=>Hash(new{Identity,Package=plan.Package,Rows=plan.Rows,Errors=plan.Errors,Source=Extract(plan.Package.Profile.Blueprint.SourceSheetId),Sheets=Sheets(),Sources=plan.Rows.Select(r=>r.SourceViewId).Distinct().OrderBy(x=>x).Select(id=>{var v=document.GetElement(new ElementId(id)) as View;return new{Id=id,Version=v?.VersionGuid};}),Zones=plan.Package.Zones.Select(z=>new{z.SourceId,Version=document.GetElement(new ElementId(z.SourceId))?.VersionGuid}),Storage=Load()});
+        private string Signature(DrawingPlan plan)=>Hash(new{Identity,Package=plan.Package,Rows=plan.Rows,Errors=plan.Errors,Source=SourceFingerprint(plan.Package.Profile.Blueprint),Sheets=Sheets(),Sources=plan.Rows.Select(r=>r.SourceViewId).Distinct().OrderBy(x=>x).Select(id=>{var v=document.GetElement(new ElementId(id)) as View;return new{Id=id,Version=v?.VersionGuid};}),Zones=plan.Package.Zones.Select(z=>new{z.SourceId,Version=document.GetElement(new ElementId(z.SourceId))?.VersionGuid}),Storage=Load()});
+        private object SourceFingerprint(SheetTemplateBlueprint blueprint)=>blueprint.AutoLayout?new{blueprint.TitleBlockTypeId,Version=document.GetElement(new ElementId(blueprint.TitleBlockTypeId))?.VersionGuid,FamilyVersion=document.GetElement(new ElementId(blueprint.TitleBlockFamilyId))?.VersionGuid}:Extract(blueprint.SourceSheetId);
         public long[] Apply(DrawingPlan preview,bool confirmed,Action? afterWrite=null)
         {
             if(!confirmed||!preview.CanApply)throw new InvalidOperationException("請先完成有效預覽並確認。");
             if(preview.DocumentIdentity!=Identity)throw new InvalidOperationException("文件已切換。");
             var fresh=Preview(preview.Package);if(!fresh.CanApply||fresh.Signature!=preview.Signature)throw new InvalidOperationException("模型或計畫已變更，請重新預覽。");
-            var data=Load();var ids=new List<long>();var blueprint=preview.Package.Profile.Blueprint;
+            preview=fresh;var data=Load();var ids=new List<long>();var blueprint=preview.Package.Profile.Blueprint;
             using var group=new TransactionGroup(document,"施工圖生產中心");group.Start();
             try
             {
@@ -292,6 +340,7 @@ namespace RevitMCP.Core.Drawing
                         var source=(ViewPlan)document.GetElement(new ElementId(row.SourceViewId));
                         var view=preview.Package.Profile.ViewStrategy==DrawingViewStrategy.Existing?source:(View)document.GetElement(source.Duplicate(preview.Package.Profile.ViewStrategy==DrawingViewStrategy.Dependent?ViewDuplicateOption.AsDependent:ViewDuplicateOption.Duplicate));
                         if(preview.Package.Profile.ViewStrategy!=DrawingViewStrategy.Existing)view.Name=row.ViewName;
+                        if(preview.Package.Profile.ProfileKind==DrawingProfileKind.Fixture){DrawingFixtureIsolation.Mark(sheet);DrawingFixtureIsolation.Mark(view);DrawingFixtureIsolation.Mark(title);}
                         var main=blueprint.Viewports.Single();
                         if(preview.Package.Profile.ViewStrategy==DrawingViewStrategy.Duplicate){view.ViewTemplateId=new ElementId(main.ViewTemplateId);if(!main.ScaleControlled)view.Scale=main.Scale;}
                         if(preview.Package.Profile.ViewStrategy!=DrawingViewStrategy.Existing)ApplyZone(view,row.Zone);
@@ -338,6 +387,7 @@ namespace RevitMCP.Core.Drawing
         }
         private void ApplyZone(View view,DrawingZone zone)
         {
+            if(zone.IsUnzoned)return;
             var scope=view.get_Parameter(BuiltInParameter.VIEWER_VOLUME_OF_INTEREST_CROP);
             if(scope==null||scope.IsReadOnly)throw new InvalidOperationException("Scope／Crop 被樣板控制，請先確認來源設定。");
             if(!scope.Set(zone.ScopeSource=="ScopeBox"?new ElementId(zone.SourceId):ElementId.InvalidElementId))throw new InvalidOperationException("Scope 設定失敗。");
@@ -367,12 +417,13 @@ namespace RevitMCP.Core.Drawing
             }
             foreach(var pair in actual.Schedules.Zip(expected.Schedules.Where(s=>s.Reuse)))Require(pair.First.SourceViewId==pair.Second.SourceViewId&&Math.Abs(pair.First.AbsoluteX-pair.Second.AbsoluteX)<VerificationTolerance&&Math.Abs(pair.First.AbsoluteY-pair.Second.AbsoluteY)<VerificationTolerance,"Schedule 位置不符。");
             var view=(View)document.GetElement(new ElementId(actual.Viewports.Single().SourceViewId));
-            Require(view.CropBoxActive,"Crop 未啟用。");
+            Require(view.GenLevel?.Id.Value==row.Level.Id,"視圖樓層不符。");
+            if(!row.Zone.IsUnzoned)Require(view.CropBoxActive,"Crop 未啟用。");
             if(row.Zone.ScopeSource=="ScopeBox")Require(view.get_Parameter(BuiltInParameter.VIEWER_VOLUME_OF_INTEREST_CROP)?.AsElementId().Value==row.Zone.SourceId,"Scope 不符。");
-            else {var crop=view.CropBox;var min=crop.Transform.OfPoint(crop.Min);var max=crop.Transform.OfPoint(crop.Max);Require(Math.Abs(min.X-row.Zone.Bounds.MinX)<VerificationTolerance&&Math.Abs(min.Y-row.Zone.Bounds.MinY)<VerificationTolerance&&Math.Abs(max.X-row.Zone.Bounds.MaxX)<VerificationTolerance&&Math.Abs(max.Y-row.Zone.Bounds.MaxY)<VerificationTolerance,"Crop 範圍不符。");}
+            else if(!row.Zone.IsUnzoned) {var crop=view.CropBox;var min=crop.Transform.OfPoint(crop.Min);var max=crop.Transform.OfPoint(crop.Max);Require(Math.Abs(min.X-row.Zone.Bounds.MinX)<VerificationTolerance&&Math.Abs(min.Y-row.Zone.Bounds.MinY)<VerificationTolerance&&Math.Abs(max.X-row.Zone.Bounds.MaxX)<VerificationTolerance&&Math.Abs(max.Y-row.Zone.Bounds.MaxY)<VerificationTolerance,"Crop 範圍不符。");}
             if(package.Profile.ViewStrategy==DrawingViewStrategy.Dependent)Require(view.GetPrimaryViewId().Value==row.SourceViewId,"母視圖不符。");
             foreach(var parameter in expected.SheetParameterCopyPolicy.Where(p=>p.Selected))Require(actual.SheetParameterCopyPolicy.Any(p=>p.Owner==parameter.Owner&&p.ParameterId==parameter.ParameterId&&p.Value==parameter.Resolve(package,row)),"參數不符："+parameter.Name);
-            var errors=DrawingSheetQaService.Layout(sheet.Id.Value,sheet.SheetNumber,actual.TitleBlockBounds,actual.Slots.ToArray()).Where(q=>q.Severity=="ERROR").ToArray();
+            var errors=DrawingSheetQaService.Layout(sheet.Id.Value,sheet.SheetNumber,(expected.AutoLayout?AutoSheetLayoutService.SafeBounds(package.Profile):actual.TitleBlockBounds),actual.Slots.ToArray()).Where(q=>q.Severity=="ERROR").ToArray();
             Require(errors.Length==0,string.Join("；",errors.Select(e=>e.Message)));
         }
         public DrawingSheetStatus[] SheetStatuses(Guid packageId,DrawingQaIssue[] issues)
@@ -398,6 +449,7 @@ namespace RevitMCP.Core.Drawing
                     var sheet=document.GetElement(new ElementId(record.SheetId)) as ViewSheet??throw new InvalidOperationException("圖紙遺失。");
                     var blueprint=Extract(record.SheetId);issues.AddRange(DrawingSheetQaService.Layout(record.SheetId,sheet.SheetNumber,blueprint.TitleBlockBounds,blueprint.Slots.ToArray()));
                     var expected=package.Profile.Blueprint;
+                    if(expected.AutoLayout)issues.AddRange(DrawingSheetQaService.Layout(record.SheetId,sheet.SheetNumber,AutoSheetLayoutService.SafeBounds(package.Profile),blueprint.Viewports));
                     void Qa(bool condition,string code,string severity,string message){if(!condition)issues.Add(new(record.SheetId,sheet.SheetNumber,code,severity,message));}
                     Qa(!string.IsNullOrWhiteSpace(sheet.Name),"MISSING_SHEET_NAME","ERROR","圖名為空。");
                     Qa(blueprint.TitleBlockTypeId==expected.TitleBlockTypeId,"WRONG_TITLEBLOCK","ERROR","圖框 Type 與出圖包不符。");
@@ -408,11 +460,11 @@ namespace RevitMCP.Core.Drawing
                         Qa(actual.ViewTemplateId==desired.ViewTemplateId,"WRONG_VIEW_TEMPLATE","WARNING","View Template 與樣板不同。");
                         Qa(actual.Scale==desired.Scale,"WRONG_VIEW_SCALE","WARNING","視圖比例與樣板不同。");
                         Qa(actual.ViewportTypeId==desired.ViewportTypeId,"WRONG_VIEWPORT_TYPE","WARNING","視埠 Type 與樣板不同。");
-                        var view=(View)document.GetElement(new ElementId(actual.SourceViewId));Qa(view.CropBoxActive,"CROP_DISABLED","ERROR","主要視圖未啟用 Crop。");
+                        var view=(View)document.GetElement(new ElementId(actual.SourceViewId));Qa(planned.TryGetValue(record.Key,out var zoneRow)&&zoneRow.Zone.IsUnzoned||view.CropBoxActive,"CROP_DISABLED","ERROR","主要視圖未啟用 Crop。");
                         Qa(actual.SourceViewId==record.ViewId,"WRONG_MAIN_VIEW","ERROR","主要視圖與工具紀錄不符。");
                         planned.TryGetValue(record.Key,out var row);
                         Qa(row!=null,"MISSING_LEVEL_ZONE","ERROR","此圖紙的樓層／分區已不在計畫。");
-                        if(row!=null)
+                        if(row!=null&&!row.Zone.IsUnzoned)
                         {
                             var crop=view.CropBox;var min=crop.Transform.OfPoint(crop.Min);var max=crop.Transform.OfPoint(crop.Max);
                             Qa(max.X-min.X<=row.Zone.Bounds.Width+VerificationTolerance&&max.Y-min.Y<=row.Zone.Bounds.Height+VerificationTolerance,"CROP_TOO_LARGE","WARNING","Crop 大於計畫分區範圍。");

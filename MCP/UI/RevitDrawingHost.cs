@@ -40,13 +40,16 @@ namespace RevitMCP.UI
             public DrawingChoice[] Sheets()=>service.Sheets();
             public DrawingChoice[] Levels()=>service.Levels();
             public DrawingChoice[] Sources(long level)=>service.Sources(level);
+            public System.Collections.Generic.Dictionary<long,DrawingChoice[]> SourcesByLevel()=>service.SourcesByLevel();
             public DrawingZone[] Zones()=>service.Zones();
             public DrawingChoice[] Grids()=>service.Grids();
             public DrawingZone GridZone(string name,long[] grids,double paddingMm)=>service.GridZone(name,grids,paddingMm);
             public DrawingChoice[] ViewTemplates()=>service.ViewTemplates();
             public SheetTemplateBlueprint ConfigureViewRule(SheetTemplateBlueprint blueprint,long templateId,int? scale)=>service.ConfigureViewRule(blueprint,templateId,scale);
-            public DrawingProjectData Load()=>service.Load();
+            public DrawingProjectData Load()=>service.ProductionData();
             public SheetTemplateBlueprint Extract(long sheet)=>service.Extract(sheet);
+            public ExternalTitleBlockAnalysis AnalyzeExternal(string path,string unit,string rft)=>new ExternalTitleBlockService(ui.Document).Analyze(path,unit,rft);
+            public SheetTemplateBlueprint LoadExternal(ExternalTitleBlockAnalysis analysis,string type,bool useExisting,bool confirmed)=>new ExternalTitleBlockService(ui.Document).Load(analysis,type,useExisting,confirmed);
             public DrawingTemplateProfile SaveProfile(DrawingTemplateProfile profile)=>service.SaveProfile(profile);
             public DrawingPlan Preview(DrawingPackageDefinition package)=>service.Preview(package);
             public long[] Apply(DrawingPlan plan,bool confirmed)=>service.Apply(plan,confirmed);
