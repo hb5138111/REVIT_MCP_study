@@ -1,6 +1,6 @@
 # Reversible Gate C only. Never commits or performs a permanent release.
 [CmdletBinding()]
-param([string]$RecoveryDirectory,[string]$ProjectTemplate,[switch]$CadOnly,[switch]$EarthworkWorkflowOnly)
+param([string]$RecoveryDirectory,[string]$ProjectTemplate,[switch]$CadOnly,[switch]$EarthworkWorkflowOnly,[switch]$DrawingWorkflowOnly)
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot -Parent
 $base=Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Autodesk\Revit\Addins\2026'
@@ -58,6 +58,7 @@ try {
         if($ProjectTemplate){$templateArguments=@('-ProjectTemplate',$ProjectTemplate)}
         if($CadOnly){$templateArguments+= '-CadOnly'}
         if($EarthworkWorkflowOnly){$templateArguments+= '-EarthworkWorkflowOnly'}
+        if($DrawingWorkflowOnly){$templateArguments+= '-DrawingWorkflowOnly'}
         $launch=& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'run-revit-selftest.ps1') @templateArguments
         if($LASTEXITCODE -ne 0){throw ($launch -join "`n")}
         $line=$launch | Where-Object {$_ -match '^STARTED '} | Select-Object -Last 1
@@ -67,7 +68,12 @@ try {
         $deadline=[DateTime]::UtcNow.AddMinutes(5)
         while((Get-Process -Id $report.ProcessId -ErrorAction SilentlyContinue) -and [DateTime]::UtcNow -lt $deadline){Start-Sleep -Seconds 2}
         $runtime=Join-Path $report.RuntimeDirectory 'runtime.json'
-        if($EarthworkWorkflowOnly){
+        if($DrawingWorkflowOnly){
+            $drawing=Get-Content (Join-Path $report.RuntimeDirectory 'drawing-runtime.json') -Raw|ConvertFrom-Json
+            $report.DrawingWorkflow=$drawing.Status
+            if($drawing.BuildSHA256 -ne $report.BuildSHA256){throw 'Drawing workflow loaded hash mismatch'}
+        }
+        elseif($EarthworkWorkflowOnly){
             $earthwork=Get-Content (Join-Path $report.RuntimeDirectory 'earthwork-workflow.json') -Raw|ConvertFrom-Json
             $report.EarthworkWorkflow=$earthwork.Status
             if($earthwork.BuildSHA256 -ne $report.BuildSHA256){throw 'Earthwork workflow loaded hash mismatch'}
@@ -120,7 +126,7 @@ finally{
             $report.FileSetMatch=(Inventory $deployment | ConvertTo-Json -Compress) -eq ($report.OriginalFiles | ConvertTo-Json -Compress)
             $workerMatch=if($report.WorkerExisted){(Get-FileHash -LiteralPath $worker).Hash -eq $report.WorkerSHA256}else{-not(Test-Path -LiteralPath $worker)}
             if(-not $report.FileSetMatch -or $report.RestoredSHA256 -ne $report.OriginalSHA256 -or (Get-FileHash -LiteralPath $manifest).Hash -ne $report.ManifestSHA256 -or $report.ManifestAfter.Count -ne 1 -or $report.ManifestAfter.Assembly -ne 'RevitMCP\RevitMCP.dll' -or $report.ManifestAfter.FullClassName -ne 'RevitMCP.Application' -or -not $workerMatch){throw 'Rollback verification mismatch'}
-            $report.Rollback='PASS';$report.Status=if($report.GateC -eq 'PASS'){'GATE_C_PASS_ROLLBACK_PASS'}else{'GATE_C_INCOMPLETE_ROLLBACK_PASS'}
+            $report.Rollback='PASS';$report.Status=if($report.DrawingWorkflow -eq 'PASS'){'DRAWING_WORKFLOW_PASS_ROLLBACK_PASS'}elseif($report.GateC -eq 'PASS'){'GATE_C_PASS_ROLLBACK_PASS'}else{'GATE_C_INCOMPLETE_ROLLBACK_PASS'}
         }catch{$report.Rollback='FAIL';$report.Status='ROLLBACK_FAILURE';$report.RuntimeFailures+=$_.Exception.Message}
         SaveReport;Write-Output "$($report.Status) $run"
     }

@@ -100,6 +100,7 @@ Check("zero_results_empty_state",true,vm.EmptyState,vm.EmptyState=="目前範圍
 var lazyViews=new[]{new CoordinationViewOption{Id=200,Usable=true},new CoordinationViewOption{Id=100,Usable=true},new CoordinationViewOption{Id=1,Usable=true,Perspective=true}};
 var deterministic=CoordinationViewPolicy.Resolve(999,null,false,id=>lazyViews.FirstOrDefault(v=>v.Id==id),()=>lazyViews);
 Check("view_resolution_deterministic",100,deterministic,deterministic==100);
+DrawingTests.Run(Check);
 var report=new { GateC2=failed==0?"PASS":"FAIL", Passed=checks.Count-failed,Failed=failed,Assertions=checks,Timestamp=DateTimeOffset.UtcNow };
 var output=args.Length>0?args[0]:"test-artifacts/v042";Directory.CreateDirectory(output);
 File.WriteAllText(Path.Combine(output,"workflow-state.json"),JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));

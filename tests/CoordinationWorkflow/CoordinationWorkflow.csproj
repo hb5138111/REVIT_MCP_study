@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><DefineConstants>$(DefineConstants);DRAWING_TESTS</DefineConstants></PropertyGroup>
   <ItemGroup>
     <Compile Include="../../MCP/Models/CoordinationModels.cs" Link="CoordinationModels.cs" />
     <Compile Include="../../MCP/UI/CoordinationViewModel.cs" Link="CoordinationViewModel.cs" />
+    <Compile Include="../../MCP/UI/DrawingProductionViewModel.cs" Link="DrawingProductionViewModel.cs" />
+    <Compile Include="../../MCP/Core/Drawing/DrawingModels.cs" Link="DrawingModels.cs" />
   </ItemGroup>
 </Project>

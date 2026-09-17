@@ -22,6 +22,8 @@ const terrainPassed=terrainRuntime?.Status==='PASS'&&terrainRuntime?.Failed===0&
 const cadPath=runtime?.Path.replace(/runtime\.json$/,'cad-runtime.json');
 const cadRuntime=cadPath&&fs.existsSync(path.join(root,cadPath))?JSON.parse(read(cadPath)):null;
 const cadPassed=cadRuntime?.Status==='PASS'&&cadRuntime?.Failed===0&&cadRuntime?.BuildSHA256===buildHash;
+const drawingCandidates=fs.readdirSync(path.join(root,'test-artifacts')).filter(n=>n.startsWith('revit-selftest-')).map(n=>'test-artifacts/'+n+'/drawing-runtime.json').filter(p=>fs.existsSync(path.join(root,p))).map(p=>({Path:p,Report:JSON.parse(read(p))}));
+const drawing=drawingCandidates.filter(x=>x.Report.Status==='PASS'&&x.Report.Failed===0&&x.Report.BuildSHA256===buildHash).sort((a,b)=>b.Report.Timestamp.localeCompare(a.Report.Timestamp))[0];
 const review=new Set(['beam-penetration-algorithm','beam-penetration-base','beam-penetration-rc','beam-penetration-sc','beam-penetration-src','sleeve-classification-protocol','corridor-analysis-protocol','daylight-area-check','exterior-wall-opening-check','fire-rating-check','floor-area-review','parking-clearance-check','parking-space-review','smoke-detector-check','smoke-exhaust-review','stair-compliance-check','wall-check','building-code-tw']);
 const settings={
  'GM_parameter-schema':['MaterialSlotAssignment','LicenseValidity','TargetTypes'],
@@ -117,6 +119,16 @@ for(const d of matrix.Domains){
   d.NativeScope={Host:true,Link:runtime?'Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested':'Source mapping only; runtime not verified',Mutation:'ReadOnly',TransactionRequired:false,UI:'DetectReviewPattern',Limits:['Centerline crossing; no solid-edge grazing certification','No opening/sleeve creation','Candidate/review only','Session-scoped project settings']};
   d.RecommendedUiPattern='DetectReviewPattern';d.LargeModelRisk='Explicit MEP category/level; pair and time budgets; totals and truncation reported';
  }
+ if(d.DomainId==='construction-drawing-production'){
+  d.NativeUiStatus='Implemented: five-step current-document Sheet Blueprint / Package workflow';
+  d.NativeWorkflowReadOnly=false;d.RuntimeCapability='Typed Native C# service; no new MCP transport';
+  d.NativeBackendFiles=['MCP/Core/Drawing/DrawingModels.cs','MCP/Core/Drawing/RevitDrawingService.cs','MCP/UI/DrawingProductionViewModel.cs','MCP/UI/RevitDrawingHost.cs'];
+  d.FixtureEvidence=drawing?.Path||null;d.FixtureTestStatus=drawing?'PASS: '+drawing.Report.Passed+' assertions; scoped drawing workflow':'NOT_TESTED: no matching-build drawing report';
+  d.NativeWorkflowTestStatus=drawing?'PASS: ViewModel / ExternalEvent / real Revit read-back':'NOT_TESTED';
+  d.NativeScope={Mutation:'ConfirmedWrite',TransactionRequired:true,Readback:true,RequiresConfirmation:true,Limits:['Same TitleBlock Type, one main plan viewport','No adoption of user-owned sheets','Custom text mapping only; no new shared parameters','Guide Grid and arbitrary annotation copy disabled','Matchline / View Reference and auto dimension PARTIAL / NOT ENABLED']};
+  d.Blockers=['Full Domain is not certified: per-field merge, adoption, multi-main topology and reference/dimension automation remain disabled'];
+  d.RecommendedUiPattern='PreviewApplyPattern';d.LargeModelRisk='Explicit queries; deterministic complete plan; virtualized table; no geometry extraction; actual 300-sheet runtime benchmark not claimed';
+ }
  if(d.DomainId==='site-terrain-earthwork'){
   d.NativeUiStatus='Implemented: v0.5 site step workflow; confirmed writes and read-back';
   d.NativeWorkflowReadOnly=false;
@@ -133,6 +145,7 @@ const allSource=[...matrix.Inventory,...backend.SourceFiles.map(f=>({...f,Bytes:
 matrix.Inventory=[...new Map(allSource.map(f=>[f.Path,f])).values()].sort((a,b)=>a.Path.localeCompare(b.Path));
 matrix.SchemaVersion=3;
 matrix.NativeFeatures=[
+ {Id:'construction-drawing-production',Status:drawing?'RUNTIME_VERIFIED':'RELEASE_GATED',RequiredGates:['A','B','C','C2','C3','DrawingRuntime'],FixtureEvidence:drawing?.Path||null,Limits:['Supported current-document workflow only','Same TitleBlock Type; one main plan viewport','Manual overrides default preserve; per-sheet explicit reapply','Auto dimension / Matchline / View Reference PARTIAL and disabled']},
  {Id:'site-terrain-earthwork',Status:terrainPassed&&cadPassed?'RUNTIME_VERIFIED':'RELEASE_GATED',RequiredGates:['A','B','C','C2','C3','TerrainLogic','TerrainRuntime','CadRuntime'],CadFixtureStatus:cadPassed?'PASS':'NOT_TESTED',Limits:['Supported subset only; full Domain remains RULE_READY','Explicit confirmation and read-back required','CAD temporary import rollback; no inferred elevation text or breaklines']},
  {Id:'model-summary',Status:'RETIRED_NATIVE_UI',Reason:'Removed low-value Native workflow; Domain and runtime tools retained'},
  {Id:'type-inventory',Status:'RETIRED_NATIVE_UI',Reason:'Removed Native inventory and navigation; generic link DTO and identity extracted'},
