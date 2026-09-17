@@ -23,9 +23,12 @@ namespace RevitMCP.UI
         string FormatVolume(double cubicMetres)=>$"{cubicMetres:F4} m³";
         long[] SelectedIds()=>Array.Empty<long>();
         string EarthworkSignature(EarthworkZone zone)=>"fixture";
-        EarthworkProjectData LoadEarthwork()=>new(Array.Empty<EarthworkProjectSettings>(),Array.Empty<EarthworkRecord>());
+        EarthworkProjectData LoadEarthwork()=>new(Array.Empty<EarthworkProjectProfile>(),Array.Empty<EarthworkRecord>());
         EarthworkProjectData SaveEarthwork(EarthworkProjectData data,bool confirmed)=>throw new NotSupportedException("專案分析資料 runtime 未提供。");
         EarthworkSchedulePreview PreviewSchedule(IReadOnlyList<EarthworkRecord> rows)=>throw new NotSupportedException("Schedule runtime 未提供。");
+        EarthworkSchedulePreview PreviewSchedule(IReadOnlyList<EarthworkRecord> rows,EarthworkScheduleKind kind)=>PreviewSchedule(rows);
+        IReadOnlyDictionary<EarthworkScheduleKind,string> EarthworkSchedules()=>new Dictionary<EarthworkScheduleKind,string>();
+        string OpenEarthworkSchedule(EarthworkScheduleKind kind)=>throw new NotSupportedException("Schedule runtime 未提供。");
         EarthworkScheduleResult WriteSchedule(IReadOnlyList<EarthworkRecord> rows,EarthworkSchedulePreview preview,bool confirmed)=>throw new NotSupportedException("Schedule runtime 未提供。");
         EarthworkProjectData DeleteEarthwork(Guid zoneGuid,bool deleteScheduleRecord,bool confirmed)=>throw new NotSupportedException("刪除分析紀錄 runtime 未提供。");
         SiteContextSnapshot Snapshot();
@@ -119,7 +122,7 @@ namespace RevitMCP.UI
             if(!Context.Levels.Any(l=>l.Id==level))level=Context.Levels.FirstOrDefault()?.Id??0;
             if(previous?.DocumentIdentity!=Context.DocumentIdentity||previous.SharedToInternal!=Context.SharedToInternal||previous.MetresPerDisplayUnit!=Context.MetresPerDisplayUnit)Changed();else InvalidateWrite();
             Detail=Context.CoordinateEvidence;Status="座標與類型／樓層已重新讀取；建築保持不動。";
-            LoadEarthworkData(c.LoadEarthwork());
+            LoadEarthworkData(c.LoadEarthwork());ScheduleStates=c.EarthworkSchedules();
         });
         public async Task PreviewAsync()
         {
@@ -156,7 +159,7 @@ namespace RevitMCP.UI
         }
         public void PreviewExcavation()
         {
-            if(!CanPreviewExcavation){Status="請先讀取模型單位並選取地形與開挖構件。";Notify();return;}Changed();Submit(document,c=>{ExcavationPreview=c.Excavate(terrain,cutter,false,false,null,Audit());Result=new SiteExcavationOutcome(terrain,cutter,ExcavationPreview.Value,c.FormatVolume(ExcavationPreview.Value),false);CaptureEarthwork(c,new(null,ExcavationPreview.Value,0,null),EarthworkMethod.RevitCutter);Status="開挖試算完成，模型已回復；尚未執行開挖。";});
+            if(!CanPreviewExcavation){Status="請先讀取模型單位並選取地形與開挖構件。";Notify();return;}Changed();calculationRequested=true;Submit(document,c=>{ExcavationPreview=c.Excavate(terrain,cutter,false,false,null,Audit());Result=new SiteExcavationOutcome(terrain,cutter,ExcavationPreview.Value,c.FormatVolume(ExcavationPreview.Value),false);CaptureEarthwork(c,new(null,ExcavationPreview.Value,0,null),EarthworkMethod.RevitCutter);Status="開挖試算完成，模型已回復；尚未執行開挖。";});
         }
         public void UseSelection(bool isTerrain)=>Submit(document,c=>{if(Context==null){Context=c.Snapshot();document=Context.DocumentIdentity;}var selected=c.SelectedElement(isTerrain);if(isTerrain){terrain=selected.Id;TerrainName=selected.Name;}else{cutter=selected.Id;CutterName=selected.Name;}InvalidateQuantity();Status=isTerrain?"已取得選取的地形。":"已取得選取的開挖構件。";});
         public void ExecuteExcavation()
@@ -168,7 +171,7 @@ namespace RevitMCP.UI
         public void CalculateBoundary()
         {
             if(!CanCalculate){Status=CalculationReadiness;Notify();return;}
-            var polygon=BoundaryPoints.ToArray();double elevation=target;var ids=boundaryIds.ToArray();long selectedLevel=baseLevel;bool useLevel=targetMode=="LevelOffset";string offset=offsetText;InvalidateQuantity();
+            var polygon=BoundaryPoints.ToArray();double elevation=target;var ids=boundaryIds.ToArray();long selectedLevel=baseLevel;bool useLevel=targetMode=="LevelOffset";string offset=offsetText;InvalidateQuantity();calculationRequested=true;
             Submit(document,c=>
             {
                 var current=c.Snapshot();if(Context==null||current.MetresPerDisplayUnit!=Context.MetresPerDisplayUnit)throw new InvalidOperationException("專案單位已改變；請重新讀取單位並輸入高程。");
@@ -183,7 +186,7 @@ namespace RevitMCP.UI
         private void Submit(string expected,Action<ISiteContext> work)
         {
             if(Busy)return;Busy=true;Notify();int token=revision;
-            if(!host.Submit(expected,c=>{try{if(token!=revision)throw new InvalidOperationException("排隊期間設定已變更；請重新 Preview 與確認。");work(c);}catch(Exception e){Status=e.Message;}finally{Busy=false;Notify();}},error=>{Status=error;Busy=false;Notify();}))
+            if(!host.Submit(expected,c=>{try{if(token!=revision)throw new InvalidOperationException("排隊期間設定已變更；請重新 Preview 與確認。");work(c);}catch(Exception e){Status=e.Message;if(calculationRequested)calculationState=CalculationStatus.Failed;}finally{calculationRequested=false;Busy=false;Notify();}},error=>{Status=error;Busy=false;Notify();}))
             {Busy=false;Status="Revit 忙碌，請稍後重試。";Notify();}
         }
     }

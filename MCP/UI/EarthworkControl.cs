@@ -18,8 +18,10 @@ namespace RevitMCP.UI
         private readonly StackPanel earthBoundary=new(),earthCutter=new(),earthDirectTarget=new(),earthLevelTarget=new();
         private readonly DataGrid earthworkRows=new(){AutoGenerateColumns=false,IsReadOnly=true,CanUserAddRows=false,Height=240,EnableRowVirtualization=true,EnableColumnVirtualization=true,SelectionMode=DataGridSelectionMode.Single};
         private EarthworkRecord? selectedEarthworkRow;
+        private readonly ComboBox profileSelector=new(){DisplayMemberPath="ProfileName",SelectedValuePath="ProfileGuid"};
+        internal string[] FixtureProfileNames=>profileSelector.Items.Cast<EarthworkProjectProfile>().Select(p=>p.ProfileName).ToArray();
         private readonly Canvas earthworkBoundaryPreview=new(){Height=160,Background=System.Windows.Media.Brushes.AliceBlue,ClipToBounds=true};
-        private sealed record DisplayRow(EarthworkRecord Record,string Number,string Name,string Area,string Cut,string Fill,string Export,string Import,long Trips,string Cost,string Status);
+        private sealed record DisplayRow(EarthworkRecord Record,string Number,string Name,string Area,string Cut,string Fill,string Export,string Import,long Trips,string Cost,string Calculation,string Review,string Profile);
         private void BuildEarthworkPage(StackPanel p)
         {
             Action(p,"新增土方區",vm.NewEarthworkZone);LiveText(p,"土方區編號",nameof(vm.ZoneNumber));LiveText(p,"土方區名稱",nameof(vm.ZoneName));
@@ -35,27 +37,33 @@ namespace RevitMCP.UI
             Option(earthLevelTarget,"參考 Level","Context.Levels",nameof(vm.EarthworkLevelId));LiveText(earthLevelTarget,"Offset（專案長度單位；請明確輸入，可為 0）",nameof(vm.TargetOffsetText));
             Bound(earthBoundary,nameof(vm.DisplayLengthUnit));Bound(earthBoundary,nameof(vm.CalculationReadiness));
             Action(earthCutter,"使用目前選取的開挖構件",()=>vm.UseSelection(false));Bound(earthCutter,nameof(vm.CutterName));Label(earthCutter,"Floor／Roof／Toposolid。試算會完整回復模型；Cutter 只提供挖方，未分析設計填方與面積。");
-            Label(p,"Project Profile（自行選取，不依土壤代碼自動套用）");var profiles=new ComboBox{DisplayMemberPath="ProfileName",SelectedValuePath="ProfileGuid"};profiles.SetBinding(ComboBox.ItemsSourceProperty,new Binding(nameof(vm.EarthworkProfiles)));profiles.SetBinding(ComboBox.SelectedValueProperty,new Binding(nameof(vm.SelectedProfileGuid)){Mode=BindingMode.TwoWay});p.Children.Add(profiles);
+            Label(p,"土方成本設定檔（自行選取）");var profiles=profileSelector;profiles.SetBinding(ComboBox.ItemsSourceProperty,new Binding(nameof(vm.EarthworkProfiles)));profiles.SetBinding(ComboBox.SelectedValueProperty,new Binding(nameof(vm.SelectedProfileGuid)){Mode=BindingMode.TwoWay});p.Children.Add(profiles);
             void EditProfile(bool edit)
             {
                 var source=edit?vm.EarthworkProfiles.SingleOrDefault(x=>x.ProfileGuid==vm.SelectedProfileGuid):null;if(edit&&source==null)return;
                 var dialog=new EarthworkProfileWindow(source);if(dialog.ShowDialog()!=true||dialog.Profile==null)return;
-                var text="將儲存於本 Revit 專案的分析資料，不修改地形。既有已存區紀錄保留原 Profile 快照。\n\n"+Newtonsoft.Json.JsonConvert.SerializeObject(dialog.Profile,Newtonsoft.Json.Formatting.Indented);
-                if(MessageBox.Show(text,"確認儲存 Project Profile",MessageBoxButton.OKCancel,MessageBoxImage.Question)==MessageBoxResult.OK)vm.SaveEarthworkProfile(dialog.Profile,true);
+                var text=$"將儲存成本設定檔：{dialog.Profile.ProfileName}\n幣別：{dialog.Profile.Currency}；體積基準：{dialog.Profile.VolumeUnit}\n{dialog.Editor.SoilPreview}\n{dialog.Editor.TruckPreview}\n\n歷史土方區保留原設定版本與成本，需明確重新計算才更新。";
+                if(MessageBox.Show(text,"確認儲存成本設定檔",MessageBoxButton.OKCancel,MessageBoxImage.Question)==MessageBoxResult.OK)vm.SaveEarthworkProfile(dialog.Profile,true);
             }
-            Action(p,"新增 Project Profile…",()=>EditProfile(false));Action(p,"編輯所選 Profile…",()=>EditProfile(true));
+            Action(p,"新增成本設定檔…",()=>EditProfile(false));Action(p,"編輯所選設定檔…",()=>EditProfile(true));
+            Action(p,"複製設定檔…",()=>{if(MessageBox.Show("以新的身分建立 V1 複本？原設定與歷史結果保留。","複製成本設定檔",MessageBoxButton.OKCancel)==MessageBoxResult.OK)vm.CloneEarthworkProfile(true);});
+            Action(p,"封存所選設定檔…",()=>{if(MessageBox.Show("封存後不出現在新計算選單；歷史版本與結果仍保留。","封存成本設定檔",MessageBoxButton.OKCancel)==MessageBoxResult.OK)vm.ArchiveEarthworkProfile(true);});
             Action(p,"預覽土方",vm.PreviewEarthwork,nameof(vm.CanPreviewEarthwork));
             p.Children.Add(earthworkBoundaryPreview);Label(p,"平面範圍預覽；尚未提供分片挖填色圖，不以此圖取代 TIN 數量。3D 定位使用既有視圖，不新增模型幾何。");earthworkBoundaryPreview.SizeChanged+=(_,__)=>DrawEarthworkBoundary();
             var resultRegion=new StackPanel{MinHeight=270};resultRegion.Children.Add(resultCards);resultRegion.Children.Add(results);p.Children.Add(resultRegion);
-            Bound(p,nameof(vm.EstimateSummary));Details(p,"查看計算依據／費用拆分",nameof(vm.CalculationBasisText));
+            Bound(p,nameof(vm.CalculationStateText));Bound(p,nameof(vm.EstimateSummary));Details(p,"查看計算依據／費用拆分",nameof(vm.CalculationBasisText));
+            Bound(p,nameof(vm.ProfileStaleWarning));Action(p,"使用最新設定重新計算",vm.RecalculateLatestProfile);
             Action(p,"3D 定位本區邊界／Cutter",vm.LocateEarthworkZone);
             Action(p,"加入／更新土方明細…",()=>{if(MessageBox.Show($"將儲存區 {vm.ZoneNumber}／{vm.ZoneName} 的分析紀錄；不修改 Terrain 或 Cutter。\n\n{vm.EstimateSummary}","確認儲存土方區",MessageBoxButton.OKCancel,MessageBoxImage.Question)==MessageBoxResult.OK)vm.SaveEarthworkZone(true);},nameof(vm.CanSaveZone));
             var write=new StackPanel();Action(write,"確認執行 Revit 開挖…",()=>{if(vm.ExcavationPreview.HasValue&&MessageBox.Show($"將實際修改 Terrain。試算量 {vm.FormatEarthworkVolume(vm.ExcavationPreview.Value)}；確認後執行並 read-back。","確認開挖",MessageBoxButton.OKCancel,MessageBoxImage.Warning)==MessageBoxResult.OK){vm.Confirmed=true;vm.ExecuteExcavation();}});p.Children.Add(new Expander{Header="實際開挖（修改模型，與分析分開）",Content=write});
             Label(p,"土方明細（點選區可載入來源並 3D 定位；需重新預覽才更新）");
-            foreach(var col in new[]{("區號","Number"),("區名","Name"),("面積","Area"),("挖方","Cut"),("填方","Fill"),("外運","Export"),("外購","Import"),("外運車次","Trips"),("預估成本","Cost"),("狀態","Status")})earthworkRows.Columns.Add(new DataGridTextColumn{Header=col.Item1,Binding=new Binding(col.Item2)});
+            foreach(var col in new[]{("區號","Number"),("區名","Name"),("面積","Area"),("挖方","Cut"),("填方","Fill"),("外運","Export"),("外購","Import"),("外運車次","Trips"),("預估成本","Cost"),("計算狀態","Calculation"),("複核狀態","Review"),("設定檔／版本","Profile")})earthworkRows.Columns.Add(new DataGridTextColumn{Header=col.Item1,Binding=new Binding(col.Item2)});
             earthworkRows.SelectionChanged+=(_,__)=>{if(!refreshing&&earthworkRows.SelectedItem is DisplayRow row){selectedEarthworkRow=row.Record;vm.SelectEarthworkZone(row.Record,true);}};p.Children.Add(earthworkRows);Bound(p,nameof(vm.EarthworkProjectSummary));
             Action(p,"刪除所選分析紀錄…",()=>{if(selectedEarthworkRow==null)return;var row=selectedEarthworkRow;if(MessageBox.Show($"刪除區 {row.ZoneNumber}／{row.ZoneName} 的分析資料，以及本工具管理的對應 Schedule 紀錄（若存在）。\nTerrain 與 Cutter 不會刪除。","確認刪除分析紀錄",MessageBoxButton.OKCancel,MessageBoxImage.Warning)==MessageBoxResult.OK)vm.DeleteEarthworkZone(row.ZoneGuid,true,true);});
-            Action(p,"預覽 Revit 土方明細表",vm.PreviewEarthworkSchedule,nameof(vm.CanCreateSchedule));Details(p,"Schedule／Parameters／Records 預覽",nameof(vm.SchedulePreviewText));
+            Action(p,"標記已複核…",()=>{if(selectedEarthworkRow!=null&&MessageBox.Show("只標記 BIM 工具複核，不代表工程數量、合約或測量核准。","確認複核",MessageBoxButton.OKCancel)==MessageBoxResult.OK)vm.MarkEarthworkReviewed(selectedEarthworkRow.ZoneGuid,true);});
+            Bound(p,nameof(vm.SummaryScheduleState));Action(p,"開啟摘要明細表",()=>vm.OpenEarthworkSchedule(EarthworkScheduleKind.Summary));Action(p,"建立／更新摘要明細表",()=>vm.PreviewEarthworkSchedule(EarthworkScheduleKind.Summary),nameof(vm.CanCreateSchedule));
+            Bound(p,nameof(vm.DetailScheduleState));Action(p,"開啟完整明細表",()=>vm.OpenEarthworkSchedule(EarthworkScheduleKind.Detail));Action(p,"建立／更新完整明細表",vm.PreviewEarthworkSchedule,nameof(vm.CanCreateSchedule));
+            Bound(p,nameof(vm.SchedulePreviewText));Details(p,"進階：完整欄位預覽",nameof(vm.ScheduleAdvancedText));
             Action(p,"確認建立／更新 Revit 土方明細表…",()=>{if(MessageBox.Show(vm.SchedulePreviewText,"確認寫入 Revit Schedule",MessageBoxButton.OKCancel,MessageBoxImage.Warning)==MessageBoxResult.OK)vm.ConfirmEarthworkSchedule(true);},nameof(vm.CanConfirmSchedule));
             Action(p,"匯出土方明細 CSV／JSON／Markdown…",ExportEarthwork);
         }
@@ -65,7 +73,7 @@ namespace RevitMCP.UI
             earthBoundary.Visibility=vm.EarthworkMode=="BoundaryTin"?System.Windows.Visibility.Visible:System.Windows.Visibility.Collapsed;earthCutter.Visibility=vm.EarthworkMode=="RevitCutter"?System.Windows.Visibility.Visible:System.Windows.Visibility.Collapsed;
             earthDirectTarget.Visibility=vm.TargetMode=="Direct"?System.Windows.Visibility.Visible:System.Windows.Visibility.Collapsed;earthLevelTarget.Visibility=vm.TargetMode=="LevelOffset"?System.Windows.Visibility.Visible:System.Windows.Visibility.Collapsed;
             var selected=selectedEarthworkRow?.ZoneGuid;
-            var rows=vm.EarthworkRecords.Select(r=>new DisplayRow(r,r.ZoneNumber,r.ZoneName,vm.FormatEarthworkArea(r.Quantity.Area),vm.FormatEarthworkVolume(r.Quantity.CutBankVolume),vm.FormatEarthworkVolume(r.Quantity.FillDesignVolume),vm.FormatEarthworkVolume(r.Logistics.ExportLooseVolume),vm.FormatEarthworkVolume(r.Logistics.ImportLooseVolume),r.Logistics.ExportTruckTrips,$"{r.Cost.TotalEstimatedCost:N2} {r.Cost.Currency}",r.Status)).ToArray();
+            var rows=vm.EarthworkRecords.Select(r=>new DisplayRow(r,r.ZoneNumber,r.ZoneName,vm.FormatEarthworkArea(r.Quantity.Area),vm.FormatEarthworkVolume(r.Quantity.CutBankVolume),vm.FormatEarthworkVolume(r.Quantity.FillDesignVolume),vm.FormatEarthworkVolume(r.Logistics.ExportLooseVolume),vm.FormatEarthworkVolume(r.Logistics.ImportLooseVolume),r.Logistics.ExportTruckTrips,EarthworkPresentation.Money(r.Cost.TotalEstimatedCost,r.Cost.Currency),r.CalculationLabel,r.ReviewLabel,$"{r.ProfileSnapshot.ProfileName} V{r.ProfileSnapshot.ProfileVersion}")).ToArray();
             earthworkRows.ItemsSource=rows;earthworkRows.SelectedItem=rows.FirstOrDefault(r=>r.Record.ZoneGuid==selected);if(earthworkRows.SelectedItem==null)selectedEarthworkRow=null;
             DrawEarthworkBoundary();
         }

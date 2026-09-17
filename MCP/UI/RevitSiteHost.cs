@@ -47,6 +47,14 @@ namespace RevitMCP.UI
             public EarthworkProjectData LoadEarthwork()=>RevitEarthworkRecords.Load(document);
             public EarthworkProjectData SaveEarthwork(EarthworkProjectData data,bool confirmed)=>RevitEarthworkRecords.Save(document,data,confirmed);
             public EarthworkSchedulePreview PreviewSchedule(System.Collections.Generic.IReadOnlyList<EarthworkRecord> rows)=>RevitEarthworkRecords.Preview(document,rows);
+            public EarthworkSchedulePreview PreviewSchedule(System.Collections.Generic.IReadOnlyList<EarthworkRecord> rows,EarthworkScheduleKind kind)=>RevitEarthworkRecords.Preview(document,rows,kind);
+            public System.Collections.Generic.IReadOnlyDictionary<EarthworkScheduleKind,string> EarthworkSchedules()=>Enum.GetValues<EarthworkScheduleKind>().ToDictionary(k=>k,k=>RevitEarthworkRecords.Schedule(document,k)==null?"未建立":"已建立；資料變更後請更新同步");
+            public string OpenEarthworkSchedule(EarthworkScheduleKind kind)
+            {
+                var view=RevitEarthworkRecords.Schedule(document,kind)??throw new InvalidOperationException("尚未建立此明細表。");
+                if(!RevitEarthworkRecords.IsProductionSchedule(document,view))throw new InvalidOperationException("此明細表包含隔離測試紀錄，正式工作流不可開啟；請先建立正式土方區並更新明細表。");
+                (ui??throw new InvalidOperationException("需要模型視窗。")).RequestViewChange(view);return "已要求開啟 "+view.Name;
+            }
             public EarthworkScheduleResult WriteSchedule(System.Collections.Generic.IReadOnlyList<EarthworkRecord> rows,EarthworkSchedulePreview preview,bool confirmed)=>RevitEarthworkRecords.WriteSchedule(document,rows,preview,confirmed);
             public EarthworkProjectData DeleteEarthwork(Guid id,bool deleteScheduleRecord,bool confirmed)=>RevitEarthworkRecords.Delete(document,id,deleteScheduleRecord,confirmed);
             public System.Collections.Generic.IReadOnlyList<SitePoint> SelectedBoundary()

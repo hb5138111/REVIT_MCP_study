@@ -25,15 +25,54 @@ namespace RevitMCP.Core.Site
             public string Name=>"BIM_EW_"+Key;
             public ForgeTypeId Spec=>Type switch{Kind.Text=>SpecTypeId.String.Text,Kind.Area=>SpecTypeId.Area,Kind.Volume=>SpecTypeId.Volume,Kind.Integer=>SpecTypeId.Int.Integer,_=>SpecTypeId.Number};
         }
-        private static readonly Column[] Columns={
-            new("Owner","工具識別",Kind.Text,r=>Owner),new("ZoneGuid","土方區 GUID",Kind.Text,r=>r.ZoneGuid.ToString("D")),
+        private static readonly Column[] Columns=new Column[]{
+            new("Owner","工具識別",Kind.Text,r=>Owner+"."+r.Profile.ProfileKind),new("ZoneGuid","土方區 GUID",Kind.Text,r=>r.ZoneGuid.ToString("D")),
             new("ZoneNumber","土方區編號",Kind.Text,r=>r.ZoneNumber),new("ZoneName","土方區名稱",Kind.Text,r=>r.ZoneName),
             new("Area","開挖面積",Kind.Area,r=>r.Quantity.Area,true),new("CutBank","挖方原地量",Kind.Volume,r=>r.Quantity.CutBankVolume,true),new("FillDesign","填方設計量",Kind.Volume,r=>r.Quantity.FillDesignVolume,true),new("Net","幾何淨方",Kind.Volume,r=>r.Quantity.GeometricNetVolume,true),
             new("Swell","鬆方係數",Kind.Number,r=>r.Profile.SwellFactor),new("CutLoose","挖方鬆方量",Kind.Volume,r=>r.Logistics.CutLooseVolume,true),new("FillFactor","回填需求係數",Kind.Number,r=>r.Profile.FillLooseFactor),new("FillDemand","回填需求量",Kind.Volume,r=>r.Logistics.FillLooseDemand,true),new("ReuseRate","再利用率",Kind.Number,r=>r.Profile.ReusableRate),new("Reused","再利用量",Kind.Volume,r=>r.Logistics.ReusedLooseVolume,true),new("Export","外運量",Kind.Volume,r=>r.Logistics.ExportLooseVolume,true),new("Import","外購量",Kind.Volume,r=>r.Logistics.ImportLooseVolume,true),
             new("Truck","車型",Kind.Text,r=>r.Profile.TruckName),new("Capacity","車斗容量",Kind.Volume,r=>EarthworkUnits.ToCubicMetres(r.Profile.TruckCapacity!.Value,r.Profile.VolumeUnit)),new("Utilization","裝載率",Kind.Number,r=>r.Profile.TruckLoadUtilization),new("ExportTrips","外運車次",Kind.Integer,r=>checked((int)r.Logistics.ExportTruckTrips),true),new("ImportTrips","外購車次",Kind.Integer,r=>checked((int)r.Logistics.ImportTruckTrips),true),
             new("ExcavationPrice","挖土單價",Kind.Number,r=>r.Profile.ExcavationUnitCost),new("LoadingPrice","裝載單價",Kind.Number,r=>r.Profile.LoadingUnitCost),new("HaulPrice","運輸單價／車次",Kind.Number,r=>r.Profile.HaulCostPerTrip),new("DisposalPrice","棄土單價",Kind.Number,r=>r.Profile.DisposalCostPerVolume),new("ImportedPrice","外購土單價",Kind.Number,r=>r.Profile.ImportedFillCostPerVolume),new("BackfillPrice","回填單價",Kind.Number,r=>r.Profile.BackfillPlacementCostPerVolume),new("CompactionPrice","夯實單價",Kind.Number,r=>r.Profile.CompactionCostPerVolume),new("Mobilization","動員費",Kind.Number,r=>r.Cost.MobilizationCost,true),new("TotalCost","預估總價",Kind.Number,r=>r.Cost.TotalEstimatedCost,true),
-            new("Currency","幣別",Kind.Text,r=>r.Cost.Currency),new("PriceBasis","體積單價基準",Kind.Text,r=>r.Profile.VolumeUnit==EarthworkVolumeUnit.CubicMetres?"每 m³":"每 ft³"),new("Method","計算方法",Kind.Text,r=>r.Request.Zone.CalculationMethod.ToString()),new("Calculated","計算日期",Kind.Text,r=>r.Request.Zone.LastCalculatedAt.ToString("O")),new("Status","狀態",Kind.Text,r=>r.Status),new("Warnings","提醒",Kind.Text,r=>string.Join("；",r.Request.Zone.Warnings))
-        };
+            new("Currency","幣別",Kind.Text,r=>r.Cost.Currency),new("PriceBasis","體積單價基準",Kind.Text,r=>r.Profile.VolumeUnit==EarthworkVolumeUnit.CubicMetres?"每 m³":"每 ft³"),new("Method","計算方法",Kind.Text,r=>r.Request.Zone.CalculationMethod.ToString()),new("Calculated","計算日期",Kind.Text,r=>r.Request.Zone.LastCalculatedAt.ToString("O")),new("Status","計算狀態",Kind.Text,r=>r.CalculationLabel),new("Warnings","提醒",Kind.Text,r=>string.Join("；",r.Request.Zone.Warnings))
+        }.Concat(new Column[]{
+            new("ReviewStatus","複核狀態",Kind.Text,r=>r.ReviewLabel),new("ProfileName","成本設定檔",Kind.Text,r=>r.ProfileSnapshot.ProfileName),new("ProfileVersion","設定版本",Kind.Text,r=>"V"+r.ProfileSnapshot.ProfileVersion),
+            new("ReusePercent","可再利用率",Kind.Text,r=>EarthworkPresentation.Percent(r.Profile.ReusableRate!.Value)),new("UtilizationPercent","平均裝載率",Kind.Text,r=>EarthworkPresentation.Percent(r.Profile.TruckLoadUtilization!.Value)),
+            new("ExcavationCost","挖土費",Kind.Number,r=>r.Cost.ExcavationCost,true),new("LoadingCost","裝載費",Kind.Number,r=>r.Cost.LoadingCost,true),new("HaulCost","外運車資",Kind.Number,r=>r.Cost.HaulCost,true),new("DisposalCost","棄土費",Kind.Number,r=>r.Cost.DisposalCost,true),new("ImportedCost","外購材料費",Kind.Number,r=>r.Cost.ImportedFillMaterialCost,true),new("BackfillCost","回填施工費",Kind.Number,r=>r.Cost.BackfillPlacementCost,true),new("CompactionCost","夯實費",Kind.Number,r=>r.Cost.CompactionCost,true)
+        }).ToArray();
+        private static Column[] Fields(EarthworkScheduleKind kind)
+        {
+            if(kind==EarthworkScheduleKind.Detail)return Columns.Where(c=>c.Key is not "ReuseRate" and not "Utilization").ToArray();
+            var keys=new[]{"Owner","ZoneGuid","ZoneNumber","ZoneName","Area","CutBank","FillDesign","Export","Import","ExportTrips","TotalCost","Status","ReviewStatus","ProfileName","ProfileVersion"};
+            return keys.Select(key=>Columns.Single(c=>c.Key==key)).ToArray();
+        }
+        private static FormatOptions Format(Document d,Column col)
+        {
+            var unit=col.Type==Kind.Area?d.GetUnits().GetFormatOptions(SpecTypeId.Area).GetUnitTypeId():col.Type==Kind.Volume?d.GetUnits().GetFormatOptions(SpecTypeId.Volume).GetUnitTypeId():UnitTypeId.Fixed;
+            return new FormatOptions(unit){UseDefault=false,Accuracy=.01,UseDigitGrouping=true,SuppressTrailingZeros=false,RoundingMethod=RoundingMethod.Nearest};
+        }
+        private static void ApplyFormat(Document d,ScheduleField field,Column col)
+        {
+            if(col.Type is Kind.Text or Kind.Integer)return;
+            using var options=Format(d,col);field.SetFormatOptions(options);
+        }
+        private static string Heading(Document d,Column col,IReadOnlyList<EarthworkRecord> rows)
+        {
+            if(col.Type is Kind.Area or Kind.Volume)
+            {
+                using var f=Format(d,col);var unit=f.GetUnitTypeId();string label=unit==UnitTypeId.SquareMeters?"m²":unit==UnitTypeId.SquareFeet?"ft²":unit==UnitTypeId.CubicMeters?"m³":unit==UnitTypeId.CubicFeet?"ft³":LabelUtils.GetLabelForUnit(unit);
+                return col.Heading+" ("+label+")";
+            }
+            return col.Key.EndsWith("Cost",StringComparison.Ordinal)||col.Key.EndsWith("Price",StringComparison.Ordinal)||col.Key=="Mobilization"?col.Heading+" ("+rows[0].Cost.Currency+")":col.Heading;
+        }
+        internal static bool IsProductionSchedule(Document d,ViewSchedule schedule)
+        {
+            foreach(var element in new FilteredElementCollector(d,schedule.Id).WhereElementIsNotElementType())
+            {
+                var payload=Payload(element,"record");if(payload==null)continue;
+                var record=JsonConvert.DeserializeObject<EarthworkRecord>(payload);
+                if(record==null||EarthworkProfiles.NormalizeLegacy(record.Profile).ProfileKind!=EarthworkProfileKind.Production)return false;
+            }
+            return true;
+        }
         private static Schema? ExistingSchema=>Schema.Lookup(SchemaId);
         private static Schema GetSchema()
         {
@@ -57,8 +96,13 @@ namespace RevitMCP.Core.Site
         public static EarthworkProjectData Load(Document d)
         {
             var stores=Owned(d,typeof(DataStorage),"project");if(stores.Length>1)throw new InvalidOperationException("發現重複土方專案資料，不自動合併。");
-            return stores.Length==0?new(Array.Empty<EarthworkProjectSettings>(),Array.Empty<EarthworkRecord>()):JsonConvert.DeserializeObject<EarthworkProjectData>(Payload(stores[0],"project")!)??throw new InvalidOperationException("土方專案資料損毀。");
+            return RefreshSources(d,EarthworkProfiles.Normalize(stores.Length==0?new(Array.Empty<EarthworkProjectProfile>(),Array.Empty<EarthworkRecord>()):JsonConvert.DeserializeObject<EarthworkProjectData>(Payload(stores[0],"project")!)??throw new InvalidOperationException("土方專案資料損毀。")));
         }
+        private static EarthworkProjectData RefreshSources(Document d,EarthworkProjectData data)=>data with{Records=data.Records.Select(r=>
+        {
+            try{return Signature(d,r.Request.Zone)==r.Request.SourceModelSignature?r:r with{CalculationStatus=CalculationStatus.Stale};}
+            catch(InvalidOperationException){return r with{CalculationStatus=CalculationStatus.Stale};}
+        }).ToArray()};
         public static string Signature(Document d,EarthworkZone zone)
         {
             var ids=new[]{zone.ExistingTerrainId,zone.CutterId??0,zone.BaseLevelId??0,d.ActiveProjectLocation.Id.Value}.Concat(zone.BoundaryElementIds).Where(id=>id>0).Distinct().OrderBy(id=>id);
@@ -67,6 +111,7 @@ namespace RevitMCP.Core.Site
         }
         private static void ValidateRecord(Document d,EarthworkRecord record)
         {
+            if(record.ProfileSnapshot.ProfileHash!=EarthworkProfiles.Hash(record.Profile)||record.ProfileSnapshot.ProfileVersion!=record.Profile.ProfileVersion)throw new InvalidOperationException("設定檔 snapshot 與計算紀錄不一致。");
             if(record.Request.SourceModelSignature!=Signature(d,record.Request.Zone))throw new InvalidOperationException($"土方區 {record.ZoneNumber} 的來源已變動，請重新計算。");
             var expected=EarthworkEstimator.Calculate(record.Request,record.Quantity,record.Profile);
             if(expected.Logistics!=record.Logistics||expected.Cost!=record.Cost)throw new InvalidOperationException("土方紀錄與 Profile 計算不一致。");
@@ -75,39 +120,41 @@ namespace RevitMCP.Core.Site
         {
             if(!confirmed)throw new InvalidOperationException("儲存專案分析資料需要明確確認。");
             if(data.Records.GroupBy(r=>r.ZoneGuid).Any(g=>g.Count()>1)||data.Profiles.GroupBy(p=>p.ProfileGuid).Any(g=>g.Count()>1))throw new ArgumentException("GUID 重複。");
-            foreach(var p in data.Profiles)p.Validate();
+            data=RefreshSources(d,EarthworkProfiles.Normalize(data));foreach(var p in data.Profiles)p.Validate();
             using var tx=new Transaction(d,"BIM 土方分析資料");tx.Start();
             var stores=Owned(d,typeof(DataStorage),"project");if(stores.Length>1)throw new InvalidOperationException("重複專案資料。");
             var store=stores.FirstOrDefault()??DataStorage.Create(d);Store(store,"project",data);
             var read=Load(d);if(JsonConvert.SerializeObject(read)!=JsonConvert.SerializeObject(data))throw new InvalidOperationException("專案分析資料 read-back 不一致。");
             if(tx.Commit()!=TransactionStatus.Committed)throw new InvalidOperationException("專案分析資料交易未完成。");return read;
         }
-        private static Dictionary<Guid,Element> RecordElements(Document d)
+        private static Dictionary<Guid,Element> RecordElements(Document d,EarthworkProfileKind? kind=null)
         {
             var result=new Dictionary<Guid,Element>();foreach(var e in Owned(d,typeof(DirectShape),"record"))
             {
                 var row=JsonConvert.DeserializeObject<EarthworkRecord>(Payload(e,"record")!)??throw new InvalidOperationException("紀錄損毀。");
+                if(kind.HasValue&&EarthworkProfiles.NormalizeLegacy(row.Profile).ProfileKind!=kind.Value)continue;
                 if(!result.TryAdd(row.ZoneGuid,e))throw new InvalidOperationException("模型中有重複 ZoneGuid 紀錄，請先檢查。");
             }return result;
         }
-        private static ViewSchedule? Schedule(Document d)
+        internal static ViewSchedule? Schedule(Document d,EarthworkScheduleKind kind=EarthworkScheduleKind.Detail)
         {
-            var schedules=Owned(d,typeof(ViewSchedule),"schedule").Cast<ViewSchedule>().ToArray();if(schedules.Length>1)throw new InvalidOperationException("找到多個工具管理的土方明細表。");return schedules.SingleOrDefault();
+            var schedules=Owned(d,typeof(ViewSchedule),kind==EarthworkScheduleKind.Detail?"schedule":"schedule-summary").Cast<ViewSchedule>().ToArray();if(schedules.Length>1)throw new InvalidOperationException("找到多個工具管理的土方明細表。");return schedules.SingleOrDefault();
         }
-        public static EarthworkSchedulePreview Preview(Document d,IReadOnlyList<EarthworkRecord> rows)
+        public static EarthworkSchedulePreview Preview(Document d,IReadOnlyList<EarthworkRecord> rows,EarthworkScheduleKind kind=EarthworkScheduleKind.Detail)
         {
             if(rows.Count==0)throw new ArgumentException("請先儲存土方區紀錄。");
             if(rows.Select(r=>r.ZoneGuid).Distinct().Count()!=rows.Count)throw new ArgumentException("ZoneGuid 重複。");
+            if(rows.Select(r=>r.Profile.ProfileKind).Distinct().Count()!=1)throw new ArgumentException("正式與測試結果不可混用同一張明細表。");
             if(rows.Select(r=>r.Cost.Currency).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=1)throw new ArgumentException("同一明細表需使用相同幣別，不自動換匯。");
             foreach(var row in rows)ValidateRecord(d,row);
-            var records=RecordElements(d);var schedule=Schedule(d);string name=schedule?.Name??"土方工程明細";
+            var records=RecordElements(d);var schedule=Schedule(d,kind);string baseName=kind==EarthworkScheduleKind.Summary?"土方工程摘要 (BIM)":"土方工程明細 (BIM)";string name=schedule?.Name??baseName;
             if(schedule==null)
             {
                 var names=new FilteredElementCollector(d).OfClass(typeof(ViewSchedule)).Cast<ViewSchedule>().Select(v=>v.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                int suffix=1;while(names.Contains(name)){name=suffix==1?"土方工程明細 (BIM)":$"土方工程明細 (BIM {suffix})";suffix++;}
+                int suffix=1;while(names.Contains(name)){name=$"{baseName} {suffix++}";}
             }
-            string evidence=JsonConvert.SerializeObject(new{Name=name,Rows=rows,Existing=records.OrderBy(x=>x.Key).Select(x=>new{x.Key,Id=x.Value.Id.Value,Version=x.Value.VersionGuid})});
-            return new(name,Columns.Select(c=>c.Heading+" / "+c.Name).ToArray(),rows.Where(r=>!records.ContainsKey(r.ZoneGuid)).Select(r=>r.ZoneGuid).ToArray(),rows.Where(r=>records.ContainsKey(r.ZoneGuid)).Select(r=>r.ZoneGuid).ToArray(),Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(evidence))));
+            string evidence=JsonConvert.SerializeObject(new{Name=name,Kind=kind,Rows=rows,Existing=records.OrderBy(x=>x.Key).Select(x=>new{x.Key,Id=x.Value.Id.Value,Version=x.Value.VersionGuid})});
+            return new(name,Fields(kind).Select(c=>c.Heading+" / "+c.Name).ToArray(),rows.Where(r=>!records.ContainsKey(r.ZoneGuid)).Select(r=>r.ZoneGuid).ToArray(),rows.Where(r=>records.ContainsKey(r.ZoneGuid)).Select(r=>r.ZoneGuid).ToArray(),Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(evidence))),kind,Fields(kind).Count(c=>c.Total));
         }
         private static Dictionary<string,ElementId> Bind(Document d)
         {
@@ -143,7 +190,7 @@ namespace RevitMCP.Core.Site
         public static EarthworkScheduleResult WriteSchedule(Document d,IReadOnlyList<EarthworkRecord> rows,EarthworkSchedulePreview preview,bool confirmed,Action? beforeReadBack=null)
         {
             if(!confirmed)throw new InvalidOperationException("建立／更新明細表需明確確認。");
-            if(Preview(d,rows).Fingerprint!=preview.Fingerprint)throw new InvalidOperationException("Schedule preview 已失效，請重新預覽。");
+            if(Preview(d,rows,preview.Kind).Fingerprint!=preview.Fingerprint)throw new InvalidOperationException("Schedule preview 已失效，請重新預覽。");
             using var group=new TransactionGroup(d,"BIM 土方工程明細");group.Start();
             using(var tx=new Transaction(d,"BIM 土方紀錄與明細欄位"))
             {
@@ -162,34 +209,40 @@ namespace RevitMCP.Core.Site
                         if(!set)throw new InvalidOperationException("Record parameter write failed: "+col.Name);
                     }
                 }
-                var schedule=Schedule(d)??ViewSchedule.CreateSchedule(d,new ElementId(BuiltInCategory.OST_GenericModel));schedule.Name=preview.ScheduleName;Store(schedule,"schedule",new{Owner});
+                var schedule=Schedule(d,preview.Kind)??ViewSchedule.CreateSchedule(d,new ElementId(BuiltInCategory.OST_GenericModel));schedule.Name=preview.ScheduleName;Store(schedule,preview.Kind==EarthworkScheduleKind.Detail?"schedule":"schedule-summary",new{Owner});
                 var definition=schedule.Definition;definition.ClearFilters();definition.ClearSortGroupFields();definition.ClearFields();definition.IsItemized=true;
                 var fields=definition.GetSchedulableFields();ScheduleField? owner=null,number=null;
-                foreach(var col in Columns)
+                foreach(var col in Fields(preview.Kind))
                 {
-                    var available=fields.Single(f=>f.ParameterId==parameters[col.Key]);var field=definition.AddField(available);field.ColumnHeading=col.Heading;field.IsHidden=col.Key is "Owner" or "ZoneGuid";
+                    var available=fields.Single(f=>f.ParameterId==parameters[col.Key]);var field=definition.AddField(available);field.ColumnHeading=Heading(d,col,rows);field.IsHidden=col.Key is "Owner" or "ZoneGuid";
                     if(col.Total&&field.CanTotal())field.DisplayType=ScheduleFieldDisplayType.Totals;
+                    ApplyFormat(d,field,col);
                     if(col.Key=="Owner")owner=field;if(col.Key=="ZoneNumber")number=field;
                 }
-                definition.AddFilter(new ScheduleFilter(owner!.FieldId,ScheduleFilterType.Equal,Owner));definition.AddSortGroupField(new ScheduleSortGroupField(number!.FieldId));
+                definition.AddFilter(new ScheduleFilter(owner!.FieldId,ScheduleFilterType.Equal,Owner+"."+rows[0].Profile.ProfileKind));definition.AddSortGroupField(new ScheduleSortGroupField(number!.FieldId));
                 definition.ShowGrandTotal=true;definition.ShowGrandTotalTitle=true;definition.GrandTotalTitle="明細加總（各區可能重疊）";
                 if(tx.Commit()!=TransactionStatus.Committed)throw new InvalidOperationException("Schedule transaction failed");
             }
-            beforeReadBack?.Invoke();var result=ReadBack(d,rows);
+            beforeReadBack?.Invoke();var result=ReadBack(d,rows,preview.Kind);
             if(group.Assimilate()!=TransactionStatus.Committed)throw new InvalidOperationException("Schedule group failed");return result;
         }
-        public static EarthworkScheduleResult ReadBack(Document d,IReadOnlyList<EarthworkRecord> rows)
+        public static EarthworkScheduleResult ReadBack(Document d,IReadOnlyList<EarthworkRecord> rows,EarthworkScheduleKind kind=EarthworkScheduleKind.Detail)
         {
-            var schedule=Schedule(d)??throw new InvalidOperationException("Schedule read-back missing");var elements=RecordElements(d);
+            var fields=Fields(kind);var schedule=Schedule(d,kind)??throw new InvalidOperationException("Schedule read-back missing");var elements=RecordElements(d,rows.First().Profile.ProfileKind);
             if(elements.Count!=rows.Count||!elements.Keys.OrderBy(x=>x).SequenceEqual(rows.Select(r=>r.ZoneGuid).OrderBy(x=>x)))throw new InvalidOperationException("Schedule records differ; explicitly delete obsolete analysis records first.");
             var visible=new FilteredElementCollector(d,schedule.Id).WhereElementIsNotElementType().ToElementIds().Select(id=>id.Value).ToHashSet();
             if(!visible.SetEquals(elements.Values.Select(e=>e.Id.Value)))throw new InvalidOperationException("Dedicated records are not reliably schedulable: schedule membership differs.");
-            if(schedule.Definition.GetFieldCount()!=Columns.Length)throw new InvalidOperationException("Schedule field count mismatch");
-            for(int index=0;index<Columns.Length;index++)
+            if(schedule.Definition.GetFieldCount()!=fields.Length)throw new InvalidOperationException("Schedule field count mismatch");
+            for(int index=0;index<fields.Length;index++)
             {
-                var col=Columns[index];var field=schedule.Definition.GetField(index);var parameter=SharedParameterElement.Lookup(d,col.Guid);
-                if(parameter==null||field.ParameterId!=parameter.Id||field.ColumnHeading!=col.Heading||field.IsHidden!=(col.Key is "Owner" or "ZoneGuid"))throw new InvalidOperationException("Schedule field definition differs: "+col.Name);
+                var col=fields[index];var field=schedule.Definition.GetField(index);var parameter=SharedParameterElement.Lookup(d,col.Guid);
+                if(parameter==null||field.ParameterId!=parameter.Id||field.ColumnHeading!=Heading(d,col,rows)||field.IsHidden!=(col.Key is "Owner" or "ZoneGuid"))throw new InvalidOperationException("Schedule field definition differs: "+col.Name);
                 if(col.Total&&field.CanTotal()&&field.DisplayType!=ScheduleFieldDisplayType.Totals)throw new InvalidOperationException("Schedule totals configuration differs: "+col.Name);
+                if(col.Type is not Kind.Text and not Kind.Integer)
+                {
+                    using var expected=Format(d,col);using var actual=field.GetFormatOptions();
+                    if(actual.UseDefault||actual.GetUnitTypeId()!=expected.GetUnitTypeId()||Math.Abs(actual.Accuracy-expected.Accuracy)>1e-10||actual.SuppressTrailingZeros)throw new InvalidOperationException("Schedule formatting differs: "+col.Name);
+                }
             }
             if(!schedule.Definition.ShowGrandTotal||!schedule.Definition.IsItemized)throw new InvalidOperationException("Schedule totals / itemized configuration differs");
             foreach(var row in rows)foreach(var col in Columns)
@@ -198,7 +251,7 @@ namespace RevitMCP.Core.Site
                 bool equal=value==null?!p.HasValue:col.Type==Kind.Text?p.AsString()==(string)value:col.Type==Kind.Integer?p.AsInteger()==Convert.ToInt32(value):Math.Abs(p.AsDouble()-Internal(col,value))<=1e-8*Math.Max(1,Math.Abs(Internal(col,value)));
                 if(!equal)throw new InvalidOperationException("Schedule read-back differs: "+row.ZoneNumber+" / "+col.Name);
             }
-            return new(schedule.Id.Value,schedule.Name,elements.ToDictionary(x=>x.Key,x=>x.Value.Id.Value),Columns.Length,"PASS: fields, owned ZoneGuids, record membership and every quantity/cost parameter");
+            return new(schedule.Id.Value,schedule.Name,elements.ToDictionary(x=>x.Key,x=>x.Value.Id.Value),fields.Length,"PASS: fields, owned ZoneGuids, record membership and every quantity/cost parameter");
         }
         public static EarthworkProjectData Delete(Document d,Guid zoneGuid,bool deleteScheduleRecord,bool confirmed)
         {

@@ -41,8 +41,13 @@ namespace RevitMCP.Core.Site
     }
     public sealed record EarthworkMaterialProfile(double SwellFactor,double FillLooseFactor,double ReusableRate);
     /// <summary>Nullable inputs are intentional: no market price or soil/truck factor defaults.</summary>
-    public sealed record EarthworkProjectSettings
+    public sealed record EarthworkProjectProfile
     {
+        public int ProfileVersion {get;init;}=1;
+        public EarthworkProfileKind ProfileKind {get;init;}=EarthworkProfileKind.Production;
+        public bool IsArchived {get;init;}
+        public DateTimeOffset CreatedAt {get;init;}
+        public DateTimeOffset UpdatedAt {get;init;}
         public Guid ProfileGuid {get;init;}=Guid.NewGuid();
         public string ProfileName {get;init;}="";
         public string Currency {get;init;}="";
@@ -81,21 +86,27 @@ namespace RevitMCP.Core.Site
     {
         public decimal TotalEstimatedCost=>checked(ExcavationCost+LoadingCost+HaulCost+DisposalCost+ImportedFillMaterialCost+BackfillPlacementCost+CompactionCost+MobilizationCost);
     }
-    public sealed record EarthworkRecord(EarthworkCalculationRequest Request,EarthworkQuantityResult Quantity,EarthworkProjectSettings Profile,EarthworkLogisticsResult Logistics,EarthworkCostResult Cost,string ToolVersion="0.5.2")
+    public sealed record EarthworkRecord(EarthworkCalculationRequest Request,EarthworkQuantityResult Quantity,EarthworkProjectProfile Profile,EarthworkLogisticsResult Logistics,EarthworkCostResult Cost,string ToolVersion="0.5.2.1")
     {
+        public EarthworkProfileSnapshot ProfileSnapshot {get;init;}=EarthworkProfileSnapshot.Create(Profile);
+        public CalculationStatus CalculationStatus {get;init;}=CalculationStatus.Calculated;
+        public ReviewStatus ReviewStatus {get;init;}=ReviewStatus.PendingReview;
+        public bool CostProfileOutdated {get;init;}
         public Guid ZoneGuid=>Request.Zone.ZoneGuid;
         public string ZoneNumber=>Request.Zone.ZoneNumber;
         public string ZoneName=>Request.Zone.ZoneName;
-        public string Status=>Request.Zone.Status;
+        public string CalculationLabel=>EarthworkPresentation.Calculation(CalculationStatus);
+        public string ReviewLabel=>Request.Zone.Warnings.Length>0?"有警告":EarthworkPresentation.Review(ReviewStatus);
+        public string Status=>CalculationLabel+"／"+ReviewLabel;
     }
-    public sealed record EarthworkProjectData(IReadOnlyList<EarthworkProjectSettings> Profiles,IReadOnlyList<EarthworkRecord> Records);
-    public sealed record EarthworkSchedulePreview(string ScheduleName,IReadOnlyList<string> Parameters,IReadOnlyList<Guid> CreateZones,IReadOnlyList<Guid> UpdateZones,string Fingerprint);
+    public sealed record EarthworkProjectData(IReadOnlyList<EarthworkProjectProfile> Profiles,IReadOnlyList<EarthworkRecord> Records);
+    public sealed record EarthworkSchedulePreview(string ScheduleName,IReadOnlyList<string> Parameters,IReadOnlyList<Guid> CreateZones,IReadOnlyList<Guid> UpdateZones,string Fingerprint,EarthworkScheduleKind Kind=EarthworkScheduleKind.Detail,int TotalFields=0);
     public sealed record EarthworkScheduleResult(long ScheduleId,string ScheduleName,IReadOnlyDictionary<Guid,long> RecordIds,int FieldCount,string ReadBack);
     public static class EarthworkEstimator
     {
         public const string Disclaimer="成本為依本專案設定之估算值，不是市場報價或合約金額。";
         public const string OverlapWarning="各區範圍可能重疊，總量僅為明細加總。";
-        public static EarthworkRecord Calculate(EarthworkCalculationRequest request,EarthworkQuantityResult q,EarthworkProjectSettings p)
+        public static EarthworkRecord Calculate(EarthworkCalculationRequest request,EarthworkQuantityResult q,EarthworkProjectProfile p)
         {
             p.Validate();
             if(request.Zone.ZoneGuid==Guid.Empty||string.IsNullOrWhiteSpace(request.Zone.ZoneName)||string.IsNullOrWhiteSpace(request.Zone.ZoneNumber)||request.Zone.ExistingTerrainId<=0)throw new ArgumentException("土方區編號、名稱、GUID 與來源地形必須有效。");

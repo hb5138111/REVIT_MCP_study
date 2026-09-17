@@ -82,3 +82,19 @@ Schedule architecture 必須經 dedicated record fixture 證明 schedulability �
 建立／更新前列出 Schedule、參數及新增／更新 GUID，明確 Confirm 後單一 transaction group 寫入；欄位、GUID、record count、schedule membership 及每個數量／成本值 read-back 全部一致才成功。使用 `CanTotal` 驗證可加總欄位，grand total 標示各區可能重疊。既有未受工具管理的同名明細表不覆寫，改用安全名稱。來源 Element.VersionGuid 不符時必須重新計算，不以舊數量更新。失敗 rollback 完整 transaction group。
 
 刪除分析紀錄需明確確認，若有對應 schedule record，須一併明列與確認。僅刪工具 ownership 與 ZoneGuid 相符的 analysis record，絕不刪 Terrain／Cutter。刪除造成額外元素連帶影響時 rollback。測試必含兩區建立、A 重算後仍兩區、stable record IDs、逐欄回讀、總量與成本、故障注入 rollback、未授權寫入阻擋及文件切換失效。
+
+## 10. 成本設定檔與成果治理（v0.5.2.1）
+
+設定檔以 ProfileGuid 辨識，ProfileVersion 初次為 1。幣別、單位基準、土方係數、容量、裝載率或單價／動員費等計算欄位改變時增加版本。名稱、車型顯示名稱與封存等 metadata 不改計算版本；歷史顯示仍使用原 snapshot。ProfileHash 對上述計算欄位使用固定順序、文化中立序列化；不含 GUID、名稱、時間、版本或 UI 狀態，decimal scale 等價值採相同 hash。
+
+Production UI 只列出未封存的 Production profiles，並排除 TestFixture 結果／匯出。TestFixture 只在明確注入的 fixture mode 使用，不作正式預設。舊版已知 Runtime fixture only／TEST／Fixture truck 組合在讀取時辨識為 TestFixture；不猜測其他使用者名稱。所有舊版數量與價格保持原值。Clone 產生新 GUID、V1；Archive 保留原資料與歷史 snapshot，不 hard delete 已使用設定檔。
+
+每個計算結果持有不可變 EarthworkProfileSnapshot，含完整設定值、GUID、名稱、版本及 hash。修改設定檔只標記 CostProfileOutdated／Stale，不動歷史成本。使用者按「使用最新設定重新計算」後才產生新 snapshot，確認儲存才更新同 ZoneGuid。歷史區可繼續顯示舊版本及明細；過期來源或設定不得直接標記已複核。
+
+CalculationStatus 區分尚未計算、已計算、結果已過期、計算失敗；ReviewStatus 區分待複核、已複核、有警告。Warnings 存在時顯示有警告，不因人工複核而隱藏。標記已複核只改工具 review metadata，不重新計算；不代表工程數量、合約或測量核准。重新計算回到待複核。
+
+UI 再利用率與裝載率使用百分數，ViewModel 轉換為 fraction 一次。再利用率允許 0～100%；裝載率須大於 0 且不超過 100%，維持有效容量必須大於 0 的既有公式。設定檔分為基本設定、土方性質、運輸、單價及其他成本；每項價格旁明示幣別／體積或車次基準，衍生容量預覽不寫模型。
+
+格式化不改計算精度：數量與金額兩位小數、係數兩位、百分比整數百分數、車次整數。Revit Schedule 在欄位設定 FormatOptions，保留原始 double／decimal 計算值；不修改全專案 Units。新百分比顯示欄位與舊 fraction 參數分離，避免改變舊資料語意。CSV／JSON 保留可追溯原始數值與 snapshot；Native UI 與 Schedule 提供閱讀格式。
+
+摘要表「土方工程摘要 (BIM)」保留日常區名、數量、外運車次、總價、計算／複核狀態、設定檔／版本；詳細表「土方工程明細 (BIM)」保留完整係數、成本拆分與來源。各自持有 ownership，共用穩定 ZoneGuid record；外來同名表不覆寫。正式與測試紀錄以明確 ownership filter 分離，不混用。摘要／詳細表保留適用總計，註明各區若有重疊範圍，總量為各區明細加總。
