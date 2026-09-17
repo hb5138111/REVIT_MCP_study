@@ -1,10 +1,9 @@
 {
-  "SchemaVersion": 2,
-  "Task": "v0.6.1",
+  "Version": "v0.6.1",
+  "Task": "施工圖生產中心 — Production Hardening / 外部圖框樣板",
   "Branch": "bim-custom",
   "Status": "READY_FOR_OPTIONAL_UAT",
-  "StatusScope": "Current Sheet / external RFA / geometry-only DWG-DXF; SingleMain; external RVT PARTIAL",
-  "UpdatedAt": "2026-09-17T09:11:46.798Z",
+  "Timestamp": "2026-09-17T09:11:46.798Z",
   "Gates": {
     "A": {
       "Status": "PASS",
@@ -624,6 +623,199 @@
       "Sha256": "314351b8e340a9212bd2ac96e037ec81b1a583eddd4b8b1c5131d3197721d640"
     }
   ],
+  "C4": {
+    "Status": "PASS",
+    "GateC4": "PASS",
+    "Cases": {
+      "A": true,
+      "D": true,
+      "H": true,
+      "G": true,
+      "F": true,
+      "E": true,
+      "B": true,
+      "C": true
+    },
+    "BuildSHA256": "9A2A9E1079373E0B70CBED8355D3823250F299A0BFB8B3F7ED685687C4F7177C",
+    "Passed": 22,
+    "Failed": 0,
+    "Assertions": [
+      {
+        "TestName": "panel_initialization",
+        "Passed": true,
+        "Actual": "找到 1 張圖紙、6 個樓層；未選分區時使用不分區。"
+      },
+      {
+        "TestName": "production_fixture_text_count_zero",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "external_rfa_analyzed_actual_file",
+        "Passed": true,
+        "Actual": "請確認圖框類型、尺寸與單位，再載入圖框。"
+      },
+      {
+        "TestName": "rfa_loaded_titleblock_only",
+        "Passed": true,
+        "Actual": "圖框已載入並讀回驗證。此來源只有圖框，工具將使用自動單一主視圖配置。"
+      },
+      {
+        "TestName": "three_auto_resolved_sources",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "D_no_zone_three_planned",
+        "Passed": true,
+        "Actual": "計畫已產生，請檢查圖號與版面。"
+      },
+      {
+        "TestName": "C4_A",
+        "Passed": true,
+        "Actual": {
+          "Status": "完成 read-back：3 張；QA 0 錯誤、0 提醒。此狀態不是施工核准。",
+          "Issues": []
+        }
+      },
+      {
+        "TestName": "C4_D",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "A_titleblock_level_ownership_readback",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "H_unchanged_preview",
+        "Passed": true,
+        "Actual": "計畫已產生，請檢查圖號與版面。"
+      },
+      {
+        "TestName": "C4_H",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "G_manual_detected",
+        "Passed": true,
+        "Actual": "計畫已產生，請檢查圖號與版面。"
+      },
+      {
+        "TestName": "C4_G",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "C4_F",
+        "Passed": true,
+        "Actual": "圖號已使用或保留。；計畫圖號重複。"
+      },
+      {
+        "TestName": "C4_E",
+        "Passed": true,
+        "Actual": "FL4：缺少來源視圖或需要選擇來源視圖。"
+      },
+      {
+        "TestName": "B_real_dwg_a3_suggested",
+        "Passed": true,
+        "Actual": {
+          "FilePath": "C:\\BIM_AI\\REVIT_MCP_study\\test-artifacts\\revit-selftest-2e944b2c0e424f48b9db0f3f42b272c3\\simple-titleblock-a3.dwg",
+          "FileHash": "AAFF3D1CE01E2953009C5C0A15DA63CE73571C8DF02CC2AE5F4C12516C784C8A",
+          "FamilyName": "simple-titleblock-a3",
+          "Types": [
+            "圖框"
+          ],
+          "Parameters": [
+            "Scale Override (Multiple Values)"
+          ],
+          "TypeBounds": {},
+          "Layers": [
+            "0",
+            "A-DETL-____-THIN"
+          ],
+          "Bounds": {
+            "MinX": 0,
+            "MinY": 0,
+            "MaxX": 1.3779527559055118,
+            "MaxY": 0.9744094488188976,
+            "Width": 1.3779527559055118,
+            "Height": 0.9744094488188976,
+            "Valid": true
+          },
+          "Unit": "mm",
+          "IsCad": true,
+          "ExistingFamily": false,
+          "RftPath": "C:\\ProgramData\\Autodesk\\RVT 2026\\Family Templates\\English\\Titleblocks\\A3 metric.rft",
+          "RftHash": "C3623F16D64543C9C6F4B175D54BED1550C83A038F158ABA65EFD2089D75079B",
+          "SizeSuggestion": "A3"
+        }
+      },
+      {
+        "TestName": "B_cad_loaded",
+        "Passed": true,
+        "Actual": "圖框已載入並讀回驗證。此來源只有圖框，工具將使用自動單一主視圖配置。"
+      },
+      {
+        "TestName": "B_temp_files_cleaned",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "B_imported_cad_persists_in_loaded_family",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "C4_B",
+        "Passed": true,
+        "Actual": {
+          "Status": "完成 read-back：2 張；QA 0 錯誤、0 提醒。此狀態不是施工核准。",
+          "Issues": []
+        }
+      },
+      {
+        "TestName": "B_geometry_limit_warning",
+        "Passed": true,
+        "Actual": null
+      },
+      {
+        "TestName": "C4_C",
+        "Passed": true,
+        "Actual": {
+          "Status": "完成 read-back：2 張；QA 0 錯誤、0 提醒。此狀態不是施工核准。",
+          "Issues": []
+        }
+      }
+    ],
+    "Timestamp": "2026-09-17T09:00:12.2915053+00:00"
+  },
+  "Scope": "Current Sheet / external RFA / geometry-only DWG-DXF; SingleMain; external RVT PARTIAL",
+  "PreviousStable": {
+    "Version": "v0.6",
+    "Commit": "9b9c34b",
+    "BuildSHA256": "5944347E0BC64EF13449944F8ECF447C59998F5EBDBF8F6CF0DCA9D3384E4042"
+  },
+  "ReversibleDirectories": {
+    "Base": "test-artifacts/reversible-39426d35d1a847c09d8883422e4ccf02",
+    "Earthwork": "test-artifacts/reversible-19e81d8cedcd470185dc753a2ff988e0",
+    "Drawing": "test-artifacts/reversible-d2a42c401d5a4fc98f958916c21c9d30",
+    "Journey": "test-artifacts/reversible-2fc508060f7843848b962e03fbd17001"
+  },
+  "Limitations": [
+    "External RVT PARTIAL",
+    "CAD geometry only; no inferred Label, Revision or company shared parameters",
+    "One main plan viewport",
+    "User-specific DWG and production-scale performance NOT TESTED",
+    "DXF titleblock conversion shares code but no separate titleblock DXF runtime fixture"
+  ],
+  "FinalCommit": {
+    "Value": "SELF_COMMIT",
+    "Resolve": "git log -1 --format=%H -- docs/productization/v061-report.json",
+    "LiteralReceipt": "test-artifacts/v061/final.json"
+  },
   "FormalDeployment": {
     "Kind": "FORMAL_V061_RELEASE",
     "Status": "PASS",
@@ -681,23 +873,31 @@
     "Assembly": "RevitMCP\\RevitMCP.dll",
     "FullClassName": "RevitMCP.Application"
   },
-  "PreviousStable": {
-    "Version": "v0.6",
-    "Commit": "9b9c34b",
-    "BuildSHA256": "5944347E0BC64EF13449944F8ECF447C59998F5EBDBF8F6CF0DCA9D3384E4042"
+  "Git": {
+    "ImplementationCommit": "a025393",
+    "TestCommit": "dfc3027",
+    "ReleaseCommit": "SELF_COMMIT",
+    "Destination": "origin/bim-custom",
+    "ReadbackReceipt": "test-artifacts/v061/final.json"
   },
-  "RemainingLimitations": [
-    "External RVT PARTIAL",
-    "CAD geometry only; no inferred Label, Revision or company shared parameters",
-    "One main plan viewport",
-    "User-specific DWG and production-scale performance NOT TESTED",
-    "DXF titleblock conversion shares code but no separate titleblock DXF runtime fixture"
-  ],
-  "FinalCommit": {
-    "Value": "SELF_COMMIT",
-    "Resolve": "git log -1 --format=%H -- docs/productization/development-state.json",
-    "LiteralReceipt": "test-artifacts/v061/final.json"
-  },
-  "NextAction": "Optional UAT of enabled scope only; stop. Do not start v0.7.",
-  "Report": "docs/productization/v061-report.json"
+  "ModifiedFiles": [
+    "MCP/Application.cs",
+    "MCP/Core/Drawing/DrawingModels.cs",
+    "MCP/Core/Drawing/DrawingProductionFixture.cs",
+    "MCP/Core/Drawing/DrawingProductionJourneyFixture.cs",
+    "MCP/Core/Drawing/DrawingFixtureIsolation.cs",
+    "MCP/Core/Drawing/ExternalTitleBlockService.cs",
+    "MCP/Core/Drawing/RevitDrawingService.cs",
+    "MCP/UI/BimConstructionPanelViewModel.cs",
+    "MCP/UI/DrawingProductionControl.cs",
+    "MCP/UI/DrawingProductionViewModel.cs",
+    "MCP/UI/RevitDrawingHost.cs",
+    "domain/construction-drawing-production.md",
+    "scripts/complete-productization-audit.cjs",
+    "scripts/run-revit-selftest.ps1",
+    "scripts/test-reversible-gate-c.ps1",
+    "scripts/test-workflow-contracts.cjs",
+    "scripts/publish-v061.ps1",
+    "tests/CoordinationWorkflow/DrawingTests.cs"
+  ]
 }

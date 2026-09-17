@@ -353,8 +353,8 @@
     },
     {
       "Path": "domain/construction-drawing-production.md",
-      "Sha256": "8379a0bff5058f8be16bc4632fe73edf360292ecfe6bcac39970443405eab965",
-      "Bytes": 5857
+      "Sha256": "21766dc9aeb1fe9564e95d29e8a672dfcfc6956e28b8a78463eb8e990d35d3ed",
+      "Bytes": 8893
     },
     {
       "Path": "domain/core-reload-boundary.md",
@@ -953,8 +953,8 @@
     },
     {
       "Path": "MCP/Application.cs",
-      "Sha256": "9a6836f3d34c2897eace70838b1ecc4ec94c49dc0a90ba8144b1f005d7f52109",
-      "Bytes": 12539
+      "Sha256": "aa6605a35cb46320cedc16c73427f35ae4495e2cdb66eff0272882d8bad5ee36",
+      "Bytes": 13185
     },
     {
       "Path": "MCP/Commands/MCPCommands.cs",
@@ -1327,19 +1327,34 @@
       "Bytes": 925
     },
     {
+      "Path": "MCP/Core/Drawing/DrawingFixtureIsolation.cs",
+      "Sha256": "1141bc645912973f428d61ce6a90e90f8c28d3bdb6c8689de83095698126b778",
+      "Bytes": 1289
+    },
+    {
       "Path": "MCP/Core/Drawing/DrawingModels.cs",
-      "Sha256": "cec8a80c0b8cae7502da034bc54879d3cf1b2b4aa0cf8909e8d49c9e3d7dd808",
-      "Bytes": 16115
+      "Sha256": "87810aefe6b721673845a1d2ce30cff85288079ce3698f86fdf598fe7b03c196",
+      "Bytes": 20090
     },
     {
       "Path": "MCP/Core/Drawing/DrawingProductionFixture.cs",
-      "Sha256": "7f74c20517bb6990d0bc0730ac76399af13d3c9f636e9a736013af1efecdc182",
-      "Bytes": 21993
+      "Sha256": "5dc773dd846bf47260c054aece7e843b81090e027e4bc4d5c626cf9b914a8ef6",
+      "Bytes": 22659
+    },
+    {
+      "Path": "MCP/Core/Drawing/DrawingProductionJourneyFixture.cs",
+      "Sha256": "5ac400ea6fb082a933ac0f670c7a7ca6776457785e2183dfe7fefaf92167b704",
+      "Bytes": 16617
+    },
+    {
+      "Path": "MCP/Core/Drawing/ExternalTitleBlockService.cs",
+      "Sha256": "ccdc1c7ffecc3ec31f43796d5b4ccd45ea76b32ac14b50a04225f3c3a8d6b637",
+      "Bytes": 12494
     },
     {
       "Path": "MCP/Core/Drawing/RevitDrawingService.cs",
-      "Sha256": "62e3c8430f71856a707eef749f4e5df2aff7a2d0dcb7d7687d2d5ab0c0eb45f9",
-      "Bytes": 47390
+      "Sha256": "373f77f8cda0642cd50aff30c06d907d79532d487d584ec8f5e02153a898979a",
+      "Bytes": 52814
     },
     {
       "Path": "MCP/Core/DwgBeamExecutor.cs",
@@ -1513,8 +1528,8 @@
     },
     {
       "Path": "MCP/UI/BimConstructionPanelViewModel.cs",
-      "Sha256": "0354713298214e5d3a7347b4793e46eea823b200145edee238e6f782d9515454",
-      "Bytes": 2594
+      "Sha256": "33380e8f9b6112c79a18e61582de2f9aecba9a1d3dcd44dbc840a8b5453a2074",
+      "Bytes": 2578
     },
     {
       "Path": "MCP/UI/CoordinationViewModel.cs",
@@ -1528,13 +1543,13 @@
     },
     {
       "Path": "MCP/UI/DrawingProductionControl.cs",
-      "Sha256": "5d407f5dabf4b6ab51e9ae6185d4629ce288ceec5af010d1f9eef85bd1826a05",
-      "Bytes": 19997
+      "Sha256": "12e9aebcb42dcc983d332dacca932fbee94379269ce406f53889d6c0ca695346",
+      "Bytes": 28454
     },
     {
       "Path": "MCP/UI/DrawingProductionViewModel.cs",
-      "Sha256": "ce3178fbae17ca1158c99c9b4fd96d4a7dc3c39daa714ec7edaab59b5f95a519",
-      "Bytes": 7680
+      "Sha256": "fd675c50b8b38d6da7878165ab859a7526127050132c63c06328fd8e5ef2b61c",
+      "Bytes": 14156
     },
     {
       "Path": "MCP/UI/EarthworkControl.cs",
@@ -1568,8 +1583,8 @@
     },
     {
       "Path": "MCP/UI/RevitDrawingHost.cs",
-      "Sha256": "7b6b4c159694182979b0d157286bf05ef9e03607ff4e332593f028e3f5b7c77f",
-      "Bytes": 3608
+      "Sha256": "28bae9f5e3e1f811efe01118a338c740c2f0980de31591c12cefba12c2752786",
+      "Bytes": 4191
     },
     {
       "Path": "MCP/UI/RevitSiteHost.cs",
@@ -49111,7 +49126,7 @@
     {
       "DomainId": "construction-drawing-production",
       "DomainPath": "domain/construction-drawing-production.md",
-      "Description": "施工圖生產中心 SOP：從既有 Sheet 擷取 Blueprint、保存出圖樣板、規劃樓層分區圖紙、確認建立更新並執行 QA 與 read-back。適用 construction drawing production、Cartoon Set、Drawing Package、人工修改保護。",
+      "Description": "施工圖生產中心 SOP：從既有 Sheet 擷取版面，或由外部 RFA／DWG／DXF 建立圖框樣板，保存出圖樣板、規劃樓層分區圖紙、確認建立更新並執行 QA 與 read-back。適用 construction drawing production、Cartoon Set、Drawing Package、人工修改保護。",
       "Tags": [
         "施工圖",
         "drawing",
@@ -49146,7 +49161,7 @@
       "RequiresProjectSettings": false,
       "RequiredSettings": [],
       "RuntimeCapability": "Typed Native C# service; no new MCP transport",
-      "NativeUiStatus": "Implemented: five-step current-document Sheet Blueprint / Package workflow",
+      "NativeUiStatus": "Implemented: production current Sheet / external RFA / CAD titleblock and five-step Package workflow",
       "FixtureTestStatus": "PASS: 46 assertions; scoped drawing workflow",
       "ProductizationStatus": "RULE_READY",
       "Priority": "P1",
@@ -49167,7 +49182,7 @@
       "RuleEvidence": [
         {
           "Line": 3,
-          "Text": "description: \"施工圖生產中心 SOP：從既有 Sheet 擷取 Blueprint、保存出圖樣板、規劃樓層分區圖紙、確認建立更新並執行 QA 與 read-back。適用 construction drawing production、Cartoon Set、Drawing Package、人工修改保護。\""
+          "Text": "description: \"施工圖生產中心 SOP：從既有 Sheet 擷取版面，或由外部 RFA／DWG／DXF 建立圖框樣板，保存出圖樣板、規劃樓層分區圖紙、確認建立更新並執行 QA 與 read-back。適用 construction drawing production、Cartoon Set、Drawing Package、人工修改保護。\""
         },
         {
           "Line": 13,
@@ -49244,22 +49259,57 @@
         {
           "Line": 51,
           "Text": "測試只使用 disposable fixture；必須包含 Template extraction、建立、重跑、人工移動保留／套用、V2、圖號衝突、QA negative cases 及真實 ViewModel→Dispatcher→read-back 工作流。"
+        },
+        {
+          "Line": 53,
+          "Text": "## v0.6.1 外部圖框與 Production journey"
+        },
+        {
+          "Line": 55,
+          "Text": "TemplateSourceKind 區分 CurrentSheet、ExternalRfa、ExternalRvt、Cad。CurrentSheet 為 SheetLayoutTemplate，沿用實際主要 Viewport／Legend／Schedule 位置；ExternalRfa 與 Cad 為 TitleBlockTemplate，只有圖框，使用自動單主視圖配置，不要求先做 Golden Sheet。ExternalRvt 的跨文件引用需獨立 read-back；未通過時標 PARTIAL 並停用。"
+        },
+        {
+          "Line": 57,
+          "Text": "RFA 分析需驗證 Title Blocks Category、Family／Type、範圍與參數，背景來源文件關閉且不保存。明確確認後才載入專案，以 TransactionGroup 保證失敗回復並 read-back 類型／Category／實際圖框範圍。同名 Family 不覆寫，只允許明確使用目前版本或取消。"
+        },
+        {
+          "Line": 59,
+          "Text": "DWG／DXF 先於暫存 TitleBlock Family 分析幾何、bounds 與圖層摘要。RFT 由 Revit 設定搜尋，無唯一可靠候選時讓使用者選擇；選擇保存在本機 application setting，不入 Git 或模型。Auto 單位及 A0–A4 尺寸均僅為建議，需使用者確認。確認後 import→暫存 RFA→Load→read-back，關閉背景文件並清理專屬暫存目錄。只保證幾何，不猜測文字與 Label 語意，不建立 Revision／公司 shared parameters。"
+        },
+        {
+          "Line": 61,
+          "Text": "AutoSheetLayoutService 以 TitleBlock bounds 扣除明確設定的左／右／上／下邊距為可用出圖區，主視埠置中並可設定位移。預設零邊距代表尚未保留資訊欄，不是 printable area 認證。保存於 Profile；不自行猜測公司標題欄。Preview 顯示圖框、可用區與預估視埠，實際 read-back 必須在可用區內。"
+        },
+        {
+          "Line": 63,
+          "Text": "未選任何 Scope／網格分區定義為 NoZone，不影響產生圖紙：每個 Level 一張，保留來源 Crop／Scope。Zone token 可為空；其他必要 token 空值仍阻擋。LevelViewResolver 以一次 FloorPlan collector 按 GenLevel 分組，排除 template、測試 marker 與工具生成的複製視圖。唯一候選自動選；零或多候選僅標示該樓層缺來源／需選擇，保留其他計畫列。規劃階段不新增 View。"
+        },
+        {
+          "Line": 65,
+          "Text": "Production UI 隱藏 Fixture marker／ProfileKind 與可辨識的舊測試樣板引用，只有專用 Developer/Test mode 可顯示。一般用戶不需理解 ElementId、internal units 或 raw enum。零列留在範圍設定；衝突阻擋確認；尚未建立不進 QA。所有 disabled 的核心動作顯示缺項；建立成功自動讀回 QA 與可開啟的 Sheet 清單。"
+        },
+        {
+          "Line": 67,
+          "Text": "Gate C4 必須從 BimConstructionPanel drawing child 初始化，經選檔／樣板、分析、載入確認、選 Levels、自動來源、計畫、確認、ExternalEvent、建立與 QA binding。A 外部 RFA 三層、B 真實外部 DWG 兩層、C 既有 Sheet、D 不分區、E 缺一層來源、F 圖號衝突、G 人工修改、H 同包重跑全部 PASS，且 Build／C4／Deployed SHA 相同，才可宣稱 READY。舊 backend／fixture PASS 不能取代 C4。"
         }
       ],
       "SourceReview": {
         "Status": "ASSESSED",
         "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
-        "DomainSha256": "8379a0bff5058f8be16bc4632fe73edf360292ecfe6bcac39970443405eab965",
+        "DomainSha256": "21766dc9aeb1fe9564e95d29e8a672dfcfc6956e28b8a78463eb8e990d35d3ed",
         "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
       },
       "NativeBackendFiles": [
         "MCP/Core/Drawing/DrawingModels.cs",
         "MCP/Core/Drawing/RevitDrawingService.cs",
         "MCP/UI/DrawingProductionViewModel.cs",
-        "MCP/UI/RevitDrawingHost.cs"
+        "MCP/UI/RevitDrawingHost.cs",
+        "MCP/Core/Drawing/ExternalTitleBlockService.cs",
+        "MCP/Core/Drawing/DrawingFixtureIsolation.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-96db92e059574e9090f668d79ea46402/drawing-runtime.json",
-      "NativeWorkflowTestStatus": "PASS: ViewModel / ExternalEvent / real Revit read-back",
+      "FixtureEvidence": "test-artifacts/revit-selftest-139da39a1dff499b87c1274d49c11026/drawing-runtime.json",
+      "NativeWorkflowTestStatus": "PASS: C4 production Panel journey A-H / external real files / read-back",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-2e944b2c0e424f48b9db0f3f42b272c3/drawing-c4-runtime.json",
       "NativeScope": {
         "Mutation": "ConfirmedWrite",
         "TransactionRequired": true,
@@ -70603,9 +70653,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/runtime.json",
       "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/workflow-runtime.json",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -72442,9 +72492,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/runtime.json",
       "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/workflow-runtime.json",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -82711,7 +82761,7 @@
         "MCP/UI/SiteTerrainWorkflow.cs",
         "MCP/UI/RevitSiteHost.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-6f763c0c3fb14e8c8da690d93b7f7e27/terrain-runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/terrain-runtime.json",
       "NativeScope": {
         "Mutation": "ConfirmedWrite",
         "TransactionRequired": true,
@@ -92858,11 +92908,13 @@
         "C",
         "C2",
         "C3",
+        "C4",
         "DrawingRuntime"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-96db92e059574e9090f668d79ea46402/drawing-runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-139da39a1dff499b87c1274d49c11026/drawing-runtime.json",
+      "ProductionJourneyEvidence": "test-artifacts/revit-selftest-2e944b2c0e424f48b9db0f3f42b272c3/drawing-c4-runtime.json",
       "Limits": [
-        "Supported current-document workflow only",
+        "Current Sheet / external RFA / geometry-only DWG-DXF; external RVT PARTIAL",
         "Same TitleBlock Type; one main plan viewport",
         "Manual overrides default preserve; per-sheet explicit reapply",
         "Auto dimension / Matchline / View Reference PARTIAL and disabled"
@@ -92931,7 +92983,7 @@
     "CompilerDiagnostics": 0,
     "DomainCoverage": 86,
     "RuntimeToolCoverage": 192,
-    "MethodCount": 1614,
+    "MethodCount": 1670,
     "Limitations": [
       "Branch union is conservative, not runtime proof.",
       "Unbound external invocations are retained in backend evidence.",
