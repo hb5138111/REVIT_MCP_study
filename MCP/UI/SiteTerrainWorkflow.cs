@@ -11,9 +11,13 @@ using RevitMCP.Core.Site;
 namespace RevitMCP.UI
 {
     public enum SiteStepState { NotStarted, Ready, Warning, Complete, Stale }
+    public sealed record SiteExcavationOutcome(long TerrainId,long CutterId,double CutBankVolume,string ProjectVolume,bool Executed)
+    {
+        public override string ToString()=>$"{(Executed?"開挖 read-back 完成":"開挖試算（模型已回復）")}\n挖方（原地量）：{ProjectVolume}\nTerrain {TerrainId} / Cutter {CutterId}\n方法：Revit 開挖體積差；此結果不包含設計填方或開挖面積。";
+    }
     public record SiteEarthworkSummary(string Area,string Cut,string Fill,string Net,string MaximumDepth,string Method,string Source,string Target,string Warnings,EarthworkResult? Quantity=null)
     {
-        public override string ToString()=>$"計算面積  {Area}\n挖方  {Cut}\n填方  {Fill}\n淨土方（填－挖）  {Net}\n最大深度  {MaximumDepth}\n方法：{Method}\n來源：{Source}\n設計高程：{Target}\n{Warnings}";
+        public override string ToString()=>$"計算面積  {Area}\n挖方（原地量）  {Cut}\n填方（設計量）  {Fill}\n幾何淨方（挖－填）  {Net}\n最大深度  {MaximumDepth}\n方法：{Method}\n來源：{Source}\n設計高程：{Target}\n{Warnings}";
     }
     public sealed class SiteControlRow
     {
@@ -34,6 +38,23 @@ namespace RevitMCP.UI
     }
     public sealed partial class SiteTerrainViewModel
     {
+        private bool targetEntered;
+        private string targetText="";
+        public string TargetElevationText
+        {
+            get=>targetText;
+            set
+            {
+                targetText=value;
+                targetEntered=Context!=null&&double.TryParse(value,NumberStyles.Float,CultureInfo.CurrentCulture,out var parsed)&&double.IsFinite(parsed);
+                if(targetEntered)target=double.Parse(value,NumberStyles.Float,CultureInfo.CurrentCulture)*DisplayFactor;
+                InvalidateQuantity();
+            }
+        }
+        public bool CanPreviewExcavation=>!Busy&&Context!=null&&terrain>0&&cutter>0&&terrain!=cutter;
+        public string CalculationReadiness=>Busy?"Revit 正在處理。":Context==null?"請先讀取模型與專案單位。":terrain<=0?"請選取地形。":!targetEntered||!double.IsFinite(target)?"請輸入有效設計高程（可明確輸入 0）。":!double.IsFinite(tolerance)||tolerance<=0?"計算容差必須為正數。":!CadTerrainAnalysis.ValidBoundary(BoundaryPoints)?"請選取可靠的閉合、平面、凸邊界。":"輸入完整，可計算。";
+        public bool CanCalculate=>CalculationReadiness=="輸入完整，可計算。";
+        public string EarthworkResultText=>Result is SiteEarthworkSummary summary?summary.ToString():Result is SiteExcavationOutcome excavation?excavation.ToString():"計算結果將顯示於此。";
         public CadTerrainAnalysis? CadAnalysis {get;private set;}
         public ObservableCollection<CadLayerChoice> CadLayers {get;}=new();
         public ObservableCollection<SiteControlRow> ControlRows {get;}=new();
@@ -55,7 +76,7 @@ namespace RevitMCP.UI
             3=>Result!=null&&Result is not SiteCreateOutcome?SiteStepState.Complete:terrain!=0?SiteStepState.Ready:SiteStepState.NotStarted,
             _=>SiteStepState.NotStarted
         };
-        public string DisplayLengthUnit=>Context?.LengthUnit??"m";
+        public string DisplayLengthUnit=>Context?.LengthUnit??"尚未讀取專案單位";
         public double DisplayFactor=>Context?.MetresPerDisplayUnit??1;
         public double DisplayTolerance {get=>tolerance/DisplayFactor;set=>ToleranceMetres=value*DisplayFactor;}
         public double DisplayGrid {get=>grid/DisplayFactor;set=>GridMetres=value*DisplayFactor;}
@@ -77,7 +98,7 @@ namespace RevitMCP.UI
         public string ConfirmationSummary=>$"有效 {Dataset?.Diagnostics.ValidCount:N0}／忽略 {(Dataset?.Diagnostics.RejectedCount??0)+(Dataset?.Diagnostics.DuplicateCount??0):N0}／實際使用 {PreviewPoints.Count:N0} 點\n品質：{reduction}\n"+
             string.Join("\n",Dataset?.Diagnostics.Warnings.Take(8).Select(w=>w.Message)??Array.Empty<string>())+"\n將建立地形並保存稽核報告。候選資料不代表測量或法規核准。";
         private void InvalidateWrite(){revision++;confirmed=false;Notify();}
-        private void InvalidateQuantity(){revision++;ExcavationPreview=null;confirmed=false;if(Result is not SiteCreateOutcome)Result=null;Notify();}
+        private void InvalidateQuantity(){revision++;ExcavationPreview=null;confirmed=false;if(Result is not SiteCreateOutcome)Result=null;InvalidateEarthworkEstimate();Notify();}
         public void ReadColumns()
         {
             try
@@ -111,7 +132,7 @@ namespace RevitMCP.UI
             ControlPoints=string.Join(";",ControlRows.Select(p=>FormattableString.Invariant($"{p.Easting*DisplayFactor},{p.Northing*DisplayFactor},{p.Elevation*DisplayFactor},{p.ModelX*DisplayFactor},{p.ModelY*DisplayFactor},{p.ModelZ*DisplayFactor}")));
         }
         public void PickControl(SiteControlRow row)=>Submit(document,c=>{var p=c.PickControlPoint();row.ModelX=p.X/DisplayFactor;row.ModelY=p.Y/DisplayFactor;row.ModelZ=p.Z/DisplayFactor;ApplyControlRows();});
-        public void UseBoundarySelection()=>Submit(document,c=>{var loop=c.SelectedBoundary();if(!CadTerrainAnalysis.ValidBoundary(loop))throw new ArgumentException("僅接受可靠的閉合、平面、凸邊界。");Boundary=string.Join(";",loop.Select(p=>FormattableString.Invariant($"{p.X},{p.Y}")));Status=$"已取得 {loop.Count} 頂點的邊界。";});
+        public void UseBoundarySelection()=>Submit(document,c=>{var loop=c.SelectedBoundary();if(!CadTerrainAnalysis.ValidBoundary(loop))throw new ArgumentException("僅接受可靠的閉合、平面、凸邊界。");Boundary=string.Join(";",loop.Select(p=>FormattableString.Invariant($"{p.X},{p.Y}")));boundaryIds=c.SelectedIds();Status=$"已取得 {loop.Count} 頂點的邊界。";});
         public void LocateTerrain()=>Submit(document,c=>Status=c.Locate(terrain));
         public void ConfirmCreate(){AcknowledgeDiagnostics=true;Confirmed=true;Create();}
     }

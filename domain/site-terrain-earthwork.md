@@ -2,8 +2,8 @@
 name: site-terrain-earthwork
 description: "基地測量點匯入、座標定位、Toposolid 與土方計算 SOP；適用 survey terrain import、coordinate alignment、excavation、cut/fill。"
 metadata:
-  version: "0.5.1"
-  updated: "2026-09-16"
+  version: "0.5.2"
+  updated: "2026-09-17"
   references: ["Autodesk Revit 2026 installed RevitAPI.xml"]
   related: [cad-block-point-placement.md, dwg-column-import.md]
   referenced_by: []
@@ -36,7 +36,7 @@ ControlPointAlignment：1 點平移；2 點旋轉平移；3+ 點以去中心的 
 
 A：指定 host Toposolid 與 Floor/Roof/Toposolid cutter，先 CanBeExcavatedBy；Preview 顯示來源、相交與 Revit 試算（transaction rollback，不留變更）。明確 Confirm 後 ExcavateBy；read-back 量與 Preview 一致，交易失敗 rollback。不移動或修改 cutter。
 
-Boundary quantity：由現況頂面 TIN，將每個 triangle 裁切到明確 boundary，再依 target elevation 的正負深度零線分割；對每個分片積分線性深度。Cut/Fill 分開，Net = Fill − Cut。Area 是實際覆蓋水平投影；未覆蓋 boundary 必須警告／阻擋精準結果。AverageCutDepth = Cut/CutArea，AverageFillDepth = Fill/FillArea。不得以 bounding box 或全區平均高差當精準體積。第一版 boundary 限明確驗證的凸多邊形；其他形狀不得靜默近似。
+Boundary quantity：由現況頂面 TIN，將每個 triangle 裁切到明確 boundary，再依 target elevation 的正負深度零線分割；對每個分片積分線性深度。Cut/Fill 分開；v0.5.2 正式紀錄的 GeometricNetVolume = CutBankVolume − FillDesignVolume。既有 engine 的 NetVolume 為 Fill − Cut，僅保留舊 API 相容性；新 UI／紀錄明確轉換語意。Area 是實際覆蓋水平投影；未覆蓋 boundary 必須警告／阻擋精準結果。AverageCutDepth = Cut/CutArea，AverageFillDepth = Fill/FillArea。不得以 bounding box 或全區平均高差當精準體積。第一版 boundary 限明確驗證的凸多邊形；其他形狀不得靜默近似。
 
 Existing/Proposed 為 experimental，不宣稱 Revit Graded Region 自動化。沒有可信任的 proposed triangulation 與重疊裁切證據時不輸出正式數量。
 
@@ -60,3 +60,25 @@ Origin 與 Shared 為明確選項。Shared 必須通過 ActiveProjectLocation / 
 
 ### Shared CAD 垂直基準
 隔離 runtime 證實：Shared Link 套用 XY／真北，但 native CAD transform 可能保留匯入參考樓層 Z。DTO chain 明確以經 GetProjectPosition 獨立驗證的 SurveyToInternal.DeltaZ 正規化垂直基準。Native transform、垂直修正量與 effective transform 均保留 evidence；四個基準探針須與 ProjectPosition 一致，不放寬 XY／旋轉檢查。這是資料座標轉換，不是 Origin fallback，也不移動 CAD 或建築。
+
+## 8. 土方區、物流與成本（v0.5.2）
+
+EarthworkZone 以穩定 ZoneGuid 辨識，保留區號／區名、Terrain／Cutter／Boundary Element IDs、可靠邊界、Target Source、Level／高程、方法、計算時間與需複核狀態。重新計算更新同一 GUID，不增加重複紀錄。不同區可以引用同一 Terrain。直接高程或 Level.ProjectElevation + Offset 均按專案長度單位輸入，轉為模型原點基準的 SI metres；不再套 Shared transform。未輸入／非有限高程、缺來源、無效邊界時阻擋計算。
+
+數量分為 CutBankVolume（挖方原地量）、FillDesignVolume（設計幾何填方）、GeometricNetVolume（挖－填）。Cutter trial 只提供 Revit 試算挖方，面積與深度若無可靠資訊須為 null，不能顯示 0 冒充已分析；`CUTTER_FILL_NOT_ANALYZED` 明示沒有設計填方分析。分析不要求先真的 ExcavateBy；實際開挖按鈕需另行確認。
+
+所有係數與單價由本專案 Profile 明確輸入，沒有公司／市場預設值：SwellFactor = Loose Excavated / Bank Cut；FillLooseFactor = Loose Fill Required / Design Fill；ReusableRate 為 0～1。CutLoose = CutBank × Swell；FillLooseDemand = FillDesign × FillLooseFactor；PotentialReusable = CutLoose × ReusableRate；Reused = min(PotentialReusable, FillLooseDemand)；Export = max(CutLoose − Reused,0)；Import = max(FillLooseDemand − Reused,0)。全部中間值保存。
+
+有效車斗容量 = 容量 × 裝載率。容量與裝載率必須為有限正數，裝載率不可超過 1。Export／Import 車次各自 ceiling(鬆方量／有效容量)，零量為零車次；不得為降低車次而靜默截斷正數尾差。Profile 明定 m³ 或 ft³ 作為車斗及體積單價基準，所有幾何 quantity 保持 SI，換算一次。UI 數量依 Project Units；CSV 機器欄位明示 m²／m³，保留完整 Profile 單位。
+
+成本：挖方原地量×挖土單價；外運鬆方×裝載單價；外運車次×運輸單價；外運鬆方×棄土單價；外購鬆方×外購土單價；設計填方×回填施工單價及夯實單價，再加選填動員費。動員費每區計入一次，空白不計。金額以 decimal 計算；幣別是使用者設定，不換匯。明示「成本為依本專案設定之估算值，不是市場報價或合約金額。」既有紀錄保留 Profile 快照，編輯 Profile 不偷偷改寫歷史結果。
+
+## 9. 專案紀錄與 Revit Schedule
+
+專案 Profiles 與 analysis records 存入工具管理的 DataStorage。每次保存需 Preview／Confirm，寫入後 read-back。摘要只 SUM 已存紀錄，不重新 triangulate；顯示「各區範圍可能重疊，總量僅為明細加總。」不同幣別分開摘要，單一 Schedule 不混合幣別。Candidate／需人工複核不代表正式核准。
+
+Schedule architecture 必須經 dedicated record fixture 證明 schedulability 才可發布：每區一個獨立、無視覺幾何的 owned Generic Model record；shared parameters 僅綁定該 category，ExtensibleStorage 保留完整來源及 Profile。不得為結果色圖建立大量永久 DirectShape。若無幾何紀錄無法可靠 schedule，先改架構並重測，不靜默建立可見實體。
+
+建立／更新前列出 Schedule、參數及新增／更新 GUID，明確 Confirm 後單一 transaction group 寫入；欄位、GUID、record count、schedule membership 及每個數量／成本值 read-back 全部一致才成功。使用 `CanTotal` 驗證可加總欄位，grand total 標示各區可能重疊。既有未受工具管理的同名明細表不覆寫，改用安全名稱。來源 Element.VersionGuid 不符時必須重新計算，不以舊數量更新。失敗 rollback 完整 transaction group。
+
+刪除分析紀錄需明確確認，若有對應 schedule record，須一併明列與確認。僅刪工具 ownership 與 ZoneGuid 相符的 analysis record，絕不刪 Terrain／Cutter。刪除造成額外元素連帶影響時 rollback。測試必含兩區建立、A 重算後仍兩區、stable record IDs、逐欄回讀、總量與成本、故障注入 rollback、未授權寫入阻擋及文件切換失效。

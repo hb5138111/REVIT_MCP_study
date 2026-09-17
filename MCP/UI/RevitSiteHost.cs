@@ -41,10 +41,22 @@ namespace RevitMCP.UI
             public CadTerrainAnalysis AnalyzeCad(CadTerrainRequest request)=>CadTerrainService.Analyze(document,request);
             public SitePoint PickControlPoint()=>CoordinateTransformService.Metres((ui??throw new InvalidOperationException("需要可操作的模型視窗。")).Selection.PickPoint("選取控制點的模型位置"));
             public string Locate(long id)=>new CoordinationNavigationService().LocateElement(ui??throw new InvalidOperationException("需要可操作的模型視窗。"),new ElementId(id),new RevitMCP.Models.CoordinationNavigationSession()).Message;
+            public string FormatVolume(double cubicMetres)=>RevitTerrainService.FormatVolume(document,cubicMetres);
+            public long[] SelectedIds()=>ui?.Selection.GetElementIds().Select(id=>id.Value).OrderBy(id=>id).ToArray()??Array.Empty<long>();
+            public string EarthworkSignature(EarthworkZone zone)=>RevitEarthworkRecords.Signature(document,zone);
+            public EarthworkProjectData LoadEarthwork()=>RevitEarthworkRecords.Load(document);
+            public EarthworkProjectData SaveEarthwork(EarthworkProjectData data,bool confirmed)=>RevitEarthworkRecords.Save(document,data,confirmed);
+            public EarthworkSchedulePreview PreviewSchedule(System.Collections.Generic.IReadOnlyList<EarthworkRecord> rows)=>RevitEarthworkRecords.Preview(document,rows);
+            public EarthworkScheduleResult WriteSchedule(System.Collections.Generic.IReadOnlyList<EarthworkRecord> rows,EarthworkSchedulePreview preview,bool confirmed)=>RevitEarthworkRecords.WriteSchedule(document,rows,preview,confirmed);
+            public EarthworkProjectData DeleteEarthwork(Guid id,bool deleteScheduleRecord,bool confirmed)=>RevitEarthworkRecords.Delete(document,id,deleteScheduleRecord,confirmed);
             public System.Collections.Generic.IReadOnlyList<SitePoint> SelectedBoundary()
             {
                 var ids=ui?.Selection.GetElementIds()??throw new InvalidOperationException("請選取樓板、地形或閉合模型線。");
-                var elements=ids.Select(document.GetElement).ToArray();
+                return BoundaryFromIds(ids.Select(id=>id.Value).ToArray());
+            }
+            public System.Collections.Generic.IReadOnlyList<SitePoint> BoundaryFromIds(System.Collections.Generic.IReadOnlyList<long> ids)
+            {
+                var elements=ids.Select(id=>document.GetElement(new ElementId(id))??throw new InvalidOperationException($"邊界 Element {id} 已刪除。")).ToArray();
                 System.Collections.Generic.IReadOnlyList<SitePoint> loop;
                 if(elements.Length==1&&elements[0] is Floor floor&&document.GetElement(floor.SketchId) is Sketch sketch)
                 {
@@ -87,7 +99,9 @@ namespace RevitMCP.UI
                 string Format(SitePoint p)=>string.Join(" / ",new[]{p.X,p.Y,p.Z}.Select(v=>UnitFormatUtils.Format(document.GetUnits(),SpecTypeId.Length,v/.3048,false)));
                 string evidence=$"目前位置：{document.ActiveProjectLocation.Name}\n內部原點：{Format(c.InternalOrigin)}\n專案基準點：{Format(c.ProjectBasePoint)}\n測量點：{Format(c.SurveyPoint)}\n真北旋轉：{c.TrueNorthRotation*180/Math.PI:F4}°\n座標正反向已與 ProjectPosition 驗證。";
                 string symbol=unit==UnitTypeId.Millimeters?"mm":unit==UnitTypeId.Meters?"m":unit==UnitTypeId.Centimeters?"cm":unit==UnitTypeId.Feet?"ft":LabelUtils.GetLabelForUnit(unit);
-                return new(DocumentSessionIdentity.GetDocumentIdentity(document),c.SurveyToInternal,evidence,RevitTerrainService.Types(document).Select(t=>new SiteChoice(t.Id,t.Name)).ToArray(),RevitTerrainService.Levels(document).Select(t=>new SiteChoice(t.Id,t.Name)).ToArray(),factor,symbol);
+                var areaUnit=document.GetUnits().GetFormatOptions(SpecTypeId.Area).GetUnitTypeId();var volumeUnit=document.GetUnits().GetFormatOptions(SpecTypeId.Volume).GetUnitTypeId();
+                double areaFactor=UnitUtils.ConvertFromInternalUnits(UnitUtils.ConvertToInternalUnits(1,areaUnit),UnitTypeId.SquareMeters),volumeFactor=UnitUtils.ConvertFromInternalUnits(UnitUtils.ConvertToInternalUnits(1,volumeUnit),UnitTypeId.CubicMeters);
+                return new(DocumentSessionIdentity.GetDocumentIdentity(document),c.SurveyToInternal,evidence,RevitTerrainService.Types(document).Select(t=>new SiteChoice(t.Id,t.Name)).ToArray(),RevitTerrainService.Levels(document).Select(t=>new SiteChoice(t.Id,t.Name,UnitUtils.ConvertFromInternalUnits(((Level)document.GetElement(new ElementId(t.Id))).ProjectElevation,UnitTypeId.Meters))).ToArray(),factor,symbol,areaFactor,LabelUtils.GetLabelForUnit(areaUnit),volumeFactor,LabelUtils.GetLabelForUnit(volumeUnit));
             }
             public SiteCreateOutcome Create(SiteCreateRequest r,bool confirmed)
             {
@@ -100,7 +114,7 @@ namespace RevitMCP.UI
             public object Calculate(long terrain,System.Collections.Generic.IReadOnlyList<SitePoint> boundary,double elevation,double tolerance,object audit)
             {
                 var r=EarthworkEngine.Calculate(RevitTerrainService.Surface(document,terrain),boundary,elevation,tolerance);r.ExistingTerrainId=terrain;
-                var result=new{Quantity=r,ProjectCut=RevitTerrainService.FormatVolume(document,r.CutVolume),ProjectFill=RevitTerrainService.FormatVolume(document,r.FillVolume),ProjectNet=RevitTerrainService.FormatVolume(document,r.NetVolume)};
+                var result=new{Quantity=r,ProjectCut=RevitTerrainService.FormatVolume(document,r.CutVolume),ProjectFill=RevitTerrainService.FormatVolume(document,r.FillVolume),ProjectNet=RevitTerrainService.FormatVolume(document,r.CutVolume-r.FillVolume)};
                 Save("earthwork-tin",audit,result);
                 string Length(double metres)=>UnitFormatUtils.Format(document.GetUnits(),SpecTypeId.Length,metres/.3048,false);
                 return new SiteEarthworkSummary(UnitFormatUtils.Format(document.GetUnits(),SpecTypeId.Area,r.Area/Math.Pow(.3048,2),false),result.ProjectCut,result.ProjectFill,result.ProjectNet,Length(r.MaxDepth),"頂面三角網裁切積分",document.GetElement(new ElementId(terrain)).Name,Length(elevation),string.Join("；",r.Warnings),r);

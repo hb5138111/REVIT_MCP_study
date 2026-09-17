@@ -9,8 +9,8 @@ using RevitMCP.Core.Site;
 
 namespace RevitMCP.UI
 {
-    public record SiteChoice(long Id,string Name);
-    public record SiteContextSnapshot(string DocumentIdentity,SiteTransform SharedToInternal,string CoordinateEvidence,IReadOnlyList<SiteChoice> Types,IReadOnlyList<SiteChoice> Levels,double MetresPerDisplayUnit=1,string LengthUnit="m");
+    public record SiteChoice(long Id,string Name,double ElevationMetres=0);
+    public record SiteContextSnapshot(string DocumentIdentity,SiteTransform SharedToInternal,string CoordinateEvidence,IReadOnlyList<SiteChoice> Types,IReadOnlyList<SiteChoice> Levels,double MetresPerDisplayUnit=1,string LengthUnit="m",double SquareMetresPerAreaUnit=1,string AreaUnit="m²",double CubicMetresPerVolumeUnit=1,string VolumeUnit="m³");
     public record SiteCreateRequest(IReadOnlyList<SitePoint> Points,long TypeId,long LevelId,double Tolerance,bool LargeOverride,object Audit);
     public record SiteCreateOutcome(long ElementId,string Summary);
     public interface ISiteContext
@@ -18,7 +18,16 @@ namespace RevitMCP.UI
         CadTerrainAnalysis AnalyzeCad(CadTerrainRequest request)=>throw new NotSupportedException("CAD runtime 未提供。");
         SitePoint PickControlPoint()=>throw new NotSupportedException("請在 Revit 選點。");
         IReadOnlyList<SitePoint> SelectedBoundary()=>throw new NotSupportedException("請在 Revit 選取邊界。");
+        IReadOnlyList<SitePoint> BoundaryFromIds(IReadOnlyList<long> ids)=>throw new NotSupportedException("邊界重讀未提供。");
         string Locate(long id)=>throw new NotSupportedException("3D 導航未提供。");
+        string FormatVolume(double cubicMetres)=>$"{cubicMetres:F4} m³";
+        long[] SelectedIds()=>Array.Empty<long>();
+        string EarthworkSignature(EarthworkZone zone)=>"fixture";
+        EarthworkProjectData LoadEarthwork()=>new(Array.Empty<EarthworkProjectSettings>(),Array.Empty<EarthworkRecord>());
+        EarthworkProjectData SaveEarthwork(EarthworkProjectData data,bool confirmed)=>throw new NotSupportedException("專案分析資料 runtime 未提供。");
+        EarthworkSchedulePreview PreviewSchedule(IReadOnlyList<EarthworkRecord> rows)=>throw new NotSupportedException("Schedule runtime 未提供。");
+        EarthworkScheduleResult WriteSchedule(IReadOnlyList<EarthworkRecord> rows,EarthworkSchedulePreview preview,bool confirmed)=>throw new NotSupportedException("Schedule runtime 未提供。");
+        EarthworkProjectData DeleteEarthwork(Guid zoneGuid,bool deleteScheduleRecord,bool confirmed)=>throw new NotSupportedException("刪除分析紀錄 runtime 未提供。");
         SiteContextSnapshot Snapshot();
         SiteChoice SelectedElement(bool terrain);
         SiteCreateOutcome Create(SiteCreateRequest request,bool confirmed);
@@ -69,7 +78,7 @@ namespace RevitMCP.UI
         public long TerrainId {get=>terrain;set{terrain=value;InvalidateQuantity();}}
         public long CutterId {get=>cutter;set{cutter=value;InvalidateQuantity();}}
         public string Boundary {get=>boundary;set{boundary=value;InvalidateQuantity();}}
-        public double TargetElevation {get=>target;set{target=value;InvalidateQuantity();}}
+        public double TargetElevation {get=>target;set{target=value;targetEntered=true;targetText=(value/DisplayFactor).ToString("G17",CultureInfo.CurrentCulture);InvalidateQuantity();}}
         public bool Confirmed {get=>confirmed;set{confirmed=value && !Busy && (PreviewPoints.Count>0||ExcavationPreview.HasValue);Notify();}}
         public bool CanCreate=>!Busy && Context!=null && Dataset!=null && PreviewPoints.Count>=3 && Dataset.Diagnostics.ConflictCount==0 &&
             (Dataset.Diagnostics.WarningCount==0||acknowledge) && (Alignment==null||Alignment.MaxResidual<=tolerance) &&
@@ -79,11 +88,11 @@ namespace RevitMCP.UI
         public bool CanExcavate=>!Busy&&Confirmed&&ExcavationPreview.HasValue;
         public void DocumentChanged(string identity,bool modified=false)
         {
-            if(identity!=document){document=identity;Context=null;Dataset=null;CadAnalysis=null;CadLayers.Clear();terrain=0;cutter=0;Result=null;Changed();Status="模型已切換，請重新分析座標與匯入。";}
+            if(identity!=document){document=identity;Context=null;Dataset=null;CadAnalysis=null;CadLayers.Clear();terrain=0;cutter=0;boundary="";targetEntered=false;targetText="";ResetEarthworkDocument();Result=null;Changed();Status="模型已切換，請重新分析座標與匯入。";}
             else if(modified){Changed();Status="模型已修改，請重新 Preview。";}
             Notify();
         }
-        private void Changed(){revision++;PreviewPoints=Array.Empty<SitePoint>();ExcavationPreview=null;confirmed=false;Transform=null;Alignment=null;Simplification=null;Result=null;foreach(var row in ControlRows)row.Residual="尚未計算";Notify();}
+        private void Changed(){revision++;PreviewPoints=Array.Empty<SitePoint>();ExcavationPreview=null;confirmed=false;Transform=null;Alignment=null;Simplification=null;Result=null;InvalidateEarthworkEstimate();foreach(var row in ControlRows)row.Residual="尚未計算";Notify();}
         private void Notify()=>PropertyChanged?.Invoke(this,new PropertyChangedEventArgs(""));
         public async Task ImportAsync()
         {
@@ -105,10 +114,12 @@ namespace RevitMCP.UI
         public void RefreshContext()=>Submit("",c=>
         {
             var previous=Context;Context=c.Snapshot();document=Context.DocumentIdentity;
+            if(previous!=null&&previous.MetresPerDisplayUnit!=Context.MetresPerDisplayUnit){targetEntered=false;targetText="";offsetText="";}
             if(!Context.Types.Any(t=>t.Id==type))type=Context.Types.FirstOrDefault()?.Id??0;
             if(!Context.Levels.Any(l=>l.Id==level))level=Context.Levels.FirstOrDefault()?.Id??0;
             if(previous?.DocumentIdentity!=Context.DocumentIdentity||previous.SharedToInternal!=Context.SharedToInternal||previous.MetresPerDisplayUnit!=Context.MetresPerDisplayUnit)Changed();else InvalidateWrite();
             Detail=Context.CoordinateEvidence;Status="座標與類型／樓層已重新讀取；建築保持不動。";
+            LoadEarthworkData(c.LoadEarthwork());
         });
         public async Task PreviewAsync()
         {
@@ -145,18 +156,27 @@ namespace RevitMCP.UI
         }
         public void PreviewExcavation()
         {
-            if(Busy)return;Changed();Submit(document,c=>{ExcavationPreview=c.Excavate(terrain,cutter,false,false,null,Audit());Status=$"Revit rollback 試算開挖 {ExcavationPreview:F6} m³；請確認後執行。";});
+            if(!CanPreviewExcavation){Status="請先讀取模型單位並選取地形與開挖構件。";Notify();return;}Changed();Submit(document,c=>{ExcavationPreview=c.Excavate(terrain,cutter,false,false,null,Audit());Result=new SiteExcavationOutcome(terrain,cutter,ExcavationPreview.Value,c.FormatVolume(ExcavationPreview.Value),false);CaptureEarthwork(c,new(null,ExcavationPreview.Value,0,null),EarthworkMethod.RevitCutter);Status="開挖試算完成，模型已回復；尚未執行開挖。";});
         }
-        public void UseSelection(bool isTerrain)=>Submit(document,c=>{var selected=c.SelectedElement(isTerrain);if(isTerrain){terrain=selected.Id;TerrainName=selected.Name;}else{cutter=selected.Id;CutterName=selected.Name;}InvalidateQuantity();Status=isTerrain?"已取得選取的地形。":"已取得選取的開挖構件。";});
+        public void UseSelection(bool isTerrain)=>Submit(document,c=>{if(Context==null){Context=c.Snapshot();document=Context.DocumentIdentity;}var selected=c.SelectedElement(isTerrain);if(isTerrain){terrain=selected.Id;TerrainName=selected.Name;}else{cutter=selected.Id;CutterName=selected.Name;}InvalidateQuantity();Status=isTerrain?"已取得選取的地形。":"已取得選取的開挖構件。";});
         public void ExecuteExcavation()
         {
             if(!CanExcavate){Status="開挖被阻擋：需要新的試算與明確確認。";Notify();return;}
             double expected=ExcavationPreview!.Value;confirmed=false;var audit=Audit();
-            Submit(document,c=>{var volume=c.Excavate(terrain,cutter,true,true,expected,audit);ExcavationPreview=null;Result=volume;Status=$"開挖 read-back 完成：{volume:F6} m³；報告已保存。";});
+            Submit(document,c=>{var volume=c.Excavate(terrain,cutter,true,true,expected,audit);ExcavationPreview=null;Result=new SiteExcavationOutcome(terrain,cutter,volume,c.FormatVolume(volume),true);Status=$"開挖 read-back 完成：{c.FormatVolume(volume)}；報告已保存。";});
         }
         public void CalculateBoundary()
         {
-            if(Busy)return;Submit(document,c=>{var polygon=boundary.Split(';',StringSplitOptions.RemoveEmptyEntries).Select(line=>{var v=line.Split(',').Select(x=>double.Parse(x,CultureInfo.InvariantCulture)).ToArray();if(v.Length!=2)throw new ArgumentException("Boundary 格式 x,y;x,y（internal m）。");return new SitePoint(v[0],v[1],0);}).ToArray();Result=c.Calculate(terrain,polygon,target,tolerance,Audit());Status="TIN 裁切積分完成；Project Units 結果與報告已保存。";});
+            if(!CanCalculate){Status=CalculationReadiness;Notify();return;}
+            var polygon=BoundaryPoints.ToArray();double elevation=target;var ids=boundaryIds.ToArray();long selectedLevel=baseLevel;bool useLevel=targetMode=="LevelOffset";string offset=offsetText;InvalidateQuantity();
+            Submit(document,c=>
+            {
+                var current=c.Snapshot();if(Context==null||current.MetresPerDisplayUnit!=Context.MetresPerDisplayUnit)throw new InvalidOperationException("專案單位已改變；請重新讀取單位並輸入高程。");
+                if(ids.Length>0)polygon=c.BoundaryFromIds(ids).ToArray();
+                if(useLevel)elevation=(current.Levels.SingleOrDefault(l=>l.Id==selectedLevel)??throw new InvalidOperationException("參考 Level 已刪除。")).ElevationMetres+double.Parse(offset,NumberStyles.Float,CultureInfo.CurrentCulture)*current.MetresPerDisplayUnit;
+                boundary=string.Join(";",polygon.Select(p=>FormattableString.Invariant($"{p.X},{p.Y}")));target=elevation;targetText=(target/DisplayFactor).ToString("G17",CultureInfo.CurrentCulture);
+                Result=c.Calculate(terrain,polygon,elevation,tolerance,Audit());if(Result is SiteEarthworkSummary summary&&summary.Quantity!=null)CaptureEarthwork(c,EarthworkQuantityResult.FromTin(summary.Quantity),EarthworkMethod.BoundaryTin);Status="TIN 裁切積分完成；Project Units 結果與報告已保存。";
+            });
         }
         public object Audit()=>new{Timestamp=DateTimeOffset.UtcNow,Dataset?.SourceKind,Dataset?.SourceName,Dataset?.SourceSHA256,Dataset?.Provenance,Units=units,Diagnostics=Dataset?.Diagnostics,CoordinateMode=mode,Transform,ControlPoints=controls,Alignment,Simplification,TypeId=type,LevelId=level,TerrainId=terrain,CutterId=cutter,Boundary=boundary,TargetElevation=target,ToleranceMetres=tolerance,AcknowledgeDiagnostics=acknowledge,LargePointOverride=largeOverride};
         public static IReadOnlyList<SiteControl> ParseControls(string text)=>text.Split(new[]{'\n',';'},StringSplitOptions.RemoveEmptyEntries).Select(line=>{var v=line.Split(',').Select(x=>double.Parse(x,CultureInfo.InvariantCulture)).ToArray();if(v.Length!=6)throw new ArgumentException("控制點每列 surveyX,Y,Z,internalX,Y,Z，全部 m。");return new SiteControl(new(v[0],v[1],v[2]),new(v[3],v[4],v[5]));}).ToArray();

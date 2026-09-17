@@ -21,12 +21,12 @@ using Grid=System.Windows.Controls.Grid;
 
 namespace RevitMCP.UI
 {
-    internal sealed class SiteTerrainControl : UserControl
+    internal sealed partial class SiteTerrainControl : UserControl
     {
         private readonly SiteTerrainViewModel vm;
         private readonly StackPanel[] pages=Enumerable.Range(0,4).Select(_=>new StackPanel{Margin=new Thickness(12)}).ToArray();
         private readonly Button[] steps=new Button[4];
-        private readonly string[] titles={"地形資料","座標定位","建立地形","土方計算"};
+        private readonly string[] titles={"地形資料","座標定位","建立地形","土方工程"};
         private readonly Canvas preview=new(){Height=270,Background=Brushes.AliceBlue,ClipToBounds=true};
         private readonly StackPanel csv=new(),cad=new();
         private readonly StackPanel pointCoordinates=new();
@@ -41,6 +41,14 @@ namespace RevitMCP.UI
         private readonly StackPanel custom=new();
         private string previewMode="平面";
         private bool refreshing;
+        private TextBox? earthworkTargetInput;
+        internal string FixtureResultText=>results.Text;
+        internal void SetFixtureTargetText(string text)
+        {
+            if(earthworkTargetInput==null)throw new InvalidOperationException("Target input missing");
+            earthworkTargetInput.Text=text;
+            earthworkTargetInput.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+        }
         public SiteTerrainControl(SiteTerrainViewModel vm)
         {
             this.vm=vm;DataContext=vm;Background=Brushes.White;Foreground=Brushes.Black;
@@ -103,20 +111,7 @@ namespace RevitMCP.UI
                 vm.ConfirmCreate();
             },nameof(vm.CanConfirmCreate));
 
-            var p3=pages[3];Action(p3,"使用目前選取的地形",()=>vm.UseSelection(true));Bound(p3,nameof(vm.TerrainName));Action(p3,"使用目前選取的開挖構件",()=>vm.UseSelection(false));Bound(p3,nameof(vm.CutterName));
-            Label(p3,"開挖構件：本模型的樓板、屋頂或地形。分析不改變構件位置。");Action(p3,"試算開挖量",vm.PreviewExcavation);
-            Action(p3,"確認執行開挖…",()=>{if(vm.ExcavationPreview.HasValue&&MessageBox.Show($"試算開挖量 {vm.ExcavationPreview:F4} m³。確認修改地形？","確認開挖",MessageBoxButton.OKCancel,MessageBoxImage.Warning)==MessageBoxResult.OK){vm.Confirmed=true;vm.ExecuteExcavation();}});
-            Label(p3,"邊界與設計高程");Action(p3,"由選取樓板／閉合模型線取得邊界",vm.UseBoundarySelection);Text(p3,"設計高程（專案長度單位；模型原點基準）",nameof(vm.DisplayTarget));Bound(p3,nameof(vm.DisplayLengthUnit));
-            Action(p3,"計算邊界內挖填方",vm.CalculateBoundary);p3.Children.Add(resultCards);p3.Children.Add(results);Action(p3,"3D 定位地形",vm.LocateTerrain);
-            Action(p3,"匯出 JSON／CSV／Markdown…",()=>
-            {
-                if(vm.Result==null)return;var dialog=new SaveFileDialog{Filter="JSON 稽核|*.json|CSV 稽核|*.csv|Markdown 報告|*.md",FileName="terrain-result",AddExtension=true};
-                if(dialog.ShowDialog()!=true)return;string audit=Newtonsoft.Json.JsonConvert.SerializeObject(vm.Audit()),result=Newtonsoft.Json.JsonConvert.SerializeObject(vm.Result);
-                string json=Newtonsoft.Json.JsonConvert.SerializeObject(new{Audit=vm.Audit(),Result=vm.Result},Newtonsoft.Json.Formatting.Indented);
-                string Quote(string value)=>"\""+value.Replace("\"","\"\"")+"\"";
-                System.IO.File.WriteAllText(dialog.FileName,dialog.FilterIndex==2?"Field,Value\r\nAudit,"+Quote(audit)+"\r\nResult,"+Quote(result)+"\r\n":dialog.FilterIndex==3?"# 基地土方報告\n\n"+vm.Result+"\n\n```json\n"+json+"\n```\n":json);
-            });
-            Details(p3,"結果明細與來源識別",nameof(vm.Result));
+            BuildEarthworkPage(pages[3]);
             vm.PropertyChanged+=(_,__)=>Refresh();preview.SizeChanged+=(_,__)=>Draw();Loaded+=(_,__)=>{if(vm.Context==null)vm.RefreshContext();};Refresh();
         }
         private void Refresh()
@@ -133,12 +128,12 @@ namespace RevitMCP.UI
             resultCards.Children.Clear();
             if(vm.Result is SiteEarthworkSummary summary)
             {
-                foreach(var card in new[]{("面積",summary.Area),("挖方",summary.Cut),("填方",summary.Fill),("淨土方（填－挖）",summary.Net),("最大深度",summary.MaximumDepth)})
+                foreach(var card in new[]{("面積",summary.Area),("挖方（原地量）",summary.Cut),("填方（設計量）",summary.Fill),("幾何淨方（挖－填）",summary.Net),("最大深度",summary.MaximumDepth)})
                     resultCards.Children.Add(new Border{Background=Brushes.AliceBlue,Padding=new Thickness(10),Margin=new Thickness(3),Child=new TextBlock{Text=card.Item1+"\n"+card.Item2,FontSize=16,TextWrapping=TextWrapping.Wrap}});
                 results.Text=$"方法：{summary.Method}\n來源：{summary.Source}\n設計高程：{summary.Target}\n{summary.Warnings}";
             }
-            else results.Text=vm.ExcavationPreview.HasValue?$"試算開挖：{vm.ExcavationPreview:F4} m³":"計算結果將顯示於此。";
-            refreshing=false;Draw();
+            else results.Text=vm.EarthworkResultText;
+            RefreshEarthwork();refreshing=false;Draw();
         }
         private void RefreshColumns()
         {
