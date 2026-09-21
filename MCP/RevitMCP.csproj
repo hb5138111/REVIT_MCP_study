@@ -16,6 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="ThirdPartyNotices.txt" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="ACadSharp" Version="3.7.16" Condition="'$(RevitVersion)' == '2026'" />
     <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
     <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

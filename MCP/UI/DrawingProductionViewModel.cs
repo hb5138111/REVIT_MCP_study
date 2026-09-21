@@ -41,6 +41,7 @@ namespace RevitMCP.UI
         public DrawingProductionViewModel(IDrawingHost host){this.host=host;}
         public event PropertyChangedEventHandler? PropertyChanged;
         public bool Busy {get;private set;}
+        internal string DiagnosticFailure {get;private set;}="";
         public int Step {get;private set;}
         public int RenderEpoch {get;private set;}
         public string Status {get;private set;}="選擇樣板圖紙，開始規劃施工圖。";
@@ -63,7 +64,7 @@ namespace RevitMCP.UI
         public string ExpectedPaperSize {get;set;}="A3";
         public string SizeComparison
         {
-            get{if(ExternalAnalysis==null)return "";var expected=AutoSheetLayoutService.PaperSize(ExpectedPaperSize);var b=ExternalAnalysis.Bounds;
+            get{if(ExternalAnalysis==null)return "";if(ExpectedPaperSize=="Custom")return "自訂圖框：請選擇候選並確認正規化預覽。";var expected=AutoSheetLayoutService.PaperSize(ExpectedPaperSize);var b=ExternalAnalysis.Bounds;
                 return $"預期 {ExpectedPaperSize}：{expected.Width} × {expected.Height} mm；尺度差：寬 {(Math.Max(b.Width,b.Height)*304.8/expected.Width-1)*100:0.##}%／高 {(Math.Min(b.Width,b.Height)*304.8/expected.Height-1)*100:0.##}%（需人工確認，非自動核准）。";}
         }
         private bool sizeAndUnitConfirmed;
@@ -77,11 +78,56 @@ namespace RevitMCP.UI
         public void SetCadUnit(string unit){CadUnit=unit;ExternalAnalysis=null;Package.Profile.Blueprint=new();SizeAndUnitConfirmed=false;RenderEpoch++;Invalidate();}
         public void SetRft(string path){RftPath=path;ExternalAnalysis=null;Package.Profile.Blueprint=new();SizeAndUnitConfirmed=false;RenderEpoch++;Invalidate();}
         public void AnalyzeExternal()=>Submit(c=>{ExternalAnalysis=c.AnalyzeExternal(ExternalPath,CadUnit,RftPath);ExpectedPaperSize=ExternalAnalysis.SizeSuggestion;SelectedExternalType=ExternalAnalysis.Types.FirstOrDefault()??"";RenderEpoch++;Status="請確認圖框類型、尺寸與單位，再載入圖框。";});
+        public void SelectCadCandidate(string id)
+        {
+            if(ExternalAnalysis?.Cad==null)return;
+            var c=ExternalAnalysis.Cad.Candidates.Single(x=>x.CandidateId==id);
+            ExternalAnalysis.CadSelection=new(){CandidateId=id,SelectedLayers=c.ContainedLayers.ToArray(),TargetPaper=c.DetectedPaperSize,ProfileName="圖框 "+id,Purpose=c.SuggestedPurpose};
+            CadSettingsChanged();RenderEpoch++;Notify();
+        }
+        public void SetManualCadBounds(DrawingBounds bounds)
+        {
+            if(ExternalAnalysis?.Cad==null)return;var c=CadTitleBlockAnalyzer.Manual(ExternalAnalysis.Cad,bounds);
+            ExternalAnalysis.CadSelection=new(){CandidateId=c.CandidateId,ManualBounds=bounds,SelectedLayers=c.ContainedLayers,TargetPaper=c.DetectedPaperSize,ProfileName="自訂圖框"};CadSettingsChanged();RenderEpoch++;Notify();
+        }
+        public void CadSettingsChanged()
+        {if(ExternalAnalysis?.CadSelection is CadConversionSelection s){s.Previewed=false;s.GeometryFilterConfirmed=false;ExternalAnalysis.CadPreviewSignature="";}SizeAndUnitConfirmed=false;Package.Profile.Blueprint=new();Invalidate();}
+        public void PreviewCad()
+        {
+            try
+            {
+                var a=ExternalAnalysis??throw new ArgumentException("請先分析 CAD。");var s=a.CadSelection??throw new ArgumentException("請先選擇候選。");
+                var c=CadTitleBlockAnalyzer.Selected(a.Cad!,s);var n=CadTitleBlockAnalyzer.Normalize(c,s);
+                if(n.ReviewRequired)throw new ArgumentException(n.Explanation);
+                if(string.IsNullOrWhiteSpace(s.ProfileName))throw new ArgumentException("請輸入圖框樣板名稱。");
+                a.CadPreviewSignature=CadTitleBlockAnalyzer.PreviewSignature(a);s.Previewed=true;RenderEpoch++;Status="候選預覽已更新；請確認用途、尺寸／單位與保留的幾何。";Notify();
+            }catch(Exception e){Status=e.Message;Notify();}
+        }
+        public void CadConfirmationChanged()=>Notify();
+        public string ExternalLoadBlockedReason
+        {
+            get
+            {
+                if(Busy)return "Revit 正在處理，請稍候。";
+                if(ExternalAnalysis==null)return "請先分析圖框。";
+                if(!SizeAndUnitConfirmed)return "請確認圖框尺寸、方向與單位。";
+                if(ExternalAnalysis.IsCad)
+                {
+                    var s=ExternalAnalysis.CadSelection;
+                    if(s==null)return "請先選擇圖框候選。";
+                    if(!s.Previewed)return "請先預覽此候選。";
+                    if(!s.PurposeConfirmed||!s.GeometryFilterConfirmed)return "請確認用途及要保留的幾何。";
+                    try{if(ExternalAnalysis.CadPreviewSignature!=CadTitleBlockAnalyzer.PreviewSignature(ExternalAnalysis))return "設定已變更，請重新預覽。";}catch(Exception e){return e.Message;}
+                }
+                return "";
+            }
+        }
+        public bool CanLoadExternal=>ExternalLoadBlockedReason=="";
         public void LoadExternal(bool useExisting,bool confirmed)
         {
-            if(ExternalAnalysis==null||!confirmed||!SizeAndUnitConfirmed){Status="請先分析並確認圖框尺寸／單位，再明確確認載入。";Notify();return;}
-            var analysis=ExternalAnalysis;
-            Submit(c=>{Package.Profile.Blueprint=c.LoadExternal(analysis,SelectedExternalType,useExisting,confirmed);Package.Profile.ProfileName=analysis.FamilyName;Package.Profile.ViewStrategy=DrawingViewStrategy.Duplicate;RenderEpoch++;Invalidate();Status="圖框已載入並讀回驗證。此來源只有圖框，工具將使用自動單一主視圖配置。";});
+            if(!CanLoadExternal||!confirmed){Status=!confirmed?"請明確確認載入圖框。":ExternalLoadBlockedReason;Notify();return;}
+            var analysis=ExternalAnalysis!;
+            Submit(c=>{var blueprint=c.LoadExternal(analysis,SelectedExternalType,useExisting,confirmed);Package.Profile=new(){Blueprint=blueprint,ProfileName=analysis.CadSelection?.ProfileName??analysis.FamilyName,TitleBlockPurpose=analysis.CadSelection?.Purpose??TitleBlockPurpose.Custom,ViewStrategy=DrawingViewStrategy.Duplicate};RenderEpoch++;Invalidate();Status="圖框已載入並讀回驗證。此來源只有圖框，工具將使用自動單一主視圖配置。";});
         }
         public DrawingQaIssue[] Issues {get;private set;}=Array.Empty<DrawingQaIssue>();
         public long[] ResultIds {get;private set;}=Array.Empty<long>();
@@ -102,10 +148,10 @@ namespace RevitMCP.UI
         }
         private void Submit(Action<IDrawingContext> action)
         {
-            if(Busy)return;Busy=true;Notify();
+            if(Busy)return;Busy=true;DiagnosticFailure="";Notify();
             try
             {
-                if(!host.Submit(identity,c=>{try{action(c);}catch(Exception e){Status=e.Message;}finally{Busy=false;Notify();}},error=>{Busy=false;Status=error;Invalidate();Notify();}))
+                if(!host.Submit(identity,c=>{try{action(c);}catch(Exception e){DiagnosticFailure=e.ToString();Status=e.Message;}finally{Busy=false;Notify();}},error=>{Busy=false;Status=error;Invalidate();Notify();}))
                 {Busy=false;Status="Revit 正忙碌，請稍後重試。";Notify();}
             }catch(Exception e){Busy=false;Status=e.Message;Notify();}
         }

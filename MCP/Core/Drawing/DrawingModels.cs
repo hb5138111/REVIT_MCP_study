@@ -39,7 +39,10 @@ namespace RevitMCP.Core.Drawing
         public bool ExistingFamily {get;set;}
         public string RftPath {get;set;}="";
         public string RftHash {get;set;}="";
-        public string SizeSuggestion=>AutoSheetLayoutService.SuggestSize(Bounds.Width*304.8,Bounds.Height*304.8);
+        public CadTitleBlockAnalysis? Cad {get;set;}
+        public CadConversionSelection? CadSelection {get;set;}
+        public string CadPreviewSignature {get;set;}="";
+        public string SizeSuggestion=>IsCad&&Cad!=null?(Cad.Candidates.Count==1?Cad.Candidates[0].DetectedPaperSize:"Custom"):AutoSheetLayoutService.SuggestSize(Bounds.Width*304.8,Bounds.Height*304.8);
     }
     public static class AutoSheetLayoutService
     {
@@ -110,6 +113,12 @@ namespace RevitMCP.Core.Drawing
     }
     public sealed class SheetTemplateBlueprint
     {
+        public string CadSourceHash {get;set;}="";
+        public string CadCandidateId {get;set;}="";
+        public string CadNativeGeometryHash {get;set;}="";
+        public DrawingBounds? CadGeometryBoundsMm {get;set;}
+        public string[] CadGeometryIds {get;set;}=Array.Empty<string>();
+        public CadNormalizationAnalysis? CadNormalization {get;set;}
         public TemplateSourceKind SourceKind {get;set;}
         public bool AutoLayout=>SourceKind is TemplateSourceKind.ExternalRfa or TemplateSourceKind.Cad;
         public long SourceSheetId { get; set; }
@@ -137,6 +146,7 @@ namespace RevitMCP.Core.Drawing
     }
     public sealed class DrawingTemplateProfile
     {
+        public TitleBlockPurpose TitleBlockPurpose {get;set;}
         public DrawingProfileKind ProfileKind {get;set;}
         public double MarginLeftMm {get;set;}
         public double MarginRightMm {get;set;}
@@ -154,7 +164,7 @@ namespace RevitMCP.Core.Drawing
         public DrawingViewStrategy ViewStrategy { get; set; } = DrawingViewStrategy.Dependent;
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-        public override string ToString() => ProfileName + "（V" + ProfileVersion + "）";
+        public override string ToString() => ProfileName + "（"+(TitleBlockPurpose==TitleBlockPurpose.ConstructionDrawing?"施工圖":TitleBlockPurpose==TitleBlockPurpose.AsBuiltDrawing?"竣工圖":"自訂")+"／V" + ProfileVersion + "）";
     }
     public sealed class DrawingZone
     {
@@ -171,6 +181,7 @@ namespace RevitMCP.Core.Drawing
     }
     public sealed class DrawingPackageDefinition
     {
+        public TitleBlockPurpose TemplatePurpose=>Profile.TitleBlockPurpose;
         public Guid PackageGuid { get; set; } = Guid.NewGuid();
         public string PackageName { get; set; } = "建築施工平面";
         public string Discipline { get; set; } = "建築";

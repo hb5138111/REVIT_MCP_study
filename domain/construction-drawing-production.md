@@ -2,8 +2,8 @@
 name: construction-drawing-production
 description: "施工圖生產中心 SOP：從既有 Sheet 擷取版面，或由外部 RFA／DWG／DXF 建立圖框樣板，保存出圖樣板、規劃樓層分區圖紙、確認建立更新並執行 QA 與 read-back。適用 construction drawing production、Cartoon Set、Drawing Package、人工修改保護。"
 metadata:
-  version: "0.6.1"
-  updated: "2026-09-17"
+  version: "0.6.1.1"
+  updated: "2026-09-21"
   references: []
   related: [sheet-viewport-management.md, dependent-view-crop-workflow.md, detail-component-sync.md, auto-dimension-workflow.md, matchline-automation.md, viewport-type-scale-sync.md]
   referenced_by: []
@@ -56,7 +56,7 @@ TemplateSourceKind 區分 CurrentSheet、ExternalRfa、ExternalRvt、Cad。Curre
 
 RFA 分析需驗證 Title Blocks Category、Family／Type、範圍與參數，背景來源文件關閉且不保存。明確確認後才載入專案，以 TransactionGroup 保證失敗回復並 read-back 類型／Category／實際圖框範圍。同名 Family 不覆寫，只允許明確使用目前版本或取消。
 
-DWG／DXF 先於暫存 TitleBlock Family 分析幾何、bounds 與圖層摘要。RFT 由 Revit 設定搜尋，無唯一可靠候選時讓使用者選擇；選擇保存在本機 application setting，不入 Git 或模型。Auto 單位及 A0–A4 尺寸均僅為建議，需使用者確認。確認後 import→暫存 RFA→Load→read-back，關閉背景文件並清理專屬暫存目錄。只保證幾何，不猜測文字與 Label 語意，不建立 Revision／公司 shared parameters。
+DWG／DXF 先以本機 managed reader 分析個別幾何、候選 bounds 與圖層摘要；選定並確認候選後才載入暫存 TitleBlock Family。RFT 由 Revit 設定搜尋，無唯一可靠候選時讓使用者選擇；選擇保存在本機 application setting，不入 Git 或模型。Auto 單位及 A0–A4 尺寸均僅為建議，需使用者確認。確認後 import→暫存 RFA→Load→read-back，關閉背景文件並清理專屬暫存目錄。只保證幾何，不猜測文字與 Label 語意，不建立 Revision／公司 shared parameters。
 
 AutoSheetLayoutService 以 TitleBlock bounds 扣除明確設定的左／右／上／下邊距為可用出圖區，主視埠置中並可設定位移。預設零邊距代表尚未保留資訊欄，不是 printable area 認證。保存於 Profile；不自行猜測公司標題欄。Preview 顯示圖框、可用區與預估視埠，實際 read-back 必須在可用區內。
 
@@ -65,3 +65,23 @@ AutoSheetLayoutService 以 TitleBlock bounds 扣除明確設定的左／右／�
 Production UI 隱藏 Fixture marker／ProfileKind 與可辨識的舊測試樣板引用，只有專用 Developer/Test mode 可顯示。一般用戶不需理解 ElementId、internal units 或 raw enum。零列留在範圍設定；衝突阻擋確認；尚未建立不進 QA。所有 disabled 的核心動作顯示缺項；建立成功自動讀回 QA 與可開啟的 Sheet 清單。
 
 Gate C4 必須從 BimConstructionPanel drawing child 初始化，經選檔／樣板、分析、載入確認、選 Levels、自動來源、計畫、確認、ExternalEvent、建立與 QA binding。A 外部 RFA 三層、B 真實外部 DWG 兩層、C 既有 Sheet、D 不分區、E 缺一層來源、F 圖號衝突、G 人工修改、H 同包重跑全部 PASS，且 Build／C4／Deployed SHA 相同，才可宣稱 READY。舊 backend／fixture PASS 不能取代 C4。
+
+## v0.6.1.1 CAD 候選與正規化 / CAD candidates and normalization
+
+全域 CAD extents 只描述資料範圍，不能作為紙張範圍。先以本機 managed CAD reader 取得 model-space 個別幾何、圖層、圖塊展開後座標，再以 deterministic XY proximity 分群；閉合矩形擁有其內部分離的文字、logo 及表格。每個候選保留來源幾何 ID、群組、外框、中心、圖層、尺寸、旋轉與可解釋 evidence。相同尺寸而位置不同的圖框絕不去重；內含小表格依外框包含關係歸入外框。所有物件均計數；任何不支援種類或超出預算都明確停止，不截斷。
+
+工具辨識容差（不是公司或法規標準）：ISO A0 1189×841、A1 841×594、A2 594×420、A3 420×297、A4 297×210 mm，可直／橫式；兩邊各差 ≤1 mm 才直接辨識。已知倍率 1、0.001、1000、0.01、100、0.1、10、25.4、1/25.4 依序比對，只產生建議，不自動縮放。等比例套標準紙張的相對長寬比誤差限 0.5%；超過需複核或明確輸入自訂寬度，禁止非等比例拉伸。候選尺寸已合適，預設 scale=1 且僅重新定位；旋轉閉合矩形還原外框方向。
+
+群組鄰接容差為非零物件尺寸中位數的 2%，最低 0.01 mm；矩形閉合容差 max(0.001 mm, 群組最大邊長×1e-8)。主群組依物件數、位置及穩定 ID 排序。其他群組若物件數 ≤max(2, 主群組數×10%) 且距離 >max(10,000 mm, 主群組最大邊長×10)，標 REMOTE_GEOMETRY。此標記只供檢查，不能刪除物件或取代外框辨識。大型但物件數相近的另一套圖框不是 stray geometry。
+
+使用者逐一選候選→預覽→確認用途與名稱→選圖層→確認正規化→明確確認幾何保留集合→建立選取圖框。畫面同時提供全圖、主要群組、選定外框、遠端標記及局部／目標預覽。可指定閉合 Polyline，或在全圖預覽點兩個對角點；這只定義 paper bounds，不授權刪除範圍外幾何。顯示 inside／outside 數量後才可確認過濾；範圍外物件可明確追加，但另一已辨識圖框需另建 Family。圖層選擇不重新 union 紙張範圍。
+
+Family 策略為每個候選獨立 Family，避免同族 Type 共用幾何的污染。確認綁定來源 SHA、候選 ID、幾何集合、尺寸／旋轉／倍率、用途及名稱；變更即失效。只把確認集合複製至全新暫存 DXF，平移至局部原點並選擇性等比例縮放；來源檔只讀。保留 CAD text／ATTDEF 幾何與樣式，不轉 Label、Revision、Shared Parameter。字型外觀可能受 Revit 字型替代影響，文字定位點不是字型輪廓；Text／ATTDEF 的第二 AlignmentPoint 必須與 InsertPoint 套用相同座標轉換，不能只信任第三方 Entity transform；需檢查載入後實際圖框。
+
+Revit RFT 可能包含四條不可刪除的紙張邊界 DetailLine。僅接受可驗證的四邊矩形，於 disposable Family 內設為 Invisible Lines 並對齊確認紙張尺寸；其他預定義圖形不明時阻擋。可刪除的樣板預設圖形只在暫存 Family 移除。轉換 read-back 核對 CAD 物件／文字、座標、Category、Family／Type、實際範圍與載入前後原生幾何指紋；不可只看 Success=true 或名稱。
+
+TitleBlockPurpose（施工圖／竣工圖／自訂）只屬 Profile metadata。CAD Text/MText 出現關鍵字可建議「可能為…」，不是候選 key，也不能自動確認用途。Package 明確使用所選 Profile 的用途，不依名稱猜公司規則。各 Profile 的候選集合、TitleBlock Type、ProfileGuid／Version 分開保存。
+
+效能預算：檔案 100 MB、展開物件 20,000、圖塊深度 16、鄰接比較 10,000,000；單群水平或垂直邊線各 1,000；原生幾何 read-back 100,000。不受支援的 xref、帶實例屬性圖塊、非 XY 文字、陣列圖塊或 CAD reader 不完整通知明示能力缺口，不忽略物件。沒有可靠候選時允許手動指定，不能直接因 global bounds 拒絕整份圖。
+
+新增 Gate C5（adversarial CAD）為 CAD／Drawing 發布必要 Gate：遠端雜線、大座標、錯誤單位、等比例縮放、錯誤長寬比、內部小表格、多圖層、兩個同尺寸外框、分離文字、旋轉圖塊及各候選幾何隔離。C4 必須延伸候選→確認→正規化→FL1/FL2／NoZone→兩張 Sheet→read-back／QA→重跑／人工修改保留，以及另一候選獨立 Family。實檔 UAT ≥2 個可信候選並完成兩用途轉換，所有 Gate 與實檔 UAT 同版 PASS 後才正式 deploy；未通過保留 stable。

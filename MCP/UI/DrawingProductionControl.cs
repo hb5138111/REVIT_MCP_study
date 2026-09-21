@@ -9,6 +9,7 @@ using System.Windows.Shapes;
 using RevitMCP.Core.Drawing;
 using Binding = System.Windows.Data.Binding;
 using Rectangle = System.Windows.Shapes.Rectangle;
+using Ellipse = System.Windows.Shapes.Ellipse;
 
 namespace RevitMCP.UI
 {
@@ -72,6 +73,7 @@ namespace RevitMCP.UI
                     body.Children.Add(Button("保存為出圖樣板／新版本",vm.SaveProfile));
                     body.Children.Add(Button("下一步",()=>vm.GoToStep(1)));break;
                 case 1:
+                    Label("此出圖包使用樣板："+vm.Package.Profile.ProfileName+"；用途："+PurposeName(vm.Package.TemplatePurpose));
                     Entry("出圖包名稱",vm.Package.PackageName,v=>vm.Package.PackageName=v);
                     Entry("專業",vm.Package.Discipline,v=>vm.Package.Discipline=v);
                     Entry("出圖類型",vm.Package.DrawingType,v=>vm.Package.DrawingType=v);
@@ -173,6 +175,9 @@ namespace RevitMCP.UI
             body.Children.Add(Button("分析圖框",vm.AnalyzeExternal));
             if(vm.ExternalAnalysis is ExternalTitleBlockAnalysis a)
             {
+                if(cad&&a.Cad!=null)CadSource(a);
+                else
+                {
                 Label($"Family：{a.FamilyName}\n偵測大小：{a.Bounds.Width*304.8:0.##} × {a.Bounds.Height*304.8:0.##} mm\n建議尺寸：{a.SizeSuggestion}（僅建議，請確認）");
                 var expectedSize=Choice("預期紙張尺寸",new[]{"A0","A1","A2","A3","A4"},item=>{vm.ExpectedPaperSize=(string)item;vm.SizeAndUnitConfirmed=false;});expectedSize.SelectedItem=vm.ExpectedPaperSize;
                 var sizeText=new TextBlock{Text=vm.SizeComparison,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(8)};body.Children.Add(sizeText);expectedSize.SelectionChanged+=(_,__)=>sizeText.Text=vm.SizeComparison;
@@ -182,6 +187,7 @@ namespace RevitMCP.UI
                 var accepted=new CheckBox{Content="我已確認圖框尺寸、方向及匯入單位",Margin=new Thickness(8)};accepted.SetBinding(CheckBox.IsCheckedProperty,new Binding(nameof(vm.SizeAndUnitConfirmed)){Mode=BindingMode.TwoWay});body.Children.Add(accepted);
                 if(a.ExistingFamily)Label("同名圖框已存在：僅可使用目前專案版本；不覆寫公司 Family。取消可重新選檔。");
                 body.Children.Add(Button(a.ExistingFamily?"使用目前專案圖框":cad?"建立 Revit 圖框":"載入圖框",()=>{if(MessageBox.Show("載入圖框："+a.FamilyName+" / "+vm.SelectedExternalType+(a.ExistingFamily?"\n使用專案現有版本。":""),"確認圖框",MessageBoxButton.OKCancel,MessageBoxImage.Question)==MessageBoxResult.OK)vm.LoadExternal(a.ExistingFamily,true);}));
+                }
             }
             if(vm.Package.Profile.Blueprint.TitleBlockTypeId>0)
             {
@@ -193,6 +199,81 @@ namespace RevitMCP.UI
                 foreach(var warning in p.Blueprint.Warnings)Label(warning);
                 body.Children.Add(Button("保存出圖樣板",vm.SaveProfile));body.Children.Add(Button("用這個圖框開始",()=>vm.GoToStep(1)));
             }
+        }
+        private static string PurposeName(TitleBlockPurpose purpose)=>purpose switch{TitleBlockPurpose.ConstructionDrawing=>"施工圖",TitleBlockPurpose.AsBuiltDrawing=>"竣工圖",_=>"自訂"};
+        private void CadSource(ExternalTitleBlockAnalysis a)
+        {
+            var data=a.Cad!;
+            Label($"CAD 單位：{data.Unit}\n全域範圍：{data.GlobalBounds.Width:0.###} × {data.GlobalBounds.Height:0.###} mm\n偵測到 {data.Candidates.Count} 個圖框候選；{data.Geometry.Length} 個幾何物件／{data.Clusters.Count} 群組。全域範圍不是紙張大小。");
+            foreach(var warning in data.Warnings)Label(warning);
+            var chooser=new ComboBox{ItemsSource=data.Candidates,SelectedItem=data.Candidates.FirstOrDefault(c=>c.CandidateId==a.CadSelection?.CandidateId),Margin=new Thickness(8)};
+            chooser.SelectionChanged+=(_,__)=>{if(chooser.SelectedItem is CadTitleBlockCandidate candidate)vm.SelectCadCandidate(candidate.CandidateId);};Label("選擇圖框候選（相同尺寸仍分別保存）");body.Children.Add(chooser);
+            Label("全圖預覽：灰色為原始幾何、綠色為主要群組、藍色為所選外框、紅色為遠端物件。文字以定位點表示，非字型外觀預覽。");
+            var all=CadCanvas(data,data.GlobalBounds,a.CadSelection,false);body.Children.Add(all);
+            DrawingPoint? corner=null;bool picking=false;
+            body.Children.Add(Button("在上方預覽指定外框兩個對角點",()=>{picking=true;corner=null;}));
+            all.MouseLeftButtonDown+=(_,ev)=>
+            {
+                if(!picking)return;var p=ev.GetPosition(all);var b=data.GlobalBounds;double scale=Math.Min(340/Math.Max(b.Width,.001),230/Math.Max(b.Height,.001));var pt=new DrawingPoint(b.MinX+(p.X-10)/scale,b.MaxY-(p.Y-10)/scale);
+                if(corner==null){corner=pt;var marker=new Ellipse{Width=6,Height=6,Fill=Brushes.Orange};Canvas.SetLeft(marker,p.X-3);Canvas.SetTop(marker,p.Y-3);all.Children.Add(marker);}
+                else {var first=corner;picking=false;if(Math.Abs(first.X-pt.X)>1e-6&&Math.Abs(first.Y-pt.Y)>1e-6)vm.SetManualCadBounds(new(Math.Min(first.X,pt.X),Math.Min(first.Y,pt.Y),Math.Max(first.X,pt.X),Math.Max(first.Y,pt.Y)));}
+            };
+            var closed=data.Geometry.Where(g=>g.Closed&&g.Bounds.Valid).ToArray();
+            if(closed.Length>0){var borders=new ComboBox{ItemsSource=closed.Select(g=>g.Id+" — "+g.Layer).ToArray(),Margin=new Thickness(8)};Label("或指定閉合 Polyline 作為外框");body.Children.Add(borders);body.Children.Add(Button("使用指定閉合外框",()=>{if(borders.SelectedIndex>=0)vm.SetManualCadBounds(closed[borders.SelectedIndex].Bounds);}));}
+            if(a.CadSelection is not CadConversionSelection s)return;
+            var c=CadTitleBlockAnalyzer.Selected(data,s);
+            Label(string.Join("\n",c.ConfidenceEvidence)+$"\n候選中心：{c.Centroid.X:0.###}, {c.Centroid.Y:0.###} mm\n外框圖層：{c.BorderLayer}\n{c.OptionalSuggestedName}（仍需確認用途）");
+            foreach(var layer in data.Geometry.GroupBy(g=>g.Layer).OrderBy(g=>g.Key,StringComparer.Ordinal))
+            {
+                var bounds=CadGeometryClusterService.Union(layer.Select(g=>g.Bounds));string name=layer.Key;
+                var check=new CheckBox{Content=$"{name}：{layer.Count()} 個／{string.Join(", ",layer.Select(g=>g.Kind).Distinct())}；{bounds.Width:0.##} × {bounds.Height:0.##} mm",IsChecked=s.SelectedLayers.Contains(name),Margin=new Thickness(8,2,8,2)};
+                void Update(){s.SelectedLayers=check.IsChecked==true?s.SelectedLayers.Append(name).Distinct().ToArray():s.SelectedLayers.Where(l=>l!=name).ToArray();vm.CadSettingsChanged();}
+                check.Checked+=(_,__)=>Update();check.Unchecked+=(_,__)=>Update();body.Children.Add(check);
+            }
+            var anomalies=new StackPanel();
+            var inside=c.GeometryIds.ToHashSet(StringComparer.Ordinal);
+            foreach(var g in data.Geometry.Where(g=>!inside.Contains(g.Id)))
+            {
+                bool belongsElsewhere=data.Candidates.Any(other=>other.CandidateId!=c.CandidateId&&other.GeometryIds.Contains(g.Id));
+                var check=new CheckBox{Content=$"{g.Id} / {g.Layer} / {g.Kind}"+(belongsElsewhere?"（另一圖框，請另建樣板）":"（範圍外）"),IsEnabled=!belongsElsewhere,IsChecked=s.AdditionalGeometryIds.Contains(g.Id),Margin=new Thickness(8,2,8,2)};
+                void Update(){s.AdditionalGeometryIds=check.IsChecked==true?s.AdditionalGeometryIds.Append(g.Id).Distinct().ToArray():s.AdditionalGeometryIds.Where(id=>id!=g.Id).ToArray();vm.CadSettingsChanged();}check.Checked+=(_,__)=>Update();check.Unchecked+=(_,__)=>Update();anomalies.Children.Add(check);
+            }
+            body.Children.Add(new Expander{Header="查看範圍外／異常物件（不自動刪除；可明確保留）",Content=new ScrollViewer{Content=anomalies,MaxHeight=180,VerticalScrollBarVisibility=ScrollBarVisibility.Auto},Margin=new Thickness(8)});
+            var purposes=new[]{"自訂","施工圖","竣工圖"};var purpose=new ComboBox{ItemsSource=purposes,SelectedIndex=(int)s.Purpose,Margin=new Thickness(8)};purpose.SelectionChanged+=(_,__)=>{s.Purpose=(TitleBlockPurpose)purpose.SelectedIndex;s.PurposeConfirmed=false;vm.CadSettingsChanged();};Label("圖框用途");body.Children.Add(purpose);
+            Entry("此候選的樣板名稱",s.ProfileName,v=>{s.ProfileName=v;vm.CadSettingsChanged();});
+            var modes=new[]{"不縮放，只重新定位","等比例調整至標準紙張／自訂寬度","保持原 CAD 尺寸（仍移至局部原點）"};
+            var mode=new ComboBox{ItemsSource=modes,SelectedIndex=(int)s.Mode,Margin=new Thickness(8)};mode.SelectionChanged+=(_,__)=>{s.Mode=(CadNormalizationMode)mode.SelectedIndex;vm.CadSettingsChanged();};Label("圖框正規化");body.Children.Add(mode);
+            var paper=new ComboBox{ItemsSource=new[]{"Custom","A0","A1","A2","A3","A4"},SelectedItem=s.TargetPaper,Margin=new Thickness(8)};paper.SelectionChanged+=(_,__)=>{s.TargetPaper=(string)paper.SelectedItem;vm.CadSettingsChanged();};Label("目標紙張（Custom＝保留比例的自訂圖框）");body.Children.Add(paper);
+            Entry("自訂目標寬度（mm，只有選自訂且等比例調整時使用）",s.CustomWidthMm.ToString(System.Globalization.CultureInfo.InvariantCulture),v=>{s.CustomWidthMm=double.TryParse(v,out var width)?width:double.NaN;vm.CadSettingsChanged();});
+            body.Children.Add(Button("預覽此候選與正規化結果",vm.PreviewCad));
+            if(!s.Previewed)return;
+            var n=CadTitleBlockAnalyzer.Normalize(c,s);var selected=CadTitleBlockAnalyzer.SelectedGeometry(data,s);
+            Label($"候選：{c.Width:0.###} × {c.Height:0.###} mm\n目標：{n.TargetBounds.Width:0.###} × {n.TargetBounds.Height:0.###} mm\n平移：({n.TranslationX:0.###}, {n.TranslationY:0.###}) mm\n還原旋轉：{-n.Rotation*180/Math.PI:0.###}°\n等比例倍率：{n.UniformScale:G12}\n紙張比例差：{n.AspectRatioError:P3}\n保留 {selected.Length} 個；範圍內 {c.GeometryCount}／外 {data.Geometry.Length-c.GeometryCount}。\n{n.Explanation}");
+            body.Children.Add(CadCanvas(data,c.Bounds,s,true));
+            Label("目標紙張範圍（綠色）；等比例圖框（藍色）");
+            var target=new CadTitleBlockAnalysis{Geometry=new[]{new CadGeometry("TARGET","","Line",new(0,0,c.Width*n.UniformScale,c.Height*n.UniformScale),Array.Empty<DrawingPoint>())},GlobalBounds=n.TargetBounds};body.Children.Add(CadCanvas(target,n.TargetBounds,null,false));
+            var purposeConfirmed=new CheckBox{Content="我已確認此候選用途："+PurposeName(s.Purpose),IsChecked=s.PurposeConfirmed,Margin=new Thickness(8)};purposeConfirmed.Checked+=(_,__)=>{s.PurposeConfirmed=true;vm.CadConfirmationChanged();};purposeConfirmed.Unchecked+=(_,__)=>{s.PurposeConfirmed=false;vm.CadConfirmationChanged();};body.Children.Add(purposeConfirmed);
+            var filterConfirmed=new CheckBox{Content="轉換時只保留此候選範圍內／指定圖層及明確追加的幾何；原 CAD 不變",IsChecked=s.GeometryFilterConfirmed,Margin=new Thickness(8)};filterConfirmed.Checked+=(_,__)=>{s.GeometryFilterConfirmed=true;vm.CadConfirmationChanged();};filterConfirmed.Unchecked+=(_,__)=>{s.GeometryFilterConfirmed=false;vm.CadConfirmationChanged();};body.Children.Add(filterConfirmed);
+            var unitsConfirmed=new CheckBox{Content="我已確認尺寸、方向及 CAD 單位",Margin=new Thickness(8)};unitsConfirmed.SetBinding(CheckBox.IsCheckedProperty,new Binding(nameof(vm.SizeAndUnitConfirmed)){Mode=BindingMode.TwoWay});body.Children.Add(unitsConfirmed);
+            var create=Button("建立選取圖框",()=>{if(MessageBox.Show($"建立獨立圖框：{s.ProfileName}\n用途：{PurposeName(s.Purpose)}\n保留 {selected.Length} 個物件；倍率 {n.UniformScale:G12}","確認圖框",MessageBoxButton.OKCancel,MessageBoxImage.Question)==MessageBoxResult.OK)vm.LoadExternal(false,true);});create.SetBinding(IsEnabledProperty,new Binding(nameof(vm.CanLoadExternal)));body.Children.Add(create);
+            var reason=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(8)};reason.SetBinding(TextBlock.TextProperty,new Binding(nameof(vm.ExternalLoadBlockedReason)));body.Children.Add(reason);
+            Label("保存後可改選另一候選，另建獨立 Family／Profile。出圖包明確選擇已保存樣板，不從名稱猜用途。");
+        }
+        private static Canvas CadCanvas(CadTitleBlockAnalysis data,DrawingBounds view,CadConversionSelection? selection,bool selectedOnly)
+        {
+            var canvas=new Canvas{Width=360,Height=250,Background=Brushes.WhiteSmoke,Margin=new Thickness(8),ClipToBounds=true};
+            double scale=Math.Min(340/Math.Max(view.Width,.001),230/Math.Max(view.Height,.001));
+            System.Windows.Point Map(DrawingPoint p)=>new(10+(p.X-view.MinX)*scale,10+(view.MaxY-p.Y)*scale);
+            void Box(DrawingBounds b,Brush color){var p=Map(new(b.MinX,b.MaxY));var rect=new Rectangle{Width=Math.Max(2,b.Width*scale),Height=Math.Max(2,b.Height*scale),Stroke=color,StrokeThickness=1.5};Canvas.SetLeft(rect,p.X);Canvas.SetTop(rect,p.Y);canvas.Children.Add(rect);}
+            var chosen=selection==null?Array.Empty<string>():CadTitleBlockAnalyzer.SelectedGeometry(data,selection);var ids=chosen.ToHashSet(StringComparer.Ordinal);var remote=data.Clusters.Where(c=>c.RemoteGeometryWarning).SelectMany(c=>c.GeometryIds).ToHashSet(StringComparer.Ordinal);
+            foreach(var g in data.Geometry.Where(g=>!selectedOnly||ids.Contains(g.Id)))
+            {
+                Brush color=remote.Contains(g.Id)?Brushes.Red:ids.Contains(g.Id)?Brushes.SteelBlue:Brushes.Gray;
+                if(g.Points.Length>1){var line=new System.Windows.Shapes.Polyline{Stroke=color,StrokeThickness=1,Points=new PointCollection(g.Points.Select(Map))};if(g.Closed)line.Points.Add(Map(g.Points[0]));canvas.Children.Add(line);}else Box(g.Bounds,color);
+            }
+            if(!selectedOnly&&data.Clusters.Count>0)Box(data.Clusters[0].Bounds,Brushes.ForestGreen);
+            if(selection!=null)Box(CadTitleBlockAnalyzer.Selected(data,selection).Bounds,Brushes.Blue);else if(data.Clusters.Count==0)Box(view,Brushes.ForestGreen);
+            return canvas;
         }
         private static Canvas Layout(SheetTemplateBlueprint blueprint,DrawingZone? zone=null,DrawingTemplateProfile? profile=null,DrawingBounds? projected=null)
         {

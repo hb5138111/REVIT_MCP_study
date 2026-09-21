@@ -50,6 +50,53 @@ namespace RevitMCP.Core.Drawing
             family.Regenerate();var import=(ImportInstance)family.GetElement(id);
             if(tx.Commit()!=TransactionStatus.Committed)throw new InvalidOperationException("CAD 圖框匯入未提交。");return import;
         }
+        private static void ConfigureTemplateGraphics(Document family,CadNormalizationAnalysis normalization)
+        {
+            // Revit protects the four inherited paper-boundary DetailLines. Retain them as
+            // invisible paper guides at the confirmed size; never retain arbitrary RFT graphics.
+            var elements=new FilteredElementCollector(family).WhereElementIsNotElementType().Where(e=>e is CurveElement or ImportInstance or FamilyInstance or TextElement or FilledRegion).ToArray();
+            var predefined=elements.Where(e=>!DocumentValidation.CanDeleteElement(family,e.Id)).ToArray();
+            if(predefined.Length!=0&&(predefined.Length!=4||predefined.Any(e=>e is not DetailCurve c||c.GeometryCurve is not Line)))throw new InvalidOperationException("族樣板有非紙張邊界的預定義圖形，不能安全轉換。");
+            var guides=predefined.Cast<DetailCurve>().OrderBy(e=>e.Id.Value).ToArray();
+            if(guides.Length>0)
+            {
+                var geometry=guides.Select(e=>{var curve=e.GeometryCurve;var p=curve.GetEndPoint(0);var q=curve.GetEndPoint(1);return new CadGeometry(e.Id.Value.ToString(),"RFT","Line",new(Math.Min(p.X,q.X)*304.8,Math.Min(p.Y,q.Y)*304.8,Math.Max(p.X,q.X)*304.8,Math.Max(p.Y,q.Y)*304.8),new[]{new DrawingPoint(p.X*304.8,p.Y*304.8),new DrawingPoint(q.X*304.8,q.Y*304.8)});}).ToArray();
+                if(CadTitleBlockAnalyzer.Analyze(geometry,"mm",1).Candidates.Count!=1)throw new InvalidOperationException("族樣板的预定義邊界不是可驗證矩形。");
+            }
+            using var tx=new Transaction(family,"設定暫存圖框紙張範圍");tx.Start();
+            var ids=elements.Except(predefined).Select(e=>e.Id).ToList();if(ids.Count>0)family.Delete(ids);
+            if(guides.Length>0)
+            {
+                var invisible=guides[0].GetLineStyleIds().Select(id=>family.GetElement(id)).OfType<GraphicsStyle>().FirstOrDefault(style=>style.GraphicsStyleCategory.Id.Value==(long)BuiltInCategory.OST_InvisibleLines)??throw new InvalidOperationException("此圖框族樣板未提供不可見線樣式。");
+                double w=normalization.SourceWidth*normalization.UniformScale/304.8,h=normalization.SourceHeight*normalization.UniformScale/304.8;
+                var points=new[]{XYZ.Zero,new XYZ(w,0,0),new XYZ(w,h,0),new XYZ(0,h,0)};
+                for(int i=0;i<guides.Length;i++){guides[i].SetGeometryCurve(Line.CreateBound(points[i],points[(i+1)%4]),true);guides[i].LineStyle=invisible;}
+            }
+            family.Regenerate();tx.Commit();
+        }
+        internal static string NativeCadGeometryHash(Document family)
+        {
+            var imports=new FilteredElementCollector(family).OfClass(typeof(ImportInstance)).Cast<ImportInstance>().ToArray();
+            if(imports.Length!=1)throw new InvalidOperationException("圖框必須只有一份已確認的 CAD 幾何。");
+            var entries=new List<string>();int budget=0;
+            string Point(XYZ p)=>FormattableString.Invariant($"{Math.Round(p.X,7):F7},{Math.Round(p.Y,7):F7},{Math.Round(p.Z,7):F7}");
+            void Walk(GeometryElement geometry,int depth)
+            {
+                if(depth>16)throw new InvalidOperationException("圖框幾何深度超過驗證預算。");
+                foreach(var g in geometry)
+                {
+                    if(++budget>100000)throw new InvalidOperationException("圖框幾何量超過驗證預算。");
+                    if(g is GeometryInstance instance){Walk(instance.GetInstanceGeometry(),depth+1);continue;}
+                    IEnumerable<XYZ>? points=g switch{Curve curve=>curve.Tessellate(),PolyLine poly=>poly.GetCoordinates(),Mesh mesh=>mesh.Vertices,Autodesk.Revit.DB.Point point=>new[]{point.Coord},_=>null};
+                    if(points!=null)entries.Add(g.GetType().Name+":"+string.Join(";",points.Select(Point).OrderBy(x=>x,StringComparer.Ordinal)));
+                    else if(g is Solid solid)foreach(Edge edge in solid.Edges)entries.Add("Edge:"+string.Join(";",edge.Tessellate().Select(Point).OrderBy(x=>x,StringComparer.Ordinal)));
+                    else throw new InvalidOperationException("尚未驗證的 Revit CAD 幾何種類："+g.GetType().Name);
+                }
+            }
+            using var options=new Options{IncludeNonVisibleObjects=true,View=FamilyView(family)};Walk(imports[0].get_Geometry(options)??throw new InvalidOperationException("無法讀取圖框視圖的 CAD 幾何。"),0);
+            if(entries.Count==0)throw new InvalidOperationException("圖框沒有可讀回驗證的原生幾何。");
+            return CadGeometryClusterService.StableId("N-",entries);
+        }
         public ExternalTitleBlockAnalysis Analyze(string path,string unit,string rft)
         {
             path=Path.GetFullPath(path);string ext=Path.GetExtension(path).ToLowerInvariant();
@@ -57,6 +104,16 @@ namespace RevitMCP.Core.Drawing
             string hash=Hash(path);bool cad=ext!=".rfa";
             if(project.Application.Documents.Cast<Document>().Any(d=>string.Equals(d.PathName,path,StringComparison.OrdinalIgnoreCase)))throw new ArgumentException("請先關閉圖框來源文件，再重新分析。");
             if(cad)rft=TitleBlockFamilyTemplateResolver.Resolve(project.Application,rft);
+            if(cad)
+            {
+                // Analyze entities before any Revit import: global coordinates may be hundreds of km.
+                var data=CadTitleBlockFileService.Analyze(path,unit);
+                var template=project.Application.NewFamilyDocument(rft);try{RequireTitleBlock(template);}finally{template.Close(false);}
+                if(Hash(path)!=hash)throw new InvalidOperationException("來源檔案在分析期間變更。");
+                TitleBlockFamilyTemplateResolver.Remember(rft);
+                var global=data.GlobalBounds;
+                return new(){FilePath=path,FileHash=hash,FamilyName=Path.GetFileNameWithoutExtension(path),IsCad=true,Unit=unit,RftPath=rft,RftHash=Hash(rft),Cad=data,Types=new[]{"圖框"},Layers=data.Geometry.Select(g=>g.Layer).Distinct().OrderBy(n=>n,StringComparer.Ordinal).ToArray(),Bounds=new(global.MinX/304.8,global.MinY/304.8,global.MaxX/304.8,global.MaxY/304.8)};
+            }
             Document? family=null;
             try
             {
@@ -90,6 +147,20 @@ namespace RevitMCP.Core.Drawing
         {
             if(!confirmed)throw new InvalidOperationException("載入圖框需明確確認。");
             if(Hash(analysis.FilePath)!=analysis.FileHash||analysis.IsCad&&Hash(analysis.RftPath)!=analysis.RftHash)throw new InvalidOperationException("來源檔或族樣板已變更，請重新分析。");
+            CadNormalizationAnalysis? normalization=null;
+            DrawingBounds? normalizedGeometry=null;
+            string expectedNativeHash="";
+            if(analysis.IsCad)
+            {
+                if(analysis.Cad==null||analysis.CadSelection==null)throw new InvalidOperationException("CAD 需重新分析並選擇圖框候選。");
+                if(analysis.CadPreviewSignature!=CadTitleBlockAnalyzer.PreviewSignature(analysis)||!analysis.CadSelection.Previewed||!analysis.CadSelection.GeometryFilterConfirmed||!analysis.CadSelection.PurposeConfirmed)throw new InvalidOperationException("候選預覽或確認已失效，請重新確認。");
+                normalization=CadTitleBlockAnalyzer.Normalize(CadTitleBlockAnalyzer.Selected(analysis.Cad,analysis.CadSelection),analysis.CadSelection);
+                if(normalization.ReviewRequired)throw new InvalidOperationException(normalization.Explanation);
+                normalizedGeometry=CadTitleBlockAnalyzer.NormalizedGeometryBounds(analysis.Cad,analysis.CadSelection);
+                if(!XYZ.IsWithinLengthLimits(new XYZ(normalizedGeometry.MinX/304.8,normalizedGeometry.MinY/304.8,0))||!XYZ.IsWithinLengthLimits(new XYZ(normalizedGeometry.MaxX/304.8,normalizedGeometry.MaxY/304.8,0)))throw new InvalidOperationException("選取保留的幾何仍超出 Revit 座標範圍；請複核追加的範圍外物件或調整等比例目標。");
+                if(!XYZ.IsWithinLengthLimits(new XYZ(normalization.SourceWidth*normalization.UniformScale/304.8,normalization.SourceHeight*normalization.UniformScale/304.8,0)))throw new InvalidOperationException("確認後的圖框仍超出 Revit 座標範圍；請先確認等比例正規化目標。");
+                analysis.FamilyName="CAD_"+analysis.CadSelection.CandidateId+"_"+analysis.CadPreviewSignature;
+            }
             var existing=new FilteredElementCollector(project).OfClass(typeof(Family)).Cast<Family>().SingleOrDefault(f=>f.Name==analysis.FamilyName);
             if(existing!=null&&!useExisting)throw new InvalidOperationException("同名 Family 已存在；請明確選擇使用專案版本或取消。");
             string temp=Path.Combine(Path.GetTempPath(),"RevitMCP-Drawing-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(temp);
@@ -100,7 +171,13 @@ namespace RevitMCP.Core.Drawing
                 string loadPath=analysis.FilePath;
                 if(existing==null&&analysis.IsCad)
                 {
-                    familyDoc=project.Application.NewFamilyDocument(analysis.RftPath);RequireTitleBlock(familyDoc);Import(familyDoc,analysis.FilePath,analysis.Unit);
+                    var normalizedPath=Path.Combine(temp,"normalized.dxf");CadTitleBlockFileService.Export(analysis,normalizedPath);
+                    familyDoc=project.Application.NewFamilyDocument(analysis.RftPath);RequireTitleBlock(familyDoc);
+                    ConfigureTemplateGraphics(familyDoc,normalization!);var imported=Import(familyDoc,normalizedPath,"mm");
+                    var importedBounds=Bounds(imported.get_BoundingBox(FamilyView(familyDoc))??throw new InvalidOperationException("CAD 載入後沒有幾何範圍。"));
+                    double expectedW=normalizedGeometry!.Width,expectedH=normalizedGeometry.Height;
+                    if(Math.Abs(importedBounds.Width*304.8-expectedW)>1||Math.Abs(importedBounds.Height*304.8-expectedH)>1||Math.Abs(importedBounds.MinX*304.8-normalizedGeometry.MinX)>1||Math.Abs(importedBounds.MinY*304.8-normalizedGeometry.MinY)>1)throw new InvalidOperationException($"正規化後實際圖框範圍與候選不符：實際 {importedBounds.Width*304.8:0.###} × {importedBounds.Height*304.8:0.###} mm；目標 {expectedW:0.###} × {expectedH:0.###} mm，請複核文字／字型與預覽。");
+                    expectedNativeHash=NativeCadGeometryHash(familyDoc);
                     using(var tx=new Transaction(familyDoc,"圖框類型")){tx.Start();if(!familyDoc.FamilyManager.Types.Cast<FamilyType>().Any(t=>t.Name==typeName))familyDoc.FamilyManager.NewType(typeName);tx.Commit();}
                     loadPath=Path.Combine(temp,analysis.FamilyName+".rfa");familyDoc.SaveAs(loadPath,new SaveAsOptions{OverwriteExistingFile=false});familyDoc.Close(false);familyDoc=null;
                 }
@@ -120,6 +197,19 @@ namespace RevitMCP.Core.Drawing
                 }
                 blueprint.SourceKind=analysis.IsCad?TemplateSourceKind.Cad:TemplateSourceKind.ExternalRfa;blueprint.SourceSheetId=0;blueprint.SourceSheetUniqueId="";blueprint.SourceSheetNumber="";blueprint.SourceSheetName="";
                 blueprint.TitleBlockTypeUniqueId=symbol.UniqueId;
+                if(analysis.IsCad)
+                {
+                    blueprint.CadSourceHash=analysis.FileHash;blueprint.CadCandidateId=analysis.CadSelection!.CandidateId;
+                    blueprint.CadGeometryIds=CadTitleBlockAnalyzer.SelectedGeometry(analysis.Cad!,analysis.CadSelection);blueprint.CadNormalization=normalization;
+                    var checkFamily=project.EditFamily(existing);try{blueprint.CadNativeGeometryHash=NativeCadGeometryHash(checkFamily);}finally{checkFamily.Close(false);}
+                    if(expectedNativeHash!=""&&blueprint.CadNativeGeometryHash!=expectedNativeHash)throw new InvalidOperationException("圖框載入前後原生幾何指紋不一致。");
+                    var actualBounds=blueprint.TitleBlockBounds;
+                    var paper=normalization!.TargetBounds;var combined=CadGeometryClusterService.Union(new[]{paper,normalizedGeometry!});
+                    if(Math.Abs(actualBounds.Width*304.8-combined.Width)>1||Math.Abs(actualBounds.Height*304.8-combined.Height)>1)throw new InvalidOperationException("載入圖框的尺寸 read-back 不符合確認候選與保留集合。");
+                    blueprint.CadGeometryBoundsMm=normalizedGeometry;
+                    blueprint.TitleBlockBounds=new(paper.MinX/304.8,paper.MinY/304.8,paper.MaxX/304.8,paper.MaxY/304.8);
+                    if(!CadGeometryClusterService.Contains(paper,normalizedGeometry!,1))blueprint.Warnings.Add("使用者確認保留的 CAD 幾何超出所選紙張外框；請人工複核列印裁切。");
+                }
                 var b=blueprint.TitleBlockBounds;
                 blueprint.Viewports=new(){new(){Role="MAIN_PLAN",ExpectedViewKind="FloorPlan",ViewportTypeId=project.GetDefaultElementTypeId(ElementTypeGroup.ViewportType).Value,ViewTemplateId=-1,Scale=100,AbsoluteX=(b.MinX+b.MaxX)/2,AbsoluteY=(b.MinY+b.MaxY)/2,Bounds=new((b.MinX+b.MaxX)/2-.001,(b.MinY+b.MaxY)/2-.001,(b.MinX+b.MaxX)/2+.001,(b.MinY+b.MaxY)/2+.001),DetailNumber="1"}};
                 blueprint.SheetParameterCopyPolicy.Clear();

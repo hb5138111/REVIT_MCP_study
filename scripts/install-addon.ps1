@@ -387,6 +387,12 @@ function Install-ToVersion {
         }
     }
     try {
+        $notices = Join-Path $srcDir 'ThirdPartyNotices.txt'
+        if (Test-Path -LiteralPath $notices) {
+            $noticeTarget = Join-Path $dllDestDir 'ThirdPartyNotices.txt'
+            Copy-Item -LiteralPath $notices -Destination $noticeTarget -Force -ErrorAction Stop
+            if ((Get-FileHash -LiteralPath $notices).Hash -ne (Get-FileHash -LiteralPath $noticeTarget).Hash) { throw 'Third-party notice hash mismatch' }
+        }
         Copy-Item -Path $sourceAddin -Destination (Join-Path $addonPath 'RevitMCP.addin') -Force -ErrorAction Stop
     }
     catch {
