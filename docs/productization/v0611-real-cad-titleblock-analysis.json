@@ -1,0 +1,2329 @@
+{
+  "Source": "<USER_TITLEBLOCK_DWG>",
+  "SHA256": "9772C6F4D734B2ACA75E27C62B68C47154AAA2DF867F8C1D3DEFEE4FD198A2EB",
+  "Unit": "INSUNITS 4（每單位 1 mm）",
+  "GlobalBounds": {
+    "MinX": -162407829.55776855,
+    "MinY": 1412603.2420823127,
+    "MaxX": 418199104.9704212,
+    "MaxY": 149555248.5328444,
+    "Width": 580606934.5281898,
+    "Height": 148142645.29076207,
+    "Valid": true
+  },
+  "LayerCount": 1,
+  "GeometryCount": 123,
+  "BlockInstanceCount": 0,
+  "Clusters": [
+    {
+      "ClusterId": "G-CBC9EF5B576E",
+      "GeometryCount": 66,
+      "Bounds": {
+        "MinX": -162407829.55776855,
+        "MinY": 1412603.2420823127,
+        "MaxX": 55780153.87180294,
+        "MaxY": 149555248.5328444,
+        "Width": 218187983.4295715,
+        "Height": 148142645.29076207,
+        "Valid": true
+      },
+      "Centroid": {
+        "X": -53313837.842982806,
+        "Y": 75483925.88746336
+      },
+      "DistanceFromLargestCluster": 0,
+      "RemoteGeometryWarning": false
+    },
+    {
+      "ClusterId": "G-EDC96F0EE750",
+      "GeometryCount": 57,
+      "Bounds": {
+        "MinX": 200011121.54084972,
+        "MinY": 1412603.2420823127,
+        "MaxX": 418199104.9704212,
+        "MaxY": 149555248.5328444,
+        "Width": 218187983.42957148,
+        "Height": 148142645.29076207,
+        "Valid": true
+      },
+      "Centroid": {
+        "X": 309105113.25563544,
+        "Y": 75483925.88746336
+      },
+      "DistanceFromLargestCluster": 144230967.66904676,
+      "RemoteGeometryWarning": false
+    }
+  ],
+  "Candidates": [
+    {
+      "CandidateId": "C-32A26BBF292A",
+      "ClusterId": "G-CBC9EF5B576E",
+      "Bounds": {
+        "MinX": -162407829.55776855,
+        "MinY": 1412603.2420823127,
+        "MaxX": 55780153.87180294,
+        "MaxY": 149555248.5328444,
+        "Width": 218187983.4295715,
+        "Height": 148142645.29076207,
+        "Valid": true
+      },
+      "Width": 218187983.4295715,
+      "Height": 148142645.29076207,
+      "AspectRatio": 1.47282359513245,
+      "Centroid": {
+        "X": -53313837.842982806,
+        "Y": 75483925.88746336
+      },
+      "GeometryCount": 66,
+      "DetectedPaperSize": "Custom",
+      "SuggestedPurpose": 2,
+      "ConfidenceEvidence": [
+        "四邊閉合矩形；包含圖欄；內部小表格不重複列為圖紙",
+        "外框可信；尺寸未符合 ISO 紙張／已知單位倍率，需人工複核"
+      ]
+    },
+    {
+      "CandidateId": "C-16DCCC71ED4F",
+      "ClusterId": "G-EDC96F0EE750",
+      "Bounds": {
+        "MinX": 200011121.54084972,
+        "MinY": 1412603.2420823127,
+        "MaxX": 418199104.9704212,
+        "MaxY": 149555248.5328444,
+        "Width": 218187983.42957148,
+        "Height": 148142645.29076207,
+        "Valid": true
+      },
+      "Width": 218187983.42957148,
+      "Height": 148142645.29076207,
+      "AspectRatio": 1.4728235951324498,
+      "Centroid": {
+        "X": 309105113.25563544,
+        "Y": 75483925.88746336
+      },
+      "GeometryCount": 57,
+      "DetectedPaperSize": "Custom",
+      "SuggestedPurpose": 1,
+      "ConfidenceEvidence": [
+        "四邊閉合矩形；包含圖欄；內部小表格不重複列為圖紙",
+        "外框可信；尺寸未符合 ISO 紙張／已知單位倍率，需人工複核"
+      ]
+    }
+  ],
+  "IndividualGeometry": [
+    {
+      "Id": "427",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -57900694.64816184,
+        "MinY": 13691055.747756869,
+        "MaxX": 55243017.62503286,
+        "MaxY": 13691055.747756869,
+        "Width": 113143712.2731947,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -1328838.5115644932,
+        "Y": 13691055.747756869
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "428",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -113295190.61702892,
+        "MinY": 11342792.495974466,
+        "MaxX": 55243017.62503286,
+        "MaxY": 11342792.495974466,
+        "Width": 168538208.2420618,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -29026086.495998032,
+        "Y": 11342792.495974466
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "429",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -77107967.3729443,
+        "MinY": 1949739.4888523817,
+        "MaxX": -77107967.3729443,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -77107967.3729443,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "42A",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -105244002.32520714,
+        "MinY": 1949739.4888523817,
+        "MaxX": -105244002.32520714,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -105244002.32520714,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "42B",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -161870693.31099847,
+        "MinY": 6646265.992413431,
+        "MaxX": -57900694.64816184,
+        "MaxY": 6646265.992413431,
+        "Width": 103969998.66283663,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -109885693.97958016,
+        "Y": 6646265.992413431
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "42C",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -161870693.31099847,
+        "MinY": 11342792.495974466,
+        "MaxX": -113295190.61702892,
+        "MaxY": 11342792.495974466,
+        "Width": 48575502.69396955,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -137582941.9640137,
+        "Y": 11342792.495974466
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "42D",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -145176138.72665057,
+        "MinY": 1949739.4888523817,
+        "MaxX": -145176138.72665057,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -145176138.72665057,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "42E",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 55243017.62503286,
+        "MinY": 16307691.94260019,
+        "MaxX": 55243017.62503286,
+        "MaxY": 149018112.2860718,
+        "Width": 0,
+        "Height": 132710420.34347162,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 55243017.62503286,
+        "Y": 82662902.114336
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "42F",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -161870693.31099847,
+        "MinY": 149018112.2860718,
+        "MaxX": 55243017.62503286,
+        "MaxY": 149018112.2860718,
+        "Width": 217113710.93603134,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -53313837.842982806,
+        "Y": 149018112.2860718
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "430",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -161870693.31099847,
+        "MinY": 16307691.94260019,
+        "MaxX": -161870693.31099847,
+        "MaxY": 149018112.2860718,
+        "Width": 0,
+        "Height": 132710420.34347162,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -161870693.31099847,
+        "Y": 82662902.114336
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "431",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -161870693.31099847,
+        "MinY": 16307691.94260019,
+        "MaxX": 55243017.62503286,
+        "MaxY": 16307691.94260019,
+        "Width": 217113710.93603134,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -53313837.842982806,
+        "Y": 16307691.94260019
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "432",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -41737307.18056259,
+        "MinY": 1949739.4888523845,
+        "MaxX": -41737307.18056259,
+        "MaxY": 13691055.747756872,
+        "Width": 0,
+        "Height": 11741316.258904487,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -41737307.18056259,
+        "Y": 7820397.618304629
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "433",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -156557690.06417692,
+        "MinY": 13151032.680275902,
+        "MaxX": -156557690.06417692,
+        "MaxY": 13151032.680275902,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -156557690.06417692,
+        "Y": 13151032.680275902
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "434",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -159981913.98067272,
+        "MinY": 8451179.668973535,
+        "MaxX": -159981913.98067272,
+        "MaxY": 8451179.668973535,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -159981913.98067272,
+        "Y": 8451179.668973535
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "435",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -156592119.4193993,
+        "MinY": 3748000.1499060243,
+        "MaxX": -156592119.4193993,
+        "MaxY": 3748000.1499060243,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -156592119.4193993,
+        "Y": 3748000.1499060243
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "436",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -144378427.70160735,
+        "MinY": 13149369.4264137,
+        "MaxX": -144378427.70160735,
+        "MaxY": 13149369.4264137,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -144378427.70160735,
+        "Y": 13149369.4264137
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "437",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -144339881.79303268,
+        "MinY": 4630332.349753529,
+        "MaxX": -144339881.79303268,
+        "MaxY": 4630332.349753529,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -144339881.79303268,
+        "Y": 4630332.349753529
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "438",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -144341129.23343942,
+        "MinY": 2730988.826754108,
+        "MaxX": -144341129.23343942,
+        "MaxY": 2730988.826754108,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -144341129.23343942,
+        "Y": 2730988.826754108
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "439",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -144355474.7981169,
+        "MinY": 9321314.673729062,
+        "MaxX": -144355474.7981169,
+        "MaxY": 9321314.673729062,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -144355474.7981169,
+        "Y": 9321314.673729062
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "43A",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -144394769.17092913,
+        "MinY": 7421971.150729641,
+        "MaxX": -144394769.17092913,
+        "MaxY": 7421971.150729641,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -144394769.17092913,
+        "Y": 7421971.150729641
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "43B",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -112976936.28118202,
+        "MinY": 13149369.4264137,
+        "MaxX": -112976936.28118202,
+        "MaxY": 13149369.4264137,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -112976936.28118202,
+        "Y": 13149369.4264137
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "43C",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -111427989.52813765,
+        "MinY": 8452842.922837615,
+        "MaxX": -111427989.52813765,
+        "MaxY": 8452842.922837615,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -111427989.52813765,
+        "Y": 8452842.922837615
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "43D",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -111476265.47187753,
+        "MinY": 3764632.688662812,
+        "MaxX": -111476265.47187753,
+        "MaxY": 3764632.688662812,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -111476265.47187753,
+        "Y": 3764632.688662812
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "43E",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -104446291.30016127,
+        "MinY": 13141053.15702495,
+        "MaxX": -104446291.30016127,
+        "MaxY": 13141053.15702495,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -104446291.30016127,
+        "Y": 13141053.15702495
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "43F",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -74168640.79514748,
+        "MinY": 13156022.441907644,
+        "MaxX": -74168640.79514748,
+        "MaxY": 13156022.441907644,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -74168640.79514748,
+        "Y": 13156022.441907644
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "440",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -74167143.86665846,
+        "MinY": 8464485.69998148,
+        "MaxX": -74167143.86665846,
+        "MaxY": 8464485.69998148,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -74167143.86665846,
+        "Y": 8464485.69998148
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "441",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -74136456.83265297,
+        "MinY": 3770454.077219382,
+        "MaxX": -74136456.83265297,
+        "MaxY": 3770454.077219382,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -74136456.83265297,
+        "Y": 3770454.077219382
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "442",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -51397049.84161481,
+        "MinY": 11958954.490631863,
+        "MaxX": -51397049.84161481,
+        "MaxY": 11958954.490631863,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -51397049.84161481,
+        "Y": 11958954.490631863
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "443",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -36453772.6841098,
+        "MinY": 11927104.96056512,
+        "MaxX": -36453772.6841098,
+        "MaxY": 11927104.96056512,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -36453772.6841098,
+        "Y": 11927104.96056512
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "444",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -28399062.522987,
+        "MinY": 14305693.09303148,
+        "MaxX": -28399062.522987,
+        "MaxY": 14305693.09303148,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -28399062.522987,
+        "Y": 14305693.09303148
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "445",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 13420395.204050243,
+        "MinY": 11947644.342721744,
+        "MaxX": 13420395.204050243,
+        "MaxY": 11947644.342721744,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 13420395.204050243,
+        "Y": 11947644.342721744
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "446",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 29597969.359166503,
+        "MinY": 11948192.506745145,
+        "MaxX": 29597969.359166503,
+        "MaxY": 11948192.506745145,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 29597969.359166503,
+        "Y": 11948192.506745145
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "447",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 44357079.45565362,
+        "MinY": 14305693.093025936,
+        "MaxX": 44357079.45565362,
+        "MaxY": 14305693.093025936,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 44357079.45565362,
+        "Y": 14305693.093025936
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "448",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -25573919.71296335,
+        "MinY": 1949739.488852365,
+        "MaxX": -25573919.71296335,
+        "MaxY": 13691055.747756852,
+        "Width": 0,
+        "Height": 11741316.258904487,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -25573919.71296335,
+        "Y": 7820397.618304608
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "449",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -9410532.2453641,
+        "MinY": 1949739.48885239,
+        "MaxX": -9410532.2453641,
+        "MaxY": 13691055.747756876,
+        "Width": 0,
+        "Height": 11741316.258904487,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -9410532.2453641,
+        "Y": 7820397.618304633
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "44A",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 22916242.68983438,
+        "MinY": 1949739.488852364,
+        "MaxX": 22916242.68983438,
+        "MaxY": 13691055.74775685,
+        "Width": 0,
+        "Height": 11741316.258904487,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 22916242.68983438,
+        "Y": 7820397.6183046065
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "44B",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 6752855.222235136,
+        "MinY": 1949739.488852365,
+        "MaxX": 6752855.222235136,
+        "MaxY": 16039318.999535484,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 6752855.222235136,
+        "Y": 8994529.244193925
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "44C",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -21723369.92483186,
+        "MinY": 11947639.395789057,
+        "MaxX": -21723369.92483186,
+        "MaxY": 11947639.395789057,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -21723369.92483186,
+        "Y": 11947639.395789057
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "44D",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -4143079.927385956,
+        "MinY": 11946113.169742867,
+        "MaxX": -4143079.927385956,
+        "MaxY": 11946113.169742867,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -4143079.927385956,
+        "Y": 11946113.169742867
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "44E",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -162407829.55776855,
+        "MinY": 1412603.2420823127,
+        "MaxX": -162407829.55776855,
+        "MaxY": 149555248.5328444,
+        "Width": 0,
+        "Height": 148142645.29076207,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -162407829.55776855,
+        "Y": 75483925.88746336
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "44F",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -162407829.55776855,
+        "MinY": 149555248.5328444,
+        "MaxX": 55780153.87180294,
+        "MaxY": 149555248.5328444,
+        "Width": 218187983.4295715,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -53313837.842982806,
+        "Y": 149555248.5328444
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "450",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 55780153.87180294,
+        "MinY": 1412603.2420823127,
+        "MaxX": 55780153.87180294,
+        "MaxY": 149555248.5328444,
+        "Width": 0,
+        "Height": 148142645.29076207,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 55780153.87180294,
+        "Y": 75483925.88746336
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "451",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -162407829.55776855,
+        "MinY": 1412603.2420823127,
+        "MaxX": 55780153.87180294,
+        "MaxY": 1412603.2420823127,
+        "Width": 218187983.4295715,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -53313837.842982806,
+        "Y": 1412603.2420823127
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "452",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -161870693.31099847,
+        "MinY": 1949739.4888523817,
+        "MaxX": 55243017.62503286,
+        "MaxY": 1949739.4888523817,
+        "Width": 217113710.93603134,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -53313837.842982806,
+        "Y": 1949739.4888523817
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "453",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -161870693.31099847,
+        "MinY": 1949739.4888523817,
+        "MaxX": -161870693.31099847,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -161870693.31099847,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "454",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -161870693.31099847,
+        "MinY": 16039318.999535501,
+        "MaxX": 55243017.62503286,
+        "MaxY": 16039318.999535501,
+        "Width": 217113710.93603134,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -53313837.842982806,
+        "Y": 16039318.999535501
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "455",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -63067892.28923753,
+        "MinY": 13177951.408003822,
+        "MaxX": -63067892.28923753,
+        "MaxY": 13177951.408003822,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -63067892.28923753,
+        "Y": 13177951.408003822
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "456",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -64311859.41618192,
+        "MinY": 3770454.077219382,
+        "MaxX": -64311859.41618192,
+        "MaxY": 3770454.077219382,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -64311859.41618192,
+        "Y": 3770454.077219382
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "457",
+      "Kind": "AttributeDefinition",
+      "Bounds": {
+        "MinX": -60456131.32064038,
+        "MinY": 8541725.726076823,
+        "MaxX": -60456131.32064038,
+        "MaxY": 8541725.726076823,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -60456131.32064038,
+        "Y": 8541725.726076823
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "458",
+      "Kind": "AttributeDefinition",
+      "Bounds": {
+        "MinX": -64953716.50588583,
+        "MinY": 13182577.305608649,
+        "MaxX": -64953716.50588583,
+        "MaxY": 13182577.305608649,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -64953716.50588583,
+        "Y": 13182577.305608649
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "459",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -104390718.08735406,
+        "MinY": 8445569.466483414,
+        "MaxX": -104390718.08735406,
+        "MaxY": 8445569.466483414,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -104390718.08735406,
+        "Y": 8445569.466483414
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "45A",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -67141976.17000616,
+        "MinY": 8552255.757970795,
+        "MaxX": -67141976.17000616,
+        "MaxY": 8552255.757970795,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -67141976.17000616,
+        "Y": 8552255.757970795
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "45B",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": -104446291.30016127,
+        "MinY": 3751597.7325983793,
+        "MaxX": -104446291.30016127,
+        "MaxY": 3751597.7325983793,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -104446291.30016127,
+        "Y": 3751597.7325983793
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "45C",
+      "Kind": "LwPolyline",
+      "Bounds": {
+        "MinX": -57900694.64816184,
+        "MinY": 1949739.4888523817,
+        "MaxX": -57900694.648161836,
+        "MaxY": 16039318.999535501,
+        "Width": 7.450580596923828e-9,
+        "Height": 14089579.51068312,
+        "Valid": true
+      },
+      "Centroid": {
+        "X": -57900694.64816184,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "463",
+      "Kind": "LwPolyline",
+      "Bounds": {
+        "MinX": 55243017.62503286,
+        "MinY": 1949739.4888523817,
+        "MaxX": 55243017.62503287,
+        "MaxY": 16039318.999535501,
+        "Width": 1.4901161193847656e-8,
+        "Height": 14089579.51068312,
+        "Valid": true
+      },
+      "Centroid": {
+        "X": 55243017.625032865,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "47E",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -114152737.37495801,
+        "MinY": 1949739.488852378,
+        "MaxX": -114152737.37495801,
+        "MaxY": 16039318.999535497,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -114152737.37495801,
+        "Y": 8994529.244193938
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "47F",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": -68171597.09660435,
+        "MinY": 1949739.4888523798,
+        "MaxX": -68171597.09660435,
+        "MaxY": 16039318.9995355,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -68171597.09660435,
+        "Y": 8994529.24419394
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "4B5",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 304518256.45045644,
+        "MinY": 13691055.747756869,
+        "MaxX": 417661968.7236511,
+        "MaxY": 13691055.747756869,
+        "Width": 113143712.27319467,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 361090112.5870538,
+        "Y": 13691055.747756869
+      },
+      "DistanceFromLargestCluster": 248738102.5786535
+    },
+    {
+      "Id": "4B6",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 249123760.48158935,
+        "MinY": 11342792.495974466,
+        "MaxX": 417661968.7236511,
+        "MaxY": 11342792.495974466,
+        "Width": 168538208.24206176,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 333392864.60262024,
+        "Y": 11342792.495974466
+      },
+      "DistanceFromLargestCluster": 193343606.6097864
+    },
+    {
+      "Id": "4B7",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 285310983.725674,
+        "MinY": 1949739.4888523817,
+        "MaxX": 285310983.725674,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 285310983.725674,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 229530829.85387105
+    },
+    {
+      "Id": "4B8",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 257174948.77341112,
+        "MinY": 1949739.4888523817,
+        "MaxX": 257174948.77341112,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 257174948.77341112,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 201394794.90160817
+    },
+    {
+      "Id": "4B9",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200548257.7876198,
+        "MinY": 6646265.992413431,
+        "MaxX": 304518256.45045644,
+        "MaxY": 6646265.992413431,
+        "Width": 103969998.66283664,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 252533257.1190381,
+        "Y": 6646265.992413431
+      },
+      "DistanceFromLargestCluster": 144768103.91581684
+    },
+    {
+      "Id": "4BA",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200548257.7876198,
+        "MinY": 11342792.495974466,
+        "MaxX": 249123760.48158935,
+        "MaxY": 11342792.495974466,
+        "Width": 48575502.69396955,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 224836009.13460457,
+        "Y": 11342792.495974466
+      },
+      "DistanceFromLargestCluster": 144768103.91581684
+    },
+    {
+      "Id": "4BB",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 217242812.3719677,
+        "MinY": 1949739.4888523817,
+        "MaxX": 217242812.3719677,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 217242812.3719677,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 161462658.50016475
+    },
+    {
+      "Id": "4BC",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 417661968.7236511,
+        "MinY": 16307691.94260019,
+        "MaxX": 417661968.7236511,
+        "MaxY": 149018112.2860718,
+        "Width": 0,
+        "Height": 132710420.34347162,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 417661968.7236511,
+        "Y": 82662902.114336
+      },
+      "DistanceFromLargestCluster": 361881814.8518482
+    },
+    {
+      "Id": "4BD",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200548257.7876198,
+        "MinY": 149018112.2860718,
+        "MaxX": 417661968.7236511,
+        "MaxY": 149018112.2860718,
+        "Width": 217113710.9360313,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 309105113.25563544,
+        "Y": 149018112.2860718
+      },
+      "DistanceFromLargestCluster": 144768103.91581684
+    },
+    {
+      "Id": "4BE",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200548257.7876198,
+        "MinY": 16307691.94260019,
+        "MaxX": 200548257.7876198,
+        "MaxY": 149018112.2860718,
+        "Width": 0,
+        "Height": 132710420.34347162,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 200548257.7876198,
+        "Y": 82662902.114336
+      },
+      "DistanceFromLargestCluster": 144768103.91581684
+    },
+    {
+      "Id": "4BF",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200548257.7876198,
+        "MinY": 16307691.94260019,
+        "MaxX": 417661968.7236511,
+        "MaxY": 16307691.94260019,
+        "Width": 217113710.9360313,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 309105113.25563544,
+        "Y": 16307691.94260019
+      },
+      "DistanceFromLargestCluster": 144768103.91581684
+    },
+    {
+      "Id": "4C0",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 323375541.8293222,
+        "MinY": 1949739.4888523817,
+        "MaxX": 323375541.8293222,
+        "MaxY": 13691055.747756869,
+        "Width": 0,
+        "Height": 11741316.258904487,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 323375541.8293222,
+        "Y": 7820397.618304625
+      },
+      "DistanceFromLargestCluster": 267595387.9575193
+    },
+    {
+      "Id": "4C1",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 205861261.03444135,
+        "MinY": 13151032.680275902,
+        "MaxX": 205861261.03444135,
+        "MaxY": 13151032.680275902,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 205861261.03444135,
+        "Y": 13151032.680275902
+      },
+      "DistanceFromLargestCluster": 150081107.16263843
+    },
+    {
+      "Id": "4C2",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 202437037.11794555,
+        "MinY": 8451179.668973535,
+        "MaxX": 202437037.11794555,
+        "MaxY": 8451179.668973535,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 202437037.11794555,
+        "Y": 8451179.668973535
+      },
+      "DistanceFromLargestCluster": 146656883.24614263
+    },
+    {
+      "Id": "4C3",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 205826831.67921898,
+        "MinY": 3748000.1499060243,
+        "MaxX": 205826831.67921898,
+        "MaxY": 3748000.1499060243,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 205826831.67921898,
+        "Y": 3748000.1499060243
+      },
+      "DistanceFromLargestCluster": 150046677.80741602
+    },
+    {
+      "Id": "4C4",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 218040523.39701092,
+        "MinY": 13149369.4264137,
+        "MaxX": 218040523.39701092,
+        "MaxY": 13149369.4264137,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 218040523.39701092,
+        "Y": 13149369.4264137
+      },
+      "DistanceFromLargestCluster": 162260369.525208
+    },
+    {
+      "Id": "4C5",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 218079069.3055856,
+        "MinY": 4630332.349753529,
+        "MaxX": 218079069.3055856,
+        "MaxY": 4630332.349753529,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 218079069.3055856,
+        "Y": 4630332.349753529
+      },
+      "DistanceFromLargestCluster": 162298915.43378264
+    },
+    {
+      "Id": "4C6",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 218077821.86517885,
+        "MinY": 2730988.826754108,
+        "MaxX": 218077821.86517885,
+        "MaxY": 2730988.826754108,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 218077821.86517885,
+        "Y": 2730988.826754108
+      },
+      "DistanceFromLargestCluster": 162297667.9933759
+    },
+    {
+      "Id": "4C7",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 218063476.30050138,
+        "MinY": 9321314.673729062,
+        "MaxX": 218063476.30050138,
+        "MaxY": 9321314.673729062,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 218063476.30050138,
+        "Y": 9321314.673729062
+      },
+      "DistanceFromLargestCluster": 162283322.42869842
+    },
+    {
+      "Id": "4C8",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 218024181.92768914,
+        "MinY": 7421971.150729641,
+        "MaxX": 218024181.92768914,
+        "MaxY": 7421971.150729641,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 218024181.92768914,
+        "Y": 7421971.150729641
+      },
+      "DistanceFromLargestCluster": 162244028.0558862
+    },
+    {
+      "Id": "4C9",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 249442014.81743625,
+        "MinY": 13149369.4264137,
+        "MaxX": 249442014.81743625,
+        "MaxY": 13149369.4264137,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 249442014.81743625,
+        "Y": 13149369.4264137
+      },
+      "DistanceFromLargestCluster": 193661860.9456333
+    },
+    {
+      "Id": "4CA",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 250990961.5704806,
+        "MinY": 8452842.922837615,
+        "MaxX": 250990961.5704806,
+        "MaxY": 8452842.922837615,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 250990961.5704806,
+        "Y": 8452842.922837615
+      },
+      "DistanceFromLargestCluster": 195210807.69867766
+    },
+    {
+      "Id": "4CB",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 250942685.62674075,
+        "MinY": 3764632.688662812,
+        "MaxX": 250942685.62674075,
+        "MaxY": 3764632.688662812,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 250942685.62674075,
+        "Y": 3764632.688662812
+      },
+      "DistanceFromLargestCluster": 195162531.75493783
+    },
+    {
+      "Id": "4CC",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 257972659.798457,
+        "MinY": 13141053.15702495,
+        "MaxX": 257972659.798457,
+        "MaxY": 13141053.15702495,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 257972659.798457,
+        "Y": 13141053.15702495
+      },
+      "DistanceFromLargestCluster": 202192505.92665404
+    },
+    {
+      "Id": "4CD",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 288250310.3034708,
+        "MinY": 13156022.441907644,
+        "MaxX": 288250310.3034708,
+        "MaxY": 13156022.441907644,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 288250310.3034708,
+        "Y": 13156022.441907644
+      },
+      "DistanceFromLargestCluster": 232470156.43166786
+    },
+    {
+      "Id": "4CE",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 288251807.2319598,
+        "MinY": 8464485.69998148,
+        "MaxX": 288251807.2319598,
+        "MaxY": 8464485.69998148,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 288251807.2319598,
+        "Y": 8464485.69998148
+      },
+      "DistanceFromLargestCluster": 232471653.3601569
+    },
+    {
+      "Id": "4CF",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 288282494.2659653,
+        "MinY": 3770454.077219382,
+        "MaxX": 288282494.2659653,
+        "MaxY": 3770454.077219382,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 288282494.2659653,
+        "Y": 3770454.077219382
+      },
+      "DistanceFromLargestCluster": 232502340.39416236
+    },
+    {
+      "Id": "4D0",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 311021901.2570034,
+        "MinY": 11958954.490631863,
+        "MaxX": 311021901.2570034,
+        "MaxY": 11958954.490631863,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 311021901.2570034,
+        "Y": 11958954.490631863
+      },
+      "DistanceFromLargestCluster": 255241747.3852005
+    },
+    {
+      "Id": "4D1",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 329981525.2266641,
+        "MinY": 11967671.21529296,
+        "MaxX": 329981525.2266641,
+        "MaxY": 11967671.21529296,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 329981525.2266641,
+        "Y": 11967671.21529296
+      },
+      "DistanceFromLargestCluster": 274201371.3548612
+    },
+    {
+      "Id": "4D2",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 339530914.0110334,
+        "MinY": 14305693.09303148,
+        "MaxX": 339530914.0110334,
+        "MaxY": 14305693.09303148,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 339530914.0110334,
+        "Y": 14305693.09303148
+      },
+      "DistanceFromLargestCluster": 283750760.1392305
+    },
+    {
+      "Id": "4D3",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 387853328.1352251,
+        "MinY": 11958954.490631863,
+        "MaxX": 387853328.1352251,
+        "MaxY": 11958954.490631863,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 387853328.1352251,
+        "Y": 11958954.490631863
+      },
+      "DistanceFromLargestCluster": 332073174.2634222
+    },
+    {
+      "Id": "4D4",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 406723770.53044766,
+        "MinY": 11954380.542478845,
+        "MaxX": 406723770.53044766,
+        "MaxY": 11954380.542478845,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 406723770.53044766,
+        "Y": 11954380.542478845
+      },
+      "DistanceFromLargestCluster": 350943616.65864474
+    },
+    {
+      "Id": "4D5",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 395976616.4147617,
+        "MinY": 14305693.093025953,
+        "MaxX": 395976616.4147617,
+        "MaxY": 14305693.093025953,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 395976616.4147617,
+        "Y": 14305693.093025953
+      },
+      "DistanceFromLargestCluster": 340196462.5429588
+    },
+    {
+      "Id": "4D6",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 342325849.70734054,
+        "MinY": 1949739.4888523817,
+        "MaxX": 342325849.70734054,
+        "MaxY": 13691055.747756869,
+        "Width": 0,
+        "Height": 11741316.258904487,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 342325849.70734054,
+        "Y": 7820397.618304625
+      },
+      "DistanceFromLargestCluster": 286545695.8355376
+    },
+    {
+      "Id": "4D7",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 361090112.5870538,
+        "MinY": 1949739.4888523817,
+        "MaxX": 361090112.5870538,
+        "MaxY": 13691055.747756869,
+        "Width": 0,
+        "Height": 11741316.258904487,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 361090112.5870538,
+        "Y": 7820397.618304625
+      },
+      "DistanceFromLargestCluster": 305309958.71525085
+    },
+    {
+      "Id": "4D8",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 398804683.34478533,
+        "MinY": 1949739.4888523817,
+        "MaxX": 398804683.34478533,
+        "MaxY": 13691055.747756869,
+        "Width": 0,
+        "Height": 11741316.258904487,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 398804683.34478533,
+        "Y": 7820397.618304625
+      },
+      "DistanceFromLargestCluster": 343024529.4729824
+    },
+    {
+      "Id": "4D9",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 379947397.96591955,
+        "MinY": 1949739.4888523817,
+        "MaxX": 379947397.96591955,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 379947397.96591955,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 324167244.0941166
+    },
+    {
+      "Id": "4DA",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 347342824.3556593,
+        "MinY": 11973769.81283179,
+        "MaxX": 347342824.3556593,
+        "MaxY": 11973769.81283179,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 347342824.3556593,
+        "Y": 11973769.81283179
+      },
+      "DistanceFromLargestCluster": 291562670.4838564
+    },
+    {
+      "Id": "4DB",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 367589253.4932168,
+        "MinY": 11958954.490631863,
+        "MaxX": 367589253.4932168,
+        "MaxY": 11958954.490631863,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 367589253.4932168,
+        "Y": 11958954.490631863
+      },
+      "DistanceFromLargestCluster": 311809099.6214139
+    },
+    {
+      "Id": "4DC",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200011121.54084972,
+        "MinY": 1412603.2420823127,
+        "MaxX": 200011121.54084972,
+        "MaxY": 149555248.5328444,
+        "Width": 0,
+        "Height": 148142645.29076207,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 200011121.54084972,
+        "Y": 75483925.88746336
+      },
+      "DistanceFromLargestCluster": 144230967.66904676
+    },
+    {
+      "Id": "4DD",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200011121.54084972,
+        "MinY": 149555248.5328444,
+        "MaxX": 418199104.9704212,
+        "MaxY": 149555248.5328444,
+        "Width": 218187983.42957148,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 309105113.25563544,
+        "Y": 149555248.5328444
+      },
+      "DistanceFromLargestCluster": 144230967.66904676
+    },
+    {
+      "Id": "4DE",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 418199104.9704212,
+        "MinY": 1412603.2420823127,
+        "MaxX": 418199104.9704212,
+        "MaxY": 149555248.5328444,
+        "Width": 0,
+        "Height": 148142645.29076207,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 418199104.9704212,
+        "Y": 75483925.88746336
+      },
+      "DistanceFromLargestCluster": 362418951.09861827
+    },
+    {
+      "Id": "4DF",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200011121.54084972,
+        "MinY": 1412603.2420823127,
+        "MaxX": 418199104.9704212,
+        "MaxY": 1412603.2420823127,
+        "Width": 218187983.42957148,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 309105113.25563544,
+        "Y": 1412603.2420823127
+      },
+      "DistanceFromLargestCluster": 144230967.66904676
+    },
+    {
+      "Id": "4E0",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200548257.7876198,
+        "MinY": 1949739.4888523817,
+        "MaxX": 417661968.7236511,
+        "MaxY": 1949739.4888523817,
+        "Width": 217113710.9360313,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 309105113.25563544,
+        "Y": 1949739.4888523817
+      },
+      "DistanceFromLargestCluster": 144768103.91581684
+    },
+    {
+      "Id": "4E1",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200548257.7876198,
+        "MinY": 1949739.4888523817,
+        "MaxX": 200548257.7876198,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 200548257.7876198,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 144768103.91581684
+    },
+    {
+      "Id": "4E2",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 200548257.7876198,
+        "MinY": 16039318.999535501,
+        "MaxX": 417661968.7236511,
+        "MaxY": 16039318.999535501,
+        "Width": 217113710.9360313,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 309105113.25563544,
+        "Y": 16039318.999535501
+      },
+      "DistanceFromLargestCluster": 144768103.91581684
+    },
+    {
+      "Id": "4E3",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 299351058.80938077,
+        "MinY": 13177951.408003822,
+        "MaxX": 299351058.80938077,
+        "MaxY": 13177951.408003822,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 299351058.80938077,
+        "Y": 13177951.408003822
+      },
+      "DistanceFromLargestCluster": 243570904.93757784
+    },
+    {
+      "Id": "4E4",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 298107091.68243635,
+        "MinY": 3770454.077219382,
+        "MaxX": 298107091.68243635,
+        "MaxY": 3770454.077219382,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 298107091.68243635,
+        "Y": 3770454.077219382
+      },
+      "DistanceFromLargestCluster": 242326937.81063342
+    },
+    {
+      "Id": "4E5",
+      "Kind": "AttributeDefinition",
+      "Bounds": {
+        "MinX": 301962819.7779779,
+        "MinY": 8541725.726076823,
+        "MaxX": 301962819.7779779,
+        "MaxY": 8541725.726076823,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 301962819.7779779,
+        "Y": 8541725.726076823
+      },
+      "DistanceFromLargestCluster": 246182665.90617496
+    },
+    {
+      "Id": "4E6",
+      "Kind": "AttributeDefinition",
+      "Bounds": {
+        "MinX": 297465234.5927325,
+        "MinY": 13182577.305608649,
+        "MaxX": 297465234.5927325,
+        "MaxY": 13182577.305608649,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 297465234.5927325,
+        "Y": 13182577.305608649
+      },
+      "DistanceFromLargestCluster": 241685080.72092956
+    },
+    {
+      "Id": "4E7",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 258028233.0112642,
+        "MinY": 8445569.466483414,
+        "MaxX": 258028233.0112642,
+        "MaxY": 8445569.466483414,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 258028233.0112642,
+        "Y": 8445569.466483414
+      },
+      "DistanceFromLargestCluster": 202248079.13946128
+    },
+    {
+      "Id": "4E8",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 295276974.9286121,
+        "MinY": 8552255.757970795,
+        "MaxX": 295276974.9286121,
+        "MaxY": 8552255.757970795,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 295276974.9286121,
+        "Y": 8552255.757970795
+      },
+      "DistanceFromLargestCluster": 239496821.0568092
+    },
+    {
+      "Id": "4E9",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 257972659.798457,
+        "MinY": 3751597.7325983793,
+        "MaxX": 257972659.798457,
+        "MaxY": 3751597.7325983793,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 257972659.798457,
+        "Y": 3751597.7325983793
+      },
+      "DistanceFromLargestCluster": 202192505.92665404
+    },
+    {
+      "Id": "4EA",
+      "Kind": "LwPolyline",
+      "Bounds": {
+        "MinX": 304518256.45045644,
+        "MinY": 1949739.4888523817,
+        "MaxX": 304518256.45045644,
+        "MaxY": 16039318.999535501,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 304518256.45045644,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 248738102.5786535
+    },
+    {
+      "Id": "4EB",
+      "Kind": "LwPolyline",
+      "Bounds": {
+        "MinX": 417661968.7236511,
+        "MinY": 1949739.4888523817,
+        "MaxX": 417661968.7236512,
+        "MaxY": 16039318.999535501,
+        "Width": 5.960464477539063e-8,
+        "Height": 14089579.51068312,
+        "Valid": true
+      },
+      "Centroid": {
+        "X": 417661968.7236512,
+        "Y": 8994529.244193941
+      },
+      "DistanceFromLargestCluster": 361881814.8518482
+    },
+    {
+      "Id": "4EC",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 248266213.72366026,
+        "MinY": 1949739.488852378,
+        "MaxX": 248266213.72366026,
+        "MaxY": 16039318.999535497,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 248266213.72366026,
+        "Y": 8994529.244193938
+      },
+      "DistanceFromLargestCluster": 192486059.8518573
+    },
+    {
+      "Id": "4ED",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 294247354.0020139,
+        "MinY": 1949739.4888523798,
+        "MaxX": 294247354.0020139,
+        "MaxY": 16039318.9995355,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 294247354.0020139,
+        "Y": 8994529.24419394
+      },
+      "DistanceFromLargestCluster": 238467200.130211
+    },
+    {
+      "Id": "4F7",
+      "Kind": "Point",
+      "Bounds": {
+        "MinX": -41737307.18056259,
+        "MinY": 6646265.992413414,
+        "MaxX": -41737307.18056259,
+        "MaxY": 6646265.992413414,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -41737307.18056259,
+        "Y": 6646265.992413414
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "4F8",
+      "Kind": "Point",
+      "Bounds": {
+        "MinX": -25573919.71296335,
+        "MinY": 6646265.992413397,
+        "MaxX": -25573919.71296335,
+        "MaxY": 6646265.992413397,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -25573919.71296335,
+        "Y": 6646265.992413397
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "4F9",
+      "Kind": "Point",
+      "Bounds": {
+        "MinX": -9410532.245364107,
+        "MinY": 6646265.992413379,
+        "MaxX": -9410532.245364107,
+        "MaxY": 6646265.992413379,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": -9410532.245364107,
+        "Y": 6646265.992413379
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "4FA",
+      "Kind": "Point",
+      "Bounds": {
+        "MinX": 6752855.222235136,
+        "MinY": 6646265.9924133625,
+        "MaxX": 6752855.222235136,
+        "MaxY": 6646265.9924133625,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 6752855.222235136,
+        "Y": 6646265.9924133625
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "4FB",
+      "Kind": "Point",
+      "Bounds": {
+        "MinX": 22916242.68983438,
+        "MinY": 6646265.992413345,
+        "MaxX": 22916242.68983438,
+        "MaxY": 6646265.992413345,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 22916242.68983438,
+        "Y": 6646265.992413345
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "4FC",
+      "Kind": "Point",
+      "Bounds": {
+        "MinX": 39079630.15743362,
+        "MinY": 6646265.992413328,
+        "MaxX": 39079630.15743362,
+        "MaxY": 6646265.992413328,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 39079630.15743362,
+        "Y": 6646265.992413328
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "4FD",
+      "Kind": "Line",
+      "Bounds": {
+        "MinX": 39079630.15743362,
+        "MinY": 1949739.4888523305,
+        "MaxX": 39079630.15743362,
+        "MaxY": 16039318.999535449,
+        "Width": 0,
+        "Height": 14089579.51068312,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 39079630.15743362,
+        "Y": 8994529.24419389
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "507",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 45761356.82676574,
+        "MinY": 11946182.978727147,
+        "MaxX": 45761356.82676574,
+        "MaxY": 11946182.978727147,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 45761356.82676574,
+        "Y": 11946182.978727147
+      },
+      "DistanceFromLargestCluster": 0
+    },
+    {
+      "Id": "50A",
+      "Kind": "TextEntity",
+      "Bounds": {
+        "MinX": 20108623.73536799,
+        "MinY": 14305693.093025917,
+        "MaxX": 20108623.73536799,
+        "MaxY": 14305693.093025917,
+        "Width": 0,
+        "Height": 0,
+        "Valid": false
+      },
+      "Centroid": {
+        "X": 20108623.73536799,
+        "Y": 14305693.093025917
+      },
+      "DistanceFromLargestCluster": 0
+    }
+  ]
+}

@@ -1,10 +1,9 @@
 {
-  "SchemaVersion": 2,
-  "Task": "v0.6.1.1",
+  "Version": "v0.6.1.1",
+  "Task": "真實 CAD 圖框辨識／正規化",
   "Branch": "bim-custom",
   "Status": "ACTUAL_DWG_UAT_PASS",
-  "StatusScope": "Actual two-candidate DWG normalized to custom 420 x 285.166534 mm; independent geometry-only Families; SingleMain; external RVT PARTIAL",
-  "UpdatedAt": "2026-09-21T08:36:55.088Z",
+  "Timestamp": "2026-09-21T08:36:55.088Z",
   "Gates": {
     "A": {
       "Status": "PASS",
@@ -664,68 +663,6 @@
       "Sha256": "314351b8e340a9212bd2ac96e037ec81b1a583eddd4b8b1c5131d3197721d640"
     }
   ],
-  "FormalDeployment": {
-    "Kind": "FORMAL_V0611_RELEASE",
-    "Status": "PASS",
-    "BuildSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766",
-    "Timestamp": "2026-09-21T08:35:26.31967+00:00",
-    "Backup": "test-artifacts\\reversible-03295bfd6d5f4c2ca10784c3b80496ec",
-    "Rollback": "NOT_NEEDED",
-    "DeployedSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766",
-    "HashMatch": true,
-    "RequiredDllSet": "PASS",
-    "RequiredDllCount": 9,
-    "Files": [
-      {
-        "File": "ACadSharp.dll",
-        "BuildSHA256": "7878873EEBA9582E2C5AB9F5AE1A7E4E75CFD7B4C637B5385653C2414E3B469E",
-        "DeployedSHA256": "7878873EEBA9582E2C5AB9F5AE1A7E4E75CFD7B4C637B5385653C2414E3B469E"
-      },
-      {
-        "File": "ClosedXML.dll",
-        "BuildSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C",
-        "DeployedSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C"
-      },
-      {
-        "File": "DocumentFormat.OpenXml.dll",
-        "BuildSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974",
-        "DeployedSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974"
-      },
-      {
-        "File": "ExcelNumberFormat.dll",
-        "BuildSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507",
-        "DeployedSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507"
-      },
-      {
-        "File": "Irony.dll",
-        "BuildSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD",
-        "DeployedSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD"
-      },
-      {
-        "File": "Newtonsoft.Json.dll",
-        "BuildSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07",
-        "DeployedSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07"
-      },
-      {
-        "File": "RevitMCP.dll",
-        "BuildSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766",
-        "DeployedSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766"
-      },
-      {
-        "File": "SixLabors.Fonts.dll",
-        "BuildSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F",
-        "DeployedSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F"
-      },
-      {
-        "File": "XLParser.dll",
-        "BuildSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C",
-        "DeployedSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C"
-      }
-    ],
-    "ManifestCount": 1,
-    "Assembly": "RevitMCP\\RevitMCP.dll",
-    "FullClassName": "RevitMCP.Application"
-  },
   "ActualDWG": {
     "Source": "<USER_TITLEBLOCK_DWG>",
     "SHA256": "9772C6F4D734B2ACA75E27C62B68C47154AAA2DF867F8C1D3DEFEE4FD198A2EB",
@@ -1025,10 +962,90 @@
       "J_FamilyReadback": true
     }
   },
-  "PreviousStable": {
-    "Version": "v0.6.1",
-    "Commit": "5fe8428",
-    "BuildSHA256": "9A2A9E1079373E0B70CBED8355D3823250F299A0BFB8B3F7ED685687C4F7177C"
+  "FormalDeployment": {
+    "Kind": "FORMAL_V0611_RELEASE",
+    "Status": "PASS",
+    "BuildSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766",
+    "Timestamp": "2026-09-21T08:35:26.31967+00:00",
+    "Backup": "test-artifacts\\reversible-03295bfd6d5f4c2ca10784c3b80496ec",
+    "Rollback": "NOT_NEEDED",
+    "DeployedSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766",
+    "HashMatch": true,
+    "RequiredDllSet": "PASS",
+    "RequiredDllCount": 9,
+    "Files": [
+      {
+        "File": "ACadSharp.dll",
+        "BuildSHA256": "7878873EEBA9582E2C5AB9F5AE1A7E4E75CFD7B4C637B5385653C2414E3B469E",
+        "DeployedSHA256": "7878873EEBA9582E2C5AB9F5AE1A7E4E75CFD7B4C637B5385653C2414E3B469E"
+      },
+      {
+        "File": "ClosedXML.dll",
+        "BuildSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C",
+        "DeployedSHA256": "A8A236A05BD81E301A15A248D5AB9B44AF1F3DF5F729F96532C56EBF4139BC2C"
+      },
+      {
+        "File": "DocumentFormat.OpenXml.dll",
+        "BuildSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974",
+        "DeployedSHA256": "588D07BDC0DD828C7DB07D04AF42C47D48B092D92CECBB7FF6E63F9741B48974"
+      },
+      {
+        "File": "ExcelNumberFormat.dll",
+        "BuildSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507",
+        "DeployedSHA256": "D7C45B8E4E1027831E2FC8CDF941FAF51D28A66FEACFCAAA737DA73262E7B507"
+      },
+      {
+        "File": "Irony.dll",
+        "BuildSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD",
+        "DeployedSHA256": "843270493384C6E1ED1B1F92D631944B08F5E881C3C7A2210824F1899152CCBD"
+      },
+      {
+        "File": "Newtonsoft.Json.dll",
+        "BuildSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07",
+        "DeployedSHA256": "22C649F75FCE5BE7C7CCDA8880473B634EF69ECF33F5D1AB8AD892CAF47D5A07"
+      },
+      {
+        "File": "RevitMCP.dll",
+        "BuildSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766",
+        "DeployedSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766"
+      },
+      {
+        "File": "SixLabors.Fonts.dll",
+        "BuildSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F",
+        "DeployedSHA256": "E1E2F107E7C78FB859F1B23383107A125ACD8B3A7470140850DAA6F6F6C45D9F"
+      },
+      {
+        "File": "XLParser.dll",
+        "BuildSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C",
+        "DeployedSHA256": "A1211FE42E65B2C51F283C6588A298989E50B988CCC82A504A9B2A7F46C54B9C"
+      }
+    ],
+    "ManifestCount": 1,
+    "Assembly": "RevitMCP\\RevitMCP.dll",
+    "FullClassName": "RevitMCP.Application"
+  },
+  "VisualReview": {
+    "Status": "PASS",
+    "BuildSHA256": "CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766",
+    "RuntimeDirectory": "test-artifacts/revit-selftest-22f0e115c5394cef978802c43c8931e0",
+    "InspectedSheetId": 211642,
+    "Checks": [
+      "Closed outer frame visible",
+      "Title table remains inside paper",
+      "Chinese CAD text visible and aligned",
+      "No remote giant text after AlignmentPoint fix"
+    ],
+    "SensitiveScreenshotSaved": false,
+    "Scope": "Screen appearance review; not company design or print approval",
+    "Timestamp": "2026-09-21T08:21:20.8414781+00:00"
+  },
+  "Git": {
+    "ImplementationCommit": "46eeee5",
+    "TestCommit": "eb825df",
+    "Destination": "origin/bim-custom",
+    "ReleaseCommit": "SELF_COMMIT",
+    "ReadbackReceipt": "test-artifacts/v0611/final.json",
+    "PushStatus": "Post-push local/remote read-back is recorded in ReadbackReceipt"
   },
   "RemainingLimitations": [
     "CAD 僅轉幾何；不推測 Label、Revision、shared parameters 或 OCR。",
@@ -1039,11 +1056,41 @@
     "帶 Instance attributes 的 INSERT 與非 XY 文字明確阻擋，不靜默遺漏。",
     "外觀檢查涵蓋測試 FL2 圖紙的螢幕顯示；未認證列印／字型完全一致或大型正式模型效能。"
   ],
+  "ModifiedFiles": [
+    "MCP/Core/Drawing/CadTitleBlockFileService.cs",
+    "MCP/Core/Drawing/CadTitleBlockGeometry.cs",
+    "MCP/Core/Drawing/DrawingModels.cs",
+    "MCP/Core/Drawing/DrawingProductionJourneyFixture.cs",
+    "MCP/Core/Drawing/ExternalTitleBlockService.cs",
+    "MCP/RevitMCP.csproj",
+    "MCP/ThirdPartyNotices.txt",
+    "MCP/UI/DrawingProductionControl.cs",
+    "MCP/UI/DrawingProductionViewModel.cs",
+    "docs/productization/development-state.json",
+    "docs/productization/matrix.json",
+    "docs/productization/v0611-cad-capability-audit.md",
+    "docs/productization/v0611-final-report.md",
+    "docs/productization/v0611-real-cad-titleblock-analysis.json",
+    "docs/productization/v0611-real-cad-titleblock-analysis.md",
+    "docs/productization/v0611-release-checkpoints.md",
+    "docs/productization/v0611-report.json",
+    "domain/construction-drawing-production.md",
+    "log/2026-09.md",
+    "scripts/complete-productization-audit.cjs",
+    "scripts/install-addon.ps1",
+    "scripts/publish-v0611.ps1",
+    "scripts/run-revit-selftest.ps1",
+    "scripts/test-productization-audit.cjs",
+    "scripts/test-reversible-gate-c.ps1",
+    "scripts/test-workflow-contracts.cjs",
+    "tests/CadTitleBlock/CadTitleBlock.csproj",
+    "tests/CadTitleBlock/Program.cs",
+    "tests/CoordinationWorkflow/CoordinationWorkflow.csproj",
+    "tests/CoordinationWorkflow/DrawingTests.cs"
+  ],
   "FinalCommit": {
     "Value": "SELF_COMMIT",
     "Resolve": "git log -1 --format=%H -- docs/productization/v0611-report.json",
     "LiteralReceipt": "test-artifacts/v0611/final.json"
-  },
-  "NextAction": "Stop at v0.6.1.1. No v0.7, Multi-Viewport, Matchline, Auto Dimension, PDF or Revision work.",
-  "Report": "docs/productization/v0611-report.json"
+  }
 }

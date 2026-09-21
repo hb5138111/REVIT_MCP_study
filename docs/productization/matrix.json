@@ -353,8 +353,8 @@
     },
     {
       "Path": "domain/construction-drawing-production.md",
-      "Sha256": "21766dc9aeb1fe9564e95d29e8a672dfcfc6956e28b8a78463eb8e990d35d3ed",
-      "Bytes": 8893
+      "Sha256": "78e79be43b419de48a14a928c56b2e94202a2ebd8d1fcafa6427a15fcb81528b",
+      "Bytes": 13580
     },
     {
       "Path": "domain/core-reload-boundary.md",
@@ -1327,14 +1327,24 @@
       "Bytes": 925
     },
     {
+      "Path": "MCP/Core/Drawing/CadTitleBlockFileService.cs",
+      "Sha256": "618c5bfeb720529e19732a97cc8a27200c95e1dda4a32f85ff9ccc46190c534b",
+      "Bytes": 10738
+    },
+    {
+      "Path": "MCP/Core/Drawing/CadTitleBlockGeometry.cs",
+      "Sha256": "cd94511d3e45b80b4b089eac9eada1ece40faecdc861ade73d0050ff94369ddb",
+      "Bytes": 22108
+    },
+    {
       "Path": "MCP/Core/Drawing/DrawingFixtureIsolation.cs",
       "Sha256": "1141bc645912973f428d61ce6a90e90f8c28d3bdb6c8689de83095698126b778",
       "Bytes": 1289
     },
     {
       "Path": "MCP/Core/Drawing/DrawingModels.cs",
-      "Sha256": "87810aefe6b721673845a1d2ce30cff85288079ce3698f86fdf598fe7b03c196",
-      "Bytes": 20090
+      "Sha256": "b767407ef6c2504129deec34ebb575eac5a0a634647084c81bd4198b0bb6793a",
+      "Bytes": 21005
     },
     {
       "Path": "MCP/Core/Drawing/DrawingProductionFixture.cs",
@@ -1343,13 +1353,13 @@
     },
     {
       "Path": "MCP/Core/Drawing/DrawingProductionJourneyFixture.cs",
-      "Sha256": "5ac400ea6fb082a933ac0f670c7a7ca6776457785e2183dfe7fefaf92167b704",
-      "Bytes": 16617
+      "Sha256": "6c0f7a272e015b835b3073470570fd64ef2b098c25c64bffaa8828c77c9e2341",
+      "Bytes": 27861
     },
     {
       "Path": "MCP/Core/Drawing/ExternalTitleBlockService.cs",
-      "Sha256": "ccdc1c7ffecc3ec31f43796d5b4ccd45ea76b32ac14b50a04225f3c3a8d6b637",
-      "Bytes": 12494
+      "Sha256": "950e1a9474d0600dec64bb7f21e4d424ea18e7f67010326ac336c1208df7e3dc",
+      "Bytes": 22608
     },
     {
       "Path": "MCP/Core/Drawing/RevitDrawingService.cs",
@@ -1543,13 +1553,13 @@
     },
     {
       "Path": "MCP/UI/DrawingProductionControl.cs",
-      "Sha256": "12e9aebcb42dcc983d332dacca932fbee94379269ce406f53889d6c0ca695346",
-      "Bytes": 28454
+      "Sha256": "11e57d4dd191708d266ea79adab2b562d61b35b8db5683f2a7e9a25f966bb993",
+      "Bytes": 40162
     },
     {
       "Path": "MCP/UI/DrawingProductionViewModel.cs",
-      "Sha256": "fd675c50b8b38d6da7878165ab859a7526127050132c63c06328fd8e5ef2b61c",
-      "Bytes": 14156
+      "Sha256": "e518ccdd51f9a6d9cf989ec8b7ce521f6c6b1c1d0679160421c6c4a10e8eeb55",
+      "Bytes": 17529
     },
     {
       "Path": "MCP/UI/EarthworkControl.cs",
@@ -49274,7 +49284,7 @@
         },
         {
           "Line": 59,
-          "Text": "DWG／DXF 先於暫存 TitleBlock Family 分析幾何、bounds 與圖層摘要。RFT 由 Revit 設定搜尋，無唯一可靠候選時讓使用者選擇；選擇保存在本機 application setting，不入 Git 或模型。Auto 單位及 A0–A4 尺寸均僅為建議，需使用者確認。確認後 import→暫存 RFA→Load→read-back，關閉背景文件並清理專屬暫存目錄。只保證幾何，不猜測文字與 Label 語意，不建立 Revision／公司 shared parameters。"
+          "Text": "DWG／DXF 先以本機 managed reader 分析個別幾何、候選 bounds 與圖層摘要；選定並確認候選後才載入暫存 TitleBlock Family。RFT 由 Revit 設定搜尋，無唯一可靠候選時讓使用者選擇；選擇保存在本機 application setting，不入 Git 或模型。Auto 單位及 A0–A4 尺寸均僅為建議，需使用者確認。確認後 import→暫存 RFA→Load→read-back，關閉背景文件並清理專屬暫存目錄。只保證幾何，不猜測文字與 Label 語意，不建立 Revision／公司 shared parameters。"
         },
         {
           "Line": 61,
@@ -49291,12 +49301,48 @@
         {
           "Line": 67,
           "Text": "Gate C4 必須從 BimConstructionPanel drawing child 初始化，經選檔／樣板、分析、載入確認、選 Levels、自動來源、計畫、確認、ExternalEvent、建立與 QA binding。A 外部 RFA 三層、B 真實外部 DWG 兩層、C 既有 Sheet、D 不分區、E 缺一層來源、F 圖號衝突、G 人工修改、H 同包重跑全部 PASS，且 Build／C4／Deployed SHA 相同，才可宣稱 READY。舊 backend／fixture PASS 不能取代 C4。"
+        },
+        {
+          "Line": 69,
+          "Text": "## v0.6.1.1 CAD 候選與正規化 / CAD candidates and normalization"
+        },
+        {
+          "Line": 71,
+          "Text": "全域 CAD extents 只描述資料範圍，不能作為紙張範圍。先以本機 managed CAD reader 取得 model-space 個別幾何、圖層、圖塊展開後座標，再以 deterministic XY proximity 分群；閉合矩形擁有其內部分離的文字、logo 及表格。每個候選保留來源幾何 ID、群組、外框、中心、圖層、尺寸、旋轉與可解釋 evidence。相同尺寸而位置不同的圖框絕不去重；內含小表格依外框包含關係歸入外框。所有物件均計數；任何不支援種類或超出預算都明確停止，不截斷。"
+        },
+        {
+          "Line": 73,
+          "Text": "工具辨識容差（不是公司或法規標準）：ISO A0 1189×841、A1 841×594、A2 594×420、A3 420×297、A4 297×210 mm，可直／橫式；兩邊各差 ≤1 mm 才直接辨識。已知倍率 1、0.001、1000、0.01、100、0.1、10、25.4、1/25.4 依序比對，只產生建議，不自動縮放。等比例套標準紙張的相對長寬比誤差限 0.5%；超過需複核或明確輸入自訂寬度，禁止非等比例拉伸。候選尺寸已合適，預設 scale=1 且僅重新定位；旋轉閉合矩形還原外框方向。"
+        },
+        {
+          "Line": 77,
+          "Text": "使用者逐一選候選→預覽→確認用途與名稱→選圖層→確認正規化→明確確認幾何保留集合→建立選取圖框。畫面同時提供全圖、主要群組、選定外框、遠端標記及局部／目標預覽。可指定閉合 Polyline，或在全圖預覽點兩個對角點；這只定義 paper bounds，不授權刪除範圍外幾何。顯示 inside／outside 數量後才可確認過濾；範圍外物件可明確追加，但另一已辨識圖框需另建 Family。圖層選擇不重新 union 紙張範圍。"
+        },
+        {
+          "Line": 79,
+          "Text": "Family 策略為每個候選獨立 Family，避免同族 Type 共用幾何的污染。確認綁定來源 SHA、候選 ID、幾何集合、尺寸／旋轉／倍率、用途及名稱；變更即失效。只把確認集合複製至全新暫存 DXF，平移至局部原點並選擇性等比例縮放；來源檔只讀。保留 CAD text／ATTDEF 幾何與樣式，不轉 Label、Revision、Shared Parameter。字型外觀可能受 Revit 字型替代影響，文字定位點不是字型輪廓；Text／ATTDEF 的第二 AlignmentPoint 必須與 InsertPoint 套用相同座標轉換，不能只信任第三方 Entity transform；需檢查載入後實際圖框。"
+        },
+        {
+          "Line": 81,
+          "Text": "Revit RFT 可能包含四條不可刪除的紙張邊界 DetailLine。僅接受可驗證的四邊矩形，於 disposable Family 內設為 Invisible Lines 並對齊確認紙張尺寸；其他預定義圖形不明時阻擋。可刪除的樣板預設圖形只在暫存 Family 移除。轉換 read-back 核對 CAD 物件／文字、座標、Category、Family／Type、實際範圍與載入前後原生幾何指紋；不可只看 Success=true 或名稱。"
+        },
+        {
+          "Line": 83,
+          "Text": "TitleBlockPurpose（施工圖／竣工圖／自訂）只屬 Profile metadata。CAD Text/MText 出現關鍵字可建議「可能為…」，不是候選 key，也不能自動確認用途。Package 明確使用所選 Profile 的用途，不依名稱猜公司規則。各 Profile 的候選集合、TitleBlock Type、ProfileGuid／Version 分開保存。"
+        },
+        {
+          "Line": 85,
+          "Text": "效能預算：檔案 100 MB、展開物件 20,000、圖塊深度 16、鄰接比較 10,000,000；單群水平或垂直邊線各 1,000；原生幾何 read-back 100,000。不受支援的 xref、帶實例屬性圖塊、非 XY 文字、陣列圖塊或 CAD reader 不完整通知明示能力缺口，不忽略物件。沒有可靠候選時允許手動指定，不能直接因 global bounds 拒絕整份圖。"
+        },
+        {
+          "Line": 87,
+          "Text": "新增 Gate C5（adversarial CAD）為 CAD／Drawing 發布必要 Gate：遠端雜線、大座標、錯誤單位、等比例縮放、錯誤長寬比、內部小表格、多圖層、兩個同尺寸外框、分離文字、旋轉圖塊及各候選幾何隔離。C4 必須延伸候選→確認→正規化→FL1/FL2／NoZone→兩張 Sheet→read-back／QA→重跑／人工修改保留，以及另一候選獨立 Family。實檔 UAT ≥2 個可信候選並完成兩用途轉換，所有 Gate 與實檔 UAT 同版 PASS 後才正式 deploy；未通過保留 stable。"
         }
       ],
       "SourceReview": {
         "Status": "ASSESSED",
         "Method": "Domain rule and limitation extraction + registered tool/schema + R26 source call graph; gaps retained explicitly",
-        "DomainSha256": "21766dc9aeb1fe9564e95d29e8a672dfcfc6956e28b8a78463eb8e990d35d3ed",
+        "DomainSha256": "78e79be43b419de48a14a928c56b2e94202a2ebd8d1fcafa6427a15fcb81528b",
         "SemanticScope": "Static capability mapping, not certification of every engineering rule or runtime path"
       },
       "NativeBackendFiles": [
@@ -49305,11 +49351,13 @@
         "MCP/UI/DrawingProductionViewModel.cs",
         "MCP/UI/RevitDrawingHost.cs",
         "MCP/Core/Drawing/ExternalTitleBlockService.cs",
+        "MCP/Core/Drawing/CadTitleBlockGeometry.cs",
+        "MCP/Core/Drawing/CadTitleBlockFileService.cs",
         "MCP/Core/Drawing/DrawingFixtureIsolation.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-139da39a1dff499b87c1274d49c11026/drawing-runtime.json",
-      "NativeWorkflowTestStatus": "PASS: C4 production Panel journey A-H / external real files / read-back",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-2e944b2c0e424f48b9db0f3f42b272c3/drawing-c4-runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-fc8ba33342194e78929ef56c1d5d3350/drawing-runtime.json",
+      "NativeWorkflowTestStatus": "PASS: C4 production Panel journey A-J / independent CAD candidates / read-back",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-1343d0864148499ea9626e4b811796b9/drawing-c4-runtime.json",
       "NativeScope": {
         "Mutation": "ConfirmedWrite",
         "TransactionRequired": true,
@@ -70653,9 +70701,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-cbbcb7a8ccea4a8ba41d77fc7ac79195/runtime.json",
       "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/workflow-runtime.json",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-cbbcb7a8ccea4a8ba41d77fc7ac79195/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -72492,9 +72540,9 @@
         "MCP/Models/CoordinationModels.cs",
         "MCP/Core/ClashDetector.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-cbbcb7a8ccea4a8ba41d77fc7ac79195/runtime.json",
       "NativeWorkflowTestStatus": "PASS: real ActiveUIDocument / controller / ExternalEvent",
-      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/workflow-runtime.json",
+      "NativeWorkflowEvidence": "test-artifacts/revit-selftest-cbbcb7a8ccea4a8ba41d77fc7ac79195/workflow-runtime.json",
       "NativeScope": {
         "Host": true,
         "Link": "Translated link fixture PASS; arbitrary rotation/mirroring not fixture tested",
@@ -82761,7 +82809,7 @@
         "MCP/UI/SiteTerrainWorkflow.cs",
         "MCP/UI/RevitSiteHost.cs"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-09b61e3c039d49ab9f16853e4df1f582/terrain-runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-cbbcb7a8ccea4a8ba41d77fc7ac79195/terrain-runtime.json",
       "NativeScope": {
         "Mutation": "ConfirmedWrite",
         "TransactionRequired": true,
@@ -92909,10 +92957,14 @@
         "C2",
         "C3",
         "C4",
-        "DrawingRuntime"
+        "C5",
+        "DrawingRuntime",
+        "ActualDWG"
       ],
-      "FixtureEvidence": "test-artifacts/revit-selftest-139da39a1dff499b87c1274d49c11026/drawing-runtime.json",
-      "ProductionJourneyEvidence": "test-artifacts/revit-selftest-2e944b2c0e424f48b9db0f3f42b272c3/drawing-c4-runtime.json",
+      "FixtureEvidence": "test-artifacts/revit-selftest-fc8ba33342194e78929ef56c1d5d3350/drawing-runtime.json",
+      "ProductionJourneyEvidence": "test-artifacts/revit-selftest-1343d0864148499ea9626e4b811796b9/drawing-c4-runtime.json",
+      "CadAdversarialEvidence": "test-artifacts/v0611/cad-c5.json",
+      "ActualCadEvidence": "test-artifacts/revit-selftest-22f0e115c5394cef978802c43c8931e0/actual-cad-uat.json",
       "Limits": [
         "Current Sheet / external RFA / geometry-only DWG-DXF; external RVT PARTIAL",
         "Same TitleBlock Type; one main plan viewport",
@@ -92983,7 +93035,7 @@
     "CompilerDiagnostics": 0,
     "DomainCoverage": 86,
     "RuntimeToolCoverage": 192,
-    "MethodCount": 1670,
+    "MethodCount": 1702,
     "Limitations": [
       "Branch union is conservative, not runtime proof.",
       "Unbound external invocations are retained in backend evidence.",
