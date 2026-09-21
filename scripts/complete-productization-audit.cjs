@@ -27,6 +27,10 @@ const drawing=drawingCandidates.filter(x=>x.Report.Status==='PASS'&&x.Report.Fai
 const journeyCandidates=fs.readdirSync(path.join(root,'test-artifacts')).filter(n=>n.startsWith('revit-selftest-')).map(n=>'test-artifacts/'+n+'/drawing-c4-runtime.json').filter(p=>fs.existsSync(path.join(root,p))).map(p=>({Path:p,Report:JSON.parse(read(p))}));
 const journey=journeyCandidates.filter(x=>x.Report.Status==='PASS'&&x.Report.Failed===0&&x.Report.BuildSHA256===buildHash&&'ABCDEFGH'.split('').every(c=>x.Report.Cases?.[c]===true)).sort((a,b)=>b.Report.Timestamp.localeCompare(a.Report.Timestamp))[0];
 
+const c5Path='test-artifacts/v0611/cad-c5.json',c5=fs.existsSync(path.join(root,c5Path))?JSON.parse(read(c5Path)):null;
+const c5Passed=c5?.GateC5==='PASS'&&c5.Failed===0&&c5.BuildSHA256===buildHash&&c5.SourceFiles.every(f=>hash(f.Path).toUpperCase()===f.SHA256);
+const actualCad=runsActual();
+function runsActual(){return fs.readdirSync(path.join(root,'test-artifacts')).filter(n=>n.startsWith('revit-selftest-')).map(n=>'test-artifacts/'+n+'/actual-cad-uat.json').filter(p=>fs.existsSync(path.join(root,p))).map(p=>({Path:p,Report:JSON.parse(read(p))})).find(x=>x.Report.Status==='ACTUAL_DWG_UAT_PASS'&&x.Report.BuildSHA256===buildHash);}
 const review=new Set(['beam-penetration-algorithm','beam-penetration-base','beam-penetration-rc','beam-penetration-sc','beam-penetration-src','sleeve-classification-protocol','corridor-analysis-protocol','daylight-area-check','exterior-wall-opening-check','fire-rating-check','floor-area-review','parking-clearance-check','parking-space-review','smoke-detector-check','smoke-exhaust-review','stair-compliance-check','wall-check','building-code-tw']);
 const settings={
  'GM_parameter-schema':['MaterialSlotAssignment','LicenseValidity','TargetTypes'],
@@ -125,9 +129,9 @@ for(const d of matrix.Domains){
  if(d.DomainId==='construction-drawing-production'){
   d.NativeUiStatus='Implemented: production current Sheet / external RFA / CAD titleblock and five-step Package workflow';
   d.NativeWorkflowReadOnly=false;d.RuntimeCapability='Typed Native C# service; no new MCP transport';
-  d.NativeBackendFiles=['MCP/Core/Drawing/DrawingModels.cs','MCP/Core/Drawing/RevitDrawingService.cs','MCP/UI/DrawingProductionViewModel.cs','MCP/UI/RevitDrawingHost.cs','MCP/Core/Drawing/ExternalTitleBlockService.cs','MCP/Core/Drawing/DrawingFixtureIsolation.cs'];
+  d.NativeBackendFiles=['MCP/Core/Drawing/DrawingModels.cs','MCP/Core/Drawing/RevitDrawingService.cs','MCP/UI/DrawingProductionViewModel.cs','MCP/UI/RevitDrawingHost.cs','MCP/Core/Drawing/ExternalTitleBlockService.cs','MCP/Core/Drawing/CadTitleBlockGeometry.cs','MCP/Core/Drawing/CadTitleBlockFileService.cs','MCP/Core/Drawing/DrawingFixtureIsolation.cs'];
   d.FixtureEvidence=drawing?.Path||null;d.FixtureTestStatus=drawing?'PASS: '+drawing.Report.Passed+' assertions; scoped drawing workflow':'NOT_TESTED: no matching-build drawing report';
-  d.NativeWorkflowTestStatus=journey?'PASS: C4 production Panel journey A-H / external real files / read-back':'NOT_TESTED: C4 required';d.NativeWorkflowEvidence=journey?.Path||null;
+  d.NativeWorkflowTestStatus=journey?'PASS: C4 production Panel journey A-J / independent CAD candidates / read-back':'NOT_TESTED: C4 required';d.NativeWorkflowEvidence=journey?.Path||null;
   d.NativeScope={Mutation:'ConfirmedWrite',TransactionRequired:true,Readback:true,RequiresConfirmation:true,Limits:['Same TitleBlock Type, one main plan viewport','No adoption of user-owned sheets','Custom text mapping only; no new shared parameters','Guide Grid and arbitrary annotation copy disabled','Matchline / View Reference and auto dimension PARTIAL / NOT ENABLED']};
   d.Blockers=['Full Domain is not certified: per-field merge, adoption, multi-main topology and reference/dimension automation remain disabled'];
   d.RecommendedUiPattern='PreviewApplyPattern';d.LargeModelRisk='Explicit queries; deterministic complete plan; virtualized table; no geometry extraction; actual 300-sheet runtime benchmark not claimed';
@@ -148,7 +152,7 @@ const allSource=[...matrix.Inventory,...backend.SourceFiles.map(f=>({...f,Bytes:
 matrix.Inventory=[...new Map(allSource.map(f=>[f.Path,f])).values()].sort((a,b)=>a.Path.localeCompare(b.Path));
 matrix.SchemaVersion=3;
 matrix.NativeFeatures=[
- {Id:'construction-drawing-production',Status:drawing&&journey?'RUNTIME_VERIFIED':'RELEASE_GATED',RequiredGates:['A','B','C','C2','C3','C4','DrawingRuntime'],FixtureEvidence:drawing?.Path||null,ProductionJourneyEvidence:journey?.Path||null,Limits:['Current Sheet / external RFA / geometry-only DWG-DXF; external RVT PARTIAL','Same TitleBlock Type; one main plan viewport','Manual overrides default preserve; per-sheet explicit reapply','Auto dimension / Matchline / View Reference PARTIAL and disabled']},
+ {Id:'construction-drawing-production',Status:drawing&&journey&&c5Passed&&actualCad?'RUNTIME_VERIFIED':'RELEASE_GATED',RequiredGates:['A','B','C','C2','C3','C4','C5','DrawingRuntime','ActualDWG'],FixtureEvidence:drawing?.Path||null,ProductionJourneyEvidence:journey?.Path||null,CadAdversarialEvidence:c5Passed?c5Path:null,ActualCadEvidence:actualCad?.Path||null,Limits:['Current Sheet / external RFA / geometry-only DWG-DXF; external RVT PARTIAL','Same TitleBlock Type; one main plan viewport','Manual overrides default preserve; per-sheet explicit reapply','Auto dimension / Matchline / View Reference PARTIAL and disabled']},
  {Id:'site-terrain-earthwork',Status:terrainPassed&&cadPassed?'RUNTIME_VERIFIED':'RELEASE_GATED',RequiredGates:['A','B','C','C2','C3','TerrainLogic','TerrainRuntime','CadRuntime'],CadFixtureStatus:cadPassed?'PASS':'NOT_TESTED',Limits:['Supported subset only; full Domain remains RULE_READY','Explicit confirmation and read-back required','CAD temporary import rollback; no inferred elevation text or breaklines']},
  {Id:'model-summary',Status:'RETIRED_NATIVE_UI',Reason:'Removed low-value Native workflow; Domain and runtime tools retained'},
  {Id:'type-inventory',Status:'RETIRED_NATIVE_UI',Reason:'Removed Native inventory and navigation; generic link DTO and identity extracted'},

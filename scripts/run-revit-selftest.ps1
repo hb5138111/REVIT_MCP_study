@@ -9,7 +9,9 @@ param(
     [switch]$CadOnly,
     [switch]$EarthworkWorkflowOnly,
     [switch]$DrawingWorkflowOnly,
-    [switch]$DrawingJourneyOnly
+    [switch]$DrawingJourneyOnly,
+    [string]$ActualCadPath,
+    [switch]$KeepOpenForReview
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
@@ -36,7 +38,7 @@ foreach ($inputPath in @($RevitExe,$ProjectTemplate,$FamilyTemplate)) { if (-not
 [xml]$registeredManifest = Get-Content -LiteralPath (Join-Path $registeredRoot 'RevitMCP.addin') -Raw
 if ($registeredManifest.RevitAddIns.AddIn.FullClassName -ne 'RevitMCP.Application' -or
     $registeredManifest.RevitAddIns.AddIn.Assembly -ne 'RevitMCP\RevitMCP.dll') { throw 'Registered manifest does not match canonical application.' }
-@{ ProjectTemplate=$ProjectTemplate; BaseProjectTemplate='C:\ProgramData\Autodesk\RVT 2026\Templates\Default_M_ENU.rte'; FamilyTemplate=$FamilyTemplate; ExpectedBuildHash=$hash } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $runRoot 'request.json')
+@{ ProjectTemplate=$ProjectTemplate; BaseProjectTemplate='C:\ProgramData\Autodesk\RVT 2026\Templates\Default_M_ENU.rte'; FamilyTemplate=$FamilyTemplate; ExpectedBuildHash=$hash; ActualCadPath=$ActualCadPath; ActualCadCustomWidthMm='420'; KeepOpenForReview=[bool]$KeepOpenForReview } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $runRoot 'request.json')
 $process = Start-Process -FilePath $RevitExe -ArgumentList '/nosplash','/language','ENU' -WindowStyle Hidden -PassThru -Environment @{
     REVIT_MCP_SELFTEST_DIR=$runRoot
     REVIT_MCP_SELFTEST_CAD_ONLY=([string][bool]$CadOnly)

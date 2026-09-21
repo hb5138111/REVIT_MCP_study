@@ -24,6 +24,18 @@ internal static class DrawingTests
         noZone.SourceViewsByLevel.Remove(2);noZonePlan=DrawingPlanner.Generate(noZone,Array.Empty<string>());
         Verify("missing_source_keeps_other_rows",noZonePlan.Rows.Count==3&&noZonePlan.Rows.Count(r=>r.Change==DrawingChange.Add)==2&&noZonePlan.Rows.Single(r=>r.Level.Id==2).IssueText.Contains("來源視圖"));
         var uninitialized=new DrawingProductionViewModel(new Host(noZone));uninitialized.GoToStep(2);
+        var cadHost=new Host(noZone);
+        var border=new CadGeometry("FRAME","0","LwPolyline",new(0,0,420,297),new[]{new DrawingPoint(0,0),new DrawingPoint(420,0),new DrawingPoint(420,297),new DrawingPoint(0,297)},true);
+        cadHost.External=new(){IsCad=true,FileHash="test",Cad=CadTitleBlockAnalyzer.Analyze(new[]{border},"mm",1),Types=new[]{"圖框"}};
+        var cadVm=new DrawingProductionViewModel(cadHost);cadVm.SelectSource(TemplateSourceKind.Cad);cadVm.AnalyzeExternal();cadHost.Drain();cadVm.SizeAndUnitConfirmed=true;
+        Verify("cad_candidate_required",!cadVm.CanLoadExternal);cadVm.LoadExternal(false,true);Verify("cad_unselected_no_write",cadHost.Loads==0&&!cadVm.Busy);
+        cadVm.SelectCadCandidate(cadHost.External.Cad.Candidates[0].CandidateId);cadVm.SizeAndUnitConfirmed=true;Verify("cad_preview_required",!cadVm.CanLoadExternal);
+        var cadSelection=cadVm.ExternalAnalysis!.CadSelection!;cadSelection.ProfileName="已確認圖框";cadSelection.Purpose=TitleBlockPurpose.ConstructionDrawing;cadVm.PreviewCad();Verify("cad_purpose_filter_required",!cadVm.CanLoadExternal);
+        cadSelection.PurposeConfirmed=true;cadSelection.GeometryFilterConfirmed=true;cadVm.SizeAndUnitConfirmed=true;Verify("cad_confirmed_load_enabled",cadVm.CanLoadExternal);
+        cadSelection.ProfileName="已變更";Verify("cad_stale_preview_blocks",!cadVm.CanLoadExternal);cadVm.PreviewCad();cadVm.LoadExternal(false,true);cadHost.Drain();
+        Verify("cad_purpose_profile_metadata",cadHost.Loads==1&&cadVm.Package.TemplatePurpose==TitleBlockPurpose.ConstructionDrawing&&cadVm.Package.Profile.ProfileName=="已變更");
+        var profileGuid=cadVm.Package.Profile.ProfileGuid;cadVm.SelectCadCandidate(cadHost.External.Cad.Candidates[0].CandidateId);cadSelection=cadVm.ExternalAnalysis!.CadSelection!;cadSelection.Purpose=TitleBlockPurpose.AsBuiltDrawing;cadVm.PreviewCad();cadSelection.PurposeConfirmed=true;cadSelection.GeometryFilterConfirmed=true;cadVm.SizeAndUnitConfirmed=true;cadVm.LoadExternal(false,true);cadHost.Drain();
+        Verify("cad_second_profile_new_identity",cadHost.Loads==2&&cadVm.Package.Profile.ProfileGuid!=profileGuid&&cadVm.Package.TemplatePurpose==TitleBlockPurpose.AsBuiltDrawing);
         Verify("empty_plan_navigation_blocked",uninitialized.Step==0&&uninitialized.Status.Contains("尚未產生"));uninitialized.GoToStep(4);
         Verify("uncreated_qa_navigation_blocked",uninitialized.Step==0&&uninitialized.Status.Contains("尚未建立"));
         uninitialized.GoToStep(1);uninitialized.GeneratePlan();Verify("missing_template_reason",uninitialized.Step==1&&uninitialized.Status.Contains("圖框"));
@@ -62,6 +74,8 @@ internal static class DrawingTests
     {
         private Action<IDrawingContext>? pending;
         public int Applies;
+        public int Loads;
+        public ExternalTitleBlockAnalysis? External;
         public Host(DrawingPackageDefinition package){}
         public bool Submit(string identity,Action<IDrawingContext> action,Action<string> failure){if(pending!=null)return false;pending=action;return true;}
         public void Drain(){var action=pending;pending=null;action?.Invoke(this);}
@@ -77,8 +91,8 @@ internal static class DrawingTests
         public SheetTemplateBlueprint ConfigureViewRule(SheetTemplateBlueprint blueprint,long templateId,int? scale)=>blueprint;
         public DrawingProjectData Load()=>new();
         public SheetTemplateBlueprint Extract(long sheet)=>new();
-        public ExternalTitleBlockAnalysis AnalyzeExternal(string path,string unit,string rft)=>throw new NotSupportedException();
-        public SheetTemplateBlueprint LoadExternal(ExternalTitleBlockAnalysis analysis,string type,bool useExisting,bool confirmed)=>throw new NotSupportedException();
+        public ExternalTitleBlockAnalysis AnalyzeExternal(string path,string unit,string rft)=>External??throw new NotSupportedException();
+        public SheetTemplateBlueprint LoadExternal(ExternalTitleBlockAnalysis analysis,string type,bool useExisting,bool confirmed){Loads++;return new(){SourceKind=TemplateSourceKind.Cad,TitleBlockTypeId=Loads,CadCandidateId=analysis.CadSelection!.CandidateId};}
         public DrawingTemplateProfile SaveProfile(DrawingTemplateProfile profile)=>profile;
         public DrawingPlan Preview(DrawingPackageDefinition package)=>DrawingPlanner.Generate(package,Array.Empty<string>());
         public long[] Apply(DrawingPlan plan,bool confirmed){if(!confirmed||!plan.CanApply)throw new InvalidOperationException();Applies++;return new long[]{1};}

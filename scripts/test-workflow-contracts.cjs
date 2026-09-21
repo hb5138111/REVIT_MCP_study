@@ -72,6 +72,9 @@ for(const token of ['TransactionGroup','group.RollBack()','fresh.Signature!=prev
 check('drawing_native_not_mcp',false,/WebSocket|JObject|CommandExecutor/.test(drawingHost),!/WebSocket|JObject|CommandExecutor/.test(drawingHost),'Native typed host');
 check('drawing_document_guard',true,drawingHost.includes('DocumentSessionIdentity.GetDocumentIdentity(doc)!=identity'),drawingHost.includes('DocumentSessionIdentity.GetDocumentIdentity(doc)!=identity'),'Queued model identity check');
 check('drawing_pure_viewmodel',false,/Autodesk.Revit|System.Windows.Controls/.test(drawingVm),!/Autodesk.Revit|System.Windows.Controls/.test(drawingVm),'Production controller linked into Gate C2');
+const cadRelease=read('scripts/publish-v0611.ps1');
+for(const token of ['actual-cad-uat.json','ACTUAL_DWG_UAT_PASS','actual_source_unchanged','cad-c5.json','C5 source changed','C5 is missing, failed or stale','Third-party notices differ'])
+ check('cad_release_'+token,true,cadRelease.includes(token),cadRelease.includes(token),'CAD formal deployment requires matching-build adversarial and actual-source proof');
 const report={TestRunId:crypto.randomUUID(),Timestamp:new Date().toISOString(),GateA:tests.every(t=>t.Passed)?'PASS':'FAIL',Passed:tests.filter(t=>t.Passed).length,Failed:tests.filter(t=>!t.Passed).length,
  Warnings:['File-level transaction evidence is not a complete call graph.','Existing sanitary fixture command remains quarantined by repository QA/QC.','Generic backend required-field matching is a basic schema/dispatcher check, not semantic equivalence.',...contractWarnings],Assertions:tests};
 const out=path.resolve(process.argv[2]||path.join(root,'test-artifacts'));fs.mkdirSync(out,{recursive:true});fs.writeFileSync(path.join(out,'contracts.json'),JSON.stringify(report,null,2));

@@ -1,6 +1,6 @@
 # Reversible Gate C only. Never commits or performs a permanent release.
 [CmdletBinding()]
-param([string]$RecoveryDirectory,[string]$ProjectTemplate,[switch]$CadOnly,[switch]$EarthworkWorkflowOnly,[switch]$DrawingWorkflowOnly,[switch]$DrawingJourneyOnly)
+param([string]$RecoveryDirectory,[string]$ProjectTemplate,[switch]$CadOnly,[switch]$EarthworkWorkflowOnly,[switch]$DrawingWorkflowOnly,[switch]$DrawingJourneyOnly,[string]$ActualCadPath,[switch]$KeepOpenForReview)
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot -Parent
 $base=Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'Autodesk\Revit\Addins\2026'
@@ -59,6 +59,8 @@ try {
         if($CadOnly){$templateArguments+= '-CadOnly'}
         if($EarthworkWorkflowOnly){$templateArguments+= '-EarthworkWorkflowOnly'}
         if($DrawingJourneyOnly){$templateArguments+= '-DrawingJourneyOnly'}
+        if($ActualCadPath){if(-not $DrawingJourneyOnly){throw 'Actual CAD requires DrawingJourneyOnly'};$templateArguments+=@('-ActualCadPath',$ActualCadPath)}
+        if($KeepOpenForReview){$templateArguments+='-KeepOpenForReview'}
         if($DrawingWorkflowOnly){$templateArguments+= '-DrawingWorkflowOnly'}
         $launch=& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'run-revit-selftest.ps1') @templateArguments
         if($LASTEXITCODE -ne 0){throw ($launch -join "`n")}

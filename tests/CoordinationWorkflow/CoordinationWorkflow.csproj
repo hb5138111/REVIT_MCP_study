@@ -5,5 +5,6 @@
     <Compile Include="../../MCP/UI/CoordinationViewModel.cs" Link="CoordinationViewModel.cs" />
     <Compile Include="../../MCP/UI/DrawingProductionViewModel.cs" Link="DrawingProductionViewModel.cs" />
     <Compile Include="../../MCP/Core/Drawing/DrawingModels.cs" Link="DrawingModels.cs" />
+    <Compile Include="../../MCP/Core/Drawing/CadTitleBlockGeometry.cs" Link="CadTitleBlockGeometry.cs" />
   </ItemGroup>
 </Project>

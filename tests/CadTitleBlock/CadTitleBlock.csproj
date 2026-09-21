@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><DefineConstants>$(DefineConstants);DRAWING_TESTS;CAD_TESTS</DefineConstants></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ACadSharp" Version="3.7.16" />
+    <Compile Include="../../MCP/Core/Drawing/DrawingModels.cs" Link="DrawingModels.cs" />
+    <Compile Include="../../MCP/Core/Drawing/CadTitleBlockGeometry.cs" Link="CadTitleBlockGeometry.cs" />
+    <Compile Include="../../MCP/Core/Drawing/CadTitleBlockFileService.cs" Link="CadTitleBlockFileService.cs" />
+  </ItemGroup>
+</Project>
