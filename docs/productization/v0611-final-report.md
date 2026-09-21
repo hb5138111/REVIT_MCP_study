@@ -30,7 +30,7 @@ ACTUAL_DWG_UAT_PASS。完整機器可讀證據與 SHA 見 [v0611-report.json](v0
 | 24 | Gate C5 | 39 PASS / 0 FAIL；涵蓋 A–J、錯誤比例、遠端幾何、單位、大座標、多層、等大雙框、無用途文字、旋轉圖塊、候選污染與失效預覽。 |
 | 25 | Regression | A/B/C/C2/C3、Drawing、Terrain、CAD、Earthwork 均見下表；不是僅 Build PASS。 |
 | 26 | Build | Release.R26 (.NET 8 / Revit 2026.5)，0 error，2181 既有 warning。ACadSharp 固定 3.7.16 MIT；部署含 notices。 |
-| 27 | QA/QC | 73 PASS / 0 FAIL / 2 SKIP；2 warnings。此輪略過 C#／MCP Server 重建以保留已測成品；兩者已在獨立 Build Gate PASS。 |
+| 27 | QA/QC | 73 PASS / 0 FAIL / 2 SKIP；1 warning。此輪略過 C#／MCP Server 重建以保留已測成品；兩者已在獨立 Build Gate PASS。 |
 | 28 | Deployment | PASS；canonical scripts/install-addon.ps1，由 publish-v0611.ps1 驗證所有 Gate、C5、實檔及同版 SHA 後執行。 |
 | 29 | SHA256 | Build/runtime/deployed: CC182F20E83C00E26AE8DDC62DA3B0233F0479272BF9648455B7CAA0E99A7766。來源只讀 SHA: 9772C6F4D734B2ACA75E27C62B68C47154AAA2DF867F8C1D3DEFEE4FD198A2EB。 |
 | 30 | Commits | 實作 46eeee5；測試 eb825df；報告 commit 用 git log -1 --format=%H -- docs/productization/v0611-report.json 解析。 |

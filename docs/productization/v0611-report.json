@@ -107,7 +107,7 @@
       "Status": "PASS",
       "Passed": 73,
       "Failed": 0,
-      "Warnings": 2,
+      "Warnings": 1,
       "Skipped": 2,
       "Evidence": "test-artifacts/v0611/qaqc-final.log",
       "Scope": "Deployment and repository checks complete. C# and MCP Server builds explicitly skipped here to preserve the runtime-tested artifact; both separately PASS in Build/McpServerBuild gates."
