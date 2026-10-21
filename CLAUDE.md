@@ -35,8 +35,8 @@ These counts must be derived from source, not copied by memory.
 
 | Item | Current Count | Source of Truth |
 |---|---:|---|
-| Runtime MCP tools | 192 | `registerRevitTools()` from `MCP-Server/src/tools/index.ts` |
-| Domain SOP files | 83 | `domain/*.md` except `domain/README.md`, plus `domain/references/*.md` |
+| Runtime MCP tools | 200 | `registerRevitTools()` from `MCP-Server/src/tools/index.ts` |
+| Domain SOP files | 85 | `domain/*.md` except `domain/README.md`, plus `domain/references/*.md` |
 | Claude skills | 61 | `.claude/skills/*/SKILL.md` |
 
 When these numbers change, update `CLAUDE.md`, `README.md`, `README.zh-TW.md`, `docs/DOCUMENT_AUDIENCE_INVENTORY.md`, and any public site copy that makes grand-total claims. Then run `scripts/verify-qaqc.ps1 -SkipBuild -SkipDeploy`.
@@ -230,6 +230,15 @@ Use `get_active_view` before the dependent operation; if it is unavailable, call
 
 If the anchor tool times out, retry once. If it still fails, stop and report the limitation.
 
+### Model Awareness and Safe Edits
+
+- Prefer `get_model_snapshot` over screenshots to anchor document, active view, selection, levels and loaded links. Keep its `changeSeq` and call `get_recent_changes(sinceSeq)` before acting on an earlier picture of the model — the user may have edited Revit in between.
+- Use `export_view_image` (optionally `focusElementIds`) when a visual check is genuinely needed; it returns an image, not a file path.
+- For edits to existing elements, use `batch_modify_elements` with the default `dryRun=true` first, report the per-element before/after values and any warnings, and only then re-run with `dryRun=false` after the user agrees. Numeric parameter values are in project display units; offsets and rotation centers are always mm.
+- Read the `warnings` / `errors` arrays that `batch_modify_elements` returns — they are the only record of warnings raised by that edit (they are dismissed to avoid dialogs and do not persist in the model). Use `get_model_warnings(elementIds)` for pre-existing model warnings on the touched elements.
+- `check_beam_clear_height.requiredClearHeightMm` and `check_mep_spacing.clearanceMm` have no defaults by design. Ask the user; never substitute a "typical" value (same rule as `domain/mep-opening-candidate-scan.md`).
+- Review markers placed by these checks are Generic Model DirectShapes tagged `RevitMCP.Review`; remove them with `clear_review_markers` when the review is done.
+
 ### Subagent Delegation Boundaries
 
 **A constraint you are operating under does not propagate to a subagent unless you write it into the delegation message.** The subagent cannot see your system prompt, this file, or the earlier conversation. It sees only what you send.
@@ -307,6 +316,8 @@ Read the matching file before applying a workflow or calculation.
 | space demand matrix, 空間需求矩陣, MEP tag, 容量包絡, 機房面積反算, 前期容量, 基本設計容量, programming, SMP, concept design, Space 明細表, 逐空間通風檢核, FUM | `domain/mep-space-demand-matrix.md` |
 | parking numbering, auto parking numbering | `domain/parking-auto-numbering.md` |
 | parking clearance, vehicle clearance, 210cm | `domain/parking-clearance-check.md` |
+| beam clear height, 梁下淨高, 樑下淨高, headroom under beam, 天花內空間, plenum space, check_beam_clear_height | `domain/beam-clear-height-check.md` |
+| MEP spacing, 管線間距, 管線淨距, 管線預留, 維修空間, 保溫間距, check_mep_spacing | `domain/mep-spacing-clearance-check.md` |
 | parking count, parking space review | `domain/parking-space-review.md` |
 | PDF export, DCC, PDFExportOptions | `domain/pdf-export-comparison.md` |
 | fill pattern, Revit fill pattern conversion | `domain/revit-fill-pattern-conversion.md` |

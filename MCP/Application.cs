@@ -73,6 +73,9 @@ namespace RevitMCP
                 // 避免 HTTP.sys 孤兒 Request Queue 佔住 port。
                 AppDomain.CurrentDomain.ProcessExit += (s, e) => EmergencyStopSocket();
 
+                // 模型變更紀錄（供 get_recent_changes）：讓 AI 不看螢幕也知道模型被改了什麼
+                application.ControlledApplication.DocumentChanged += Core.Review.ChangeTracker.OnDocumentChanged;
+
                 Logger.Info("RevitMCP Plugin 已成功載入");
 
                 TaskDialog.Show("RevitMCP", 
@@ -93,6 +96,7 @@ namespace RevitMCP
         {
             try
             {
+                try { application.ControlledApplication.DocumentChanged -= Core.Review.ChangeTracker.OnDocumentChanged; } catch { }
                 EmergencyStopSocket();
                 return Result.Succeeded;
             }

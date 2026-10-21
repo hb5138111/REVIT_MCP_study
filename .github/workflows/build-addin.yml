@@ -1,0 +1,29 @@
+# 編譯檢查：在 Windows runner 上以 Nice3point Revit API 參考組件編譯 Add-in，
+# 讓每次 push / PR 都能確認 C# 對各 Revit 版本 API 可編譯（不需安裝 Revit）。
+name: Build Revit Add-in
+
+on:
+  push:
+    paths:
+      - "MCP/**"
+      - ".github/workflows/build-addin.yml"
+  pull_request:
+    paths:
+      - "MCP/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Release.R24, Release.R26]   # R24 = .NET Framework 4.8 / int ElementId；R26 = .NET 8 / long ElementId
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Build ${{ matrix.config }}
+        working-directory: MCP
+        run: dotnet build RevitMCP.csproj -c ${{ matrix.config }}

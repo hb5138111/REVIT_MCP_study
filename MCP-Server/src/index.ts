@@ -89,6 +89,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     console.error(`[MCP Server] Tool executed successfully`);
 
+    // 影像結果（export_view_image）：以 MCP image content 回傳，讓 AI 直接「看見」視圖，
+    // 文字部分只留中繼資料，避免把整段 base64 當文字塞進對話。
+    if (result && typeof result === "object" && typeof (result as any).imageBase64 === "string") {
+      const { imageBase64, mimeType, ...meta } = result as any;
+      return {
+        content: [
+          { type: "text", text: JSON.stringify(meta, null, 2) },
+          { type: "image", data: imageBase64, mimeType: mimeType || "image/png" },
+        ],
+      };
+    }
+
     return {
       content: [
         {

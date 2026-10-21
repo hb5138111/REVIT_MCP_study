@@ -33,7 +33,9 @@ export async function executeRevitTool(
 
     // 跨文件命令需要較長 timeout（開啟 .rvt/.rfa 檔案較費時）
     const CROSS_DOC_COMMANDS = new Set(["read_source_file_sheets", "copy_sheets_from_file", "sync_sheet_parameters_from_source", "inject_green_material_into_family"]);
-    const timeoutMs = CROSS_DOC_COMMANDS.has(commandName) ? 120000 : 30000;
+    // 全模型檢討（含連結）與影像輸出在大型專案可能超過 30 秒
+    const LONG_RUNNING_COMMANDS = new Set(["check_beam_clear_height", "check_mep_spacing", "export_view_image", "batch_modify_elements"]);
+    const timeoutMs = CROSS_DOC_COMMANDS.has(commandName) ? 120000 : LONG_RUNNING_COMMANDS.has(commandName) ? 300000 : 30000;
 
     // 發送命令到 Revit
     const response = await client.sendCommand(commandName, args, timeoutMs);

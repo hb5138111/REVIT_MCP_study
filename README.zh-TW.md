@@ -33,8 +33,8 @@ Revit MCP 透過 Model Context Protocol (MCP) 讓 AI Client 呼叫 Revit 工具�
 
 | 項目 | 數量 | 來源 |
 |---|---:|---|
-| Runtime MCP tools | 192 | `MCP-Server/src/tools/index.ts` 的 `registerRevitTools()` |
-| Domain SOP files | 83 | `domain/*.md` 扣除 `README.md`，加上 `domain/references/*.md` |
+| Runtime MCP tools | 200 | `MCP-Server/src/tools/index.ts` 的 `registerRevitTools()` |
+| Domain SOP files | 85 | `domain/*.md` 扣除 `README.md`，加上 `domain/references/*.md` |
 | Claude skills | 61 | `.claude/skills/*/SKILL.md` |
 
 如果這些數字改變，請同步更新 `CLAUDE.md`、本 README、`README.md`、`docs/DOCUMENT_AUDIENCE_INVENTORY.md`，並執行：
@@ -52,6 +52,23 @@ Revit MCP 透過 Model Context Protocol (MCP) 讓 AI Client 呼叫 Revit 工具�
 - stdio 連線方式與既有 Revit add-in 完全不受影響，不需要重新安裝或重新設定。
 
 完整的 MCP 2026-07-28 升級說明見 `docs/MIGRATION_GUIDE.md`。
+
+## 新功能：不看螢幕掌握模型、安全調整、梁下淨高與管線間距檢討
+
+AI 不必靠截圖，也能掌握 Revit 目前狀態，並在改模型前先試跑、找出建置錯誤：
+
+| 工具 | 用途 |
+|---|---|
+| `get_model_snapshot` | 一次取得作用視圖、選取、樓層、連結、主要類別數量、警告數 |
+| `get_recent_changes` | 你在 Revit 手動改了什麼（依 `changeSeq` 增量查詢） |
+| `get_model_warnings` | 依訊息分組的警告，可只看特定元素 |
+| `export_view_image` | 把視圖（或聚焦元素的 3D 剖面框）輸出成影像給 AI 看 |
+| `batch_modify_elements` | 批次改參數、換類型、移動、複製、旋轉；預設試跑（dryRun）、全有或全無、回報修改前後值與警告 |
+| `check_beam_clear_height` | 梁下淨高（含連結結構模型）與梁下到天花的管線空間，方法見 `domain/beam-clear-height-check.md` |
+| `check_mep_spacing` | 管線間（含保溫、含連結）與管線對梁柱的預留淨距，方法見 `domain/mep-spacing-clearance-check.md` |
+| `clear_review_markers` | 清除檢討時放置的標記 |
+
+兩個檢討工具的要求值（淨高、淨距）**沒有預設值**，AI 會先問你再執行。
 
 ## 架構
 
