@@ -223,8 +223,17 @@ export class RevitSocketClient {
         console.error(`[Socket] Sending command: ${commandName}`, parameters);
 
         return new Promise((resolve, reject) => {
+            // Request Timeout（以 requestId 各自計時；並行請求互不影響）
+            const timer = setTimeout(() => {
+                if (this.responseHandlers.has(requestId)) {
+                    this.responseHandlers.delete(requestId);
+                    reject(new Error('Command timed out'));
+                }
+            }, timeoutMs); // default 30 seconds; cross-document commands pass a longer value
+
             // Register response handler
             this.responseHandlers.set(requestId, (response: RevitResponse) => {
+                clearTimeout(timer);
                 if (response.success) {
                     resolve(response);
                 } else {
@@ -234,14 +243,6 @@ export class RevitSocketClient {
 
             // Send command
             this.ws?.send(JSON.stringify(command));
-
-            // Request Timeout
-            setTimeout(() => {
-                if (this.responseHandlers.has(requestId)) {
-                    this.responseHandlers.delete(requestId);
-                    reject(new Error('Command timed out'));
-                }
-            }, timeoutMs); // default 30 seconds; cross-document commands pass a longer value
         });
     }
 
