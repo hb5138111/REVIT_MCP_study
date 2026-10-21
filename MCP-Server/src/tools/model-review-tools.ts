@@ -79,7 +79,8 @@ export const modelReviewTools: Tool[] = [
             "安全地批次調整現有模型（改參數、換類型、移動、複製、旋轉），全部包在同一個交易群組，任一步失敗就整批回滾。" +
             "預設 dryRun=true：實際跑過 Revit 的接合/約束/警告檢查後回滾，回報每個元素修改前後的值與會產生的警告，模型不變。" +
             "流程：先 dryRun 檢查 → 向使用者說明結果 → 取得同意後 dryRun=false 正式執行（可在 Revit Ctrl+Z 復原）。" +
-            "參數值以專案顯示單位解讀（台灣專案通常 mm）。位移與旋轉中心一律 mm。不支援刪除（請用 delete_element）。",
+            "參數值以專案顯示單位解讀（台灣專案通常 mm）。位移與旋轉中心一律 mm。不支援刪除（請用 delete_element）。" +
+            "鎖定（Pinned）元素不移動/旋轉；群組成員只能改類型參數（target=type），其他操作會直接擋下。",
         inputSchema: {
             type: "object",
             properties: {
@@ -120,6 +121,7 @@ export const modelReviewTools: Tool[] = [
         description:
             "梁下淨高檢討（含連結的結構模型）：沿每支梁取樣，量測梁底到下方第一片樓板頂面的淨高，與要求值比較；" +
             "同時量測梁底到天花板頂的管線可用空間與天花高度。回傳不合格清單、各樓層最小淨高，可選擇在模型放置檢討標記或在「AI檢討_結果3D」上色。" +
+            "樓層歸屬以梁底為準；找不到樓板或打到下下層（穿過開口）的梁列在 needsReviewItems，不算合格。" +
             "方法見 domain/beam-clear-height-check.md。",
         inputSchema: {
             type: "object",
@@ -131,6 +133,7 @@ export const modelReviewTools: Tool[] = [
                 includeCeilings: { type: "boolean", description: "同時量測天花板（預設 true）" },
                 minCeilingSpaceMm: { type: "number", description: "梁底到天花頂至少要留的管線空間 mm；不足者標 CEILING_SPACE_LOW（預設不檢查）" },
                 samplesPerBeam: { type: "number", description: "每支梁取樣點數（預設 5）" },
+                timeBudgetSec: { type: "number", description: "時間預算秒數（預設 240、上限 270，須小於 MCP 端 300 秒逾時）。超過就停止並回傳 truncated=true 的部分結果；大型專案請改用 levels 分樓層執行" },
                 includePassed: { type: "boolean", description: "清單也列出合格的梁（預設 false）" },
                 maxResults: { type: "number", description: "清單最多筆數（預設 300）" },
                 createMarkers: { type: "boolean", description: "在不合格位置放置檢討標記（一般模型，可用 clear_review_markers 清除；預設 false）" },

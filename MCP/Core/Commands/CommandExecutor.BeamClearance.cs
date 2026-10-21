@@ -39,6 +39,11 @@ namespace RevitMCP.Core
             bool createMarkers = parameters["createMarkers"]?.Value<bool>() ?? false;
             bool highlight = parameters["highlightInView"]?.Value<bool>() ?? false;
             double minCeilingSpaceMm = parameters["minCeilingSpaceMm"]?.Value<double>() ?? 0;
+            // 時間預算：MCP 端對本命令的逾時是 300 秒，逾時後 Revit 仍會跑完、結果卻被丟棄。
+            // 大型專案（數千支梁）全模型可能要 20 分鐘以上 → 到預算就停，回傳已完成部分並標示 truncated。
+            int timeBudgetSec = Math.Max(10, Math.Min(270, parameters["timeBudgetSec"]?.Value<int>() ?? 240));
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            bool truncated = false;
             var levelNames = (parameters["levels"] as JArray)?.Select(t => t.Value<string>()).ToList();
             var categoryNames = (parameters["categories"] as JArray)?.Select(t => t.Value<string>()).ToList() ?? new List<string> { "beams" };
             var cats = categoryNames.Select(ReviewUtil.ParseCategory).Distinct().ToList();
@@ -60,9 +65,11 @@ namespace RevitMCP.Core
 
             foreach (var src in ReviewUtil.GetSourceDocs(doc, includeLinks))
             {
+                if (truncated) break;
                 var filter = new ElementMulticategoryFilter(cats);
                 foreach (Element e in new FilteredElementCollector(src.Doc).WherePasses(filter).WhereElementIsNotElementType())
                 {
+                    if (clock.Elapsed.TotalSeconds > timeBudgetSec) { truncated = true; break; }
                     var box = ReviewUtil.HostBox(e, src.ToHost);
                     if (box == null) continue;
                     if (!ReviewUtil.InBands(bands, box.Value.min.Z)) continue;
@@ -75,9 +82,15 @@ namespace RevitMCP.Core
                     r.Required = ReviewUtil.Ft(requiredMm);
                     if (r.Point != null)
                     {
-                        var lv = ReviewUtil.LevelAtZ(hostLevels, r.FloorZ ?? r.BottomZ);
+                        // 樓層歸屬以梁底為準（domain §3）：梁底所在 (本層, 上一層] 的「本層」，與 LevelBands/InBands 的下界一致。
+                        // 不可用打到的樓板高度決定，否則射線穿過開口打到下下層時，梁會被歸到錯的樓層。
+                        var lv = ReviewUtil.LevelAtZ(hostLevels, r.BottomZ - 1e-6, 0);
                         r.SpaceLevel = lv?.Name;
                         r.SpaceLevelElev = lv?.ProjectElevation;
+                        int li = lv != null ? hostLevels.FindIndex(l => l.Id == lv.Id) : -1;
+                        // 樓板頂低於「本層與下一層的中線」→ 不是本層空間的樓板（多半是穿過開口、挑空打到下下層）
+                        if (li > 0 && r.FloorZ != null)
+                            r.FloorBelowSpaceLevel = r.FloorZ.Value < (lv.ProjectElevation + hostLevels[li - 1].ProjectElevation) / 2;
                     }
                     results.Add(r);
                 }
@@ -88,6 +101,7 @@ namespace RevitMCP.Core
             {
                 if (r.Point == null) r.Status = "NO_GEOMETRY_HIT";
                 else if (r.ClearHeight == null) r.Status = "NO_FLOOR_BELOW";
+                else if (r.FloorBelowSpaceLevel) r.Status = "FLOOR_BELOW_SPACE_LEVEL"; // 不可當成合格（domain §4）
                 else if (r.ClearHeight.Value + tol < r.Required) r.Status = "FAIL";
                 else r.Status = "PASS";
 
@@ -106,17 +120,27 @@ namespace RevitMCP.Core
             if (highlight && fails.Count > 0)
                 highlighted = ReviewUtil.HighlightInResultView(doc, fails.Where(r => r.IsHost).Select(r => new ElementId(r.Id)), new Color(230, 40, 40));
 
-            var perLevel = results.Where(r => r.ClearHeight != null).GroupBy(r => r.SpaceLevel ?? "(未知)")
+            // 最小淨高只取有效量測（打到本層樓板者）；需人工確認的另外計數
+            bool Measured(BeamClearResult r) => r.Status == "FAIL" || r.Status == "PASS" || r.Status == "CEILING_SPACE_LOW";
+            var perLevel = results.Where(r => r.SpaceLevel != null).GroupBy(r => r.SpaceLevel)
                 .Select(g => new
                 {
                     level = g.Key,
+                    elevationMm = ReviewUtil.Mm(g.First().SpaceLevelElev ?? 0),
                     beams = g.Count(),
+                    measured = g.Count(Measured),
                     fail = g.Count(r => r.Status == "FAIL"),
-                    minClearHeightMm = ReviewUtil.Mm(g.Min(r => r.ClearHeight.Value)),
-                    minCeilingSpaceMm = g.Any(r => r.CeilingSpace != null) ? ReviewUtil.Mm(g.Where(r => r.CeilingSpace != null).Min(r => r.CeilingSpace.Value)) : (double?)null
-                }).OrderBy(x => x.level).ToList();
+                    needsReview = g.Count(r => !Measured(r)),
+                    minClearHeightMm = g.Any(Measured) ? ReviewUtil.Mm(g.Where(Measured).Min(r => r.ClearHeight.Value)) : (double?)null,
+                    minCeilingSpaceMm = g.Any(r => Measured(r) && r.CeilingSpace != null) ? ReviewUtil.Mm(g.Where(r => Measured(r) && r.CeilingSpace != null).Min(r => r.CeilingSpace.Value)) : (double?)null
+                }).OrderBy(x => x.elevationMm).ToList();
 
-            var listed = (includePassed ? results.OrderBy(r => r.ClearHeight ?? double.MaxValue).ToList() : fails).Take(maxResults);
+            var listedAll = includePassed ? results.OrderBy(r => r.ClearHeight ?? double.MaxValue).ToList() : fails;
+            // domain §4：NO_FLOOR_BELOW / FLOOR_BELOW_SPACE_LEVEL / NO_GEOMETRY_HIT 不可當成合格，單獨列出。
+            // 依稀有/嚴重度排序（幾何異常 → 打到下層樓板 → 找不到樓板），避免少數重要項目被 maxResults 截掉
+            int ReviewRank(string s) => s == "NO_GEOMETRY_HIT" ? 0 : s == "FLOOR_BELOW_SPACE_LEVEL" ? 1 : 2;
+            var reviewAll = results.Where(r => !Measured(r)).OrderBy(r => ReviewRank(r.Status)).ThenBy(r => r.SpaceLevelElev ?? 0).ToList();
+            bool listCapped = listedAll.Count > maxResults || reviewAll.Count > maxResults;
 
             return new
             {
@@ -124,15 +148,28 @@ namespace RevitMCP.Core
                 requiredClearHeightMm = requiredMm,
                 checkedElements = checkedCount,
                 skippedNoGeometry,
+                truncated,
+                elapsedSec = Math.Round(clock.Elapsed.TotalSeconds, 1),
+                truncatedNote = truncated
+                    ? $"已達時間預算 {timeBudgetSec} 秒，只檢討了前 {checkedCount} 個元素，結果不完整（不合格數與各樓層最小值都可能偏低）。請用 levels 分樓層執行。"
+                    : null,
                 failCount = results.Count(r => r.Status == "FAIL"),
                 ceilingSpaceLowCount = results.Count(r => r.Status == "CEILING_SPACE_LOW"),
                 noFloorBelowCount = results.Count(r => r.Status == "NO_FLOOR_BELOW"),
+                floorBelowSpaceLevelCount = results.Count(r => r.Status == "FLOOR_BELOW_SPACE_LEVEL"),
+                noGeometryHitCount = results.Count(r => r.Status == "NO_GEOMETRY_HIT"),
                 perLevel,
                 markersPlaced = markers,
                 highlightedInView = highlighted,
                 resultView = highlighted > 0 || markers > 0 ? ReviewUtil.ResultViewName : null,
                 coordinateNote = "座標為主模型內部原點（mm）；淨高 = 梁底 − 下方第一片樓板頂面",
-                items = listed.Select(r => r.ToJson()).ToList()
+                itemsTotal = listedAll.Count,
+                needsReviewTotal = reviewAll.Count,
+                listNote = listCapped
+                    ? $"清單只列前 {maxResults} 筆（items 共 {listedAll.Count}、needsReviewItems 共 {reviewAll.Count}）；統計數字為完整結果。加大 maxResults 可看全部。"
+                    : null,
+                items = listedAll.Take(maxResults).Select(r => r.ToJson()).ToList(),
+                needsReviewItems = reviewAll.Take(maxResults).Select(r => r.ToJson()).ToList()
             };
         }
 
@@ -258,7 +295,7 @@ namespace RevitMCP.Core
         {
             public IdType Id;
             public string Source, Category, TypeName, Mark, RefLevel, SpaceLevel, Status, FloorRef;
-            public bool IsHost;
+            public bool IsHost, FloorBelowSpaceLevel;
             public XYZ Point;
             public double BottomZ, Required;
             public double? FloorZ, ClearHeight, CeilingSpace, CeilingHeight, SpaceLevelElev;

@@ -118,6 +118,9 @@ namespace RevitMCP.Core
             var ids = (op["elementIds"] as JArray)?.Select(x => new ElementId(x.Value<IdType>())).ToList() ?? new List<ElementId>();
             if (ids.Count == 0) throw new Exception($"第 {index} 個操作（{action}）缺少 elementIds");
             var elements = ids.Select(id => doc.GetElement(id) ?? throw new Exception($"第 {index} 個操作：找不到元素 {id.GetIdValue()}")).ToList();
+            // 改類型參數不動群組成員本身；其餘操作 Revit 都會以「只允許在群組編輯模式中變更」整批失敗 → 先擋下並講清楚
+            bool typeTarget = action == "set_parameter" && (op["target"]?.Value<string>() ?? "instance").Trim().ToLowerInvariant() == "type";
+            if (!typeTarget) CheckGrouped(elements, index, action);
 
             switch (action)
             {
@@ -166,6 +169,14 @@ namespace RevitMCP.Core
             var pinned = elements.Where(e => e.Pinned).Select(e => e.Id.GetIdValue()).ToList();
             if (pinned.Count > 0)
                 throw new Exception($"第 {index} 個操作（{action}）：元素已鎖定（Pinned），為避免誤動不執行：{string.Join(",", pinned.Take(20))}");
+        }
+
+        private static void CheckGrouped(List<Element> elements, int index, string action)
+        {
+            var grouped = elements.Where(e => e.GroupId != ElementId.InvalidElementId)
+                .Select(e => $"{e.Id.GetIdValue()}（群組 {e.GroupId.GetIdValue()}）").ToList();
+            if (grouped.Count > 0)
+                throw new Exception($"第 {index} 個操作（{action}）：元素屬於群組，Revit 只允許在「編輯群組」模式中修改，不執行：{string.Join(",", grouped.Take(20))}");
         }
 
         private object OpSetParameter(Document doc, JObject op, List<Element> elements, int index)

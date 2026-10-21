@@ -42,7 +42,9 @@ metadata:
 | 5. 天花 | 同一點再打一條只認「天花板」的射線：第一面 = 天花頂、第二面 = 天花底 | 得到梁下到天花頂的管線空間、與天花淨高 |
 | 6. 取最不利 | 每支梁取所有取樣點中的最小淨高 | 檢討看最差處 |
 
-**樓層歸屬**：`levels` 以「空間所在樓層」篩選——3F 代表梁底落在 3F 與 4F 樓層之間的梁（也就是 3F 空間頂上的梁），與梁本身的參考樓層（多半是 4F）無關。回傳同時列出 `referenceLevel`（梁的參考樓層）與 `spaceLevel`（下方空間樓層）。
+**樓層歸屬**：`levels` 以「空間所在樓層」篩選——3F 代表梁底落在 3F 與 4F 樓層之間的梁（也就是 3F 空間頂上的梁），與梁本身的參考樓層（多半是 4F）無關。回傳同時列出 `referenceLevel`（梁的參考樓層）與 `spaceLevel`（下方空間樓層）。`spaceLevel` **一律由梁底高度決定**，不由射線打到的樓板決定。
+
+**樓板是否屬於本層空間**：打到的樓板頂面若低於「本層與下一層標高的中線」，就不是本層空間的地板（多半是射線穿過開口、挑空打到下下層），狀態判為 `FLOOR_BELOW_SPACE_LEVEL`，量到的數值只供參考，不參與合格判定與各樓層最小淨高。中線以上的降版（例如浴廁降版）仍視為本層樓板。
 
 ## 4. 狀態判定
 
@@ -51,10 +53,13 @@ metadata:
 | `FAIL` | 淨高 < 要求值（容差 0.5 mm） | 回報 `shortageMm`，列入問題清單 |
 | `CEILING_SPACE_LOW` | 淨高合格，但梁底到天花頂 < `minCeilingSpaceMm` | 通知機電／調整天花高度 |
 | `NO_FLOOR_BELOW` | 射線往下找不到樓板 | 常見於挑空、樓梯間、開口、邊梁外側；人工確認 |
+| `FLOOR_BELOW_SPACE_LEVEL` | 打到的樓板頂低於本層與下一層的中線（見 §3） | 多半是穿過開口或挑空；人工確認，不可當成合格 |
 | `NO_GEOMETRY_HIT` | 取樣點皆未穿過梁實體 | 族群幾何異常，人工確認 |
 | `PASS` | 合格 | 預設不列出（`includePassed=true` 才列） |
 
-`NO_FLOOR_BELOW` 與異常大的淨高（例如超過兩層樓高）通常代表射線穿過開口打到下下層，**不可當成合格**，應在報告中單獨列出。
+`NO_FLOOR_BELOW`、`FLOOR_BELOW_SPACE_LEVEL`、`NO_GEOMETRY_HIT` 都**不可當成合格**：工具把它們放在 `needsReviewItems`（與不合格清單 `items` 分開），`perLevel` 的 `minClearHeightMm` 只計入有效量測（`FAIL`／`PASS`／`CEILING_SPACE_LOW`），`needsReview` 為該層需人工確認的數量。
+
+`needsReviewItems` 依 `NO_GEOMETRY_HIT` → `FLOOR_BELOW_SPACE_LEVEL` → `NO_FLOOR_BELOW` 排序，少數但較嚴重的項目排前面。兩份清單都受 `maxResults` 限制，統計數字（`failCount` 等）則一律是完整結果；`itemsTotal` / `needsReviewTotal` 大於清單長度時會附 `listNote`，報告須註明「清單僅列前 N 筆」。
 
 ## 5. 已知限制
 
@@ -62,6 +67,7 @@ metadata:
 - 若建築樓板與結構樓板分開建模，射線取到的是第一片（通常是建築完成面），符合淨高定義；但若只有結構版，量到的是結構版頂，需扣除地坪裝修厚度後再判斷。
 - 射線檢測依賴「AI檢討_射線用3D」視圖的可見性；工具會自動建立該視圖並確保樓板、天花、連結可見。請勿在該視圖套用樣版或隱藏連結。
 - 座標為主模型內部原點（mm）。
+- 時間預算（`timeBudgetSec`，預設 240 秒）：大型專案全模型可能需要 20 分鐘以上，超過預算就停止並回傳 `truncated=true` 的部分結果。部分結果的不合格數與各樓層最小淨高都可能偏低，**不可當成完整檢討**；請用 `levels` 分樓層執行。
 
 ## 6. 標準流程
 
@@ -73,4 +79,4 @@ metadata:
 
 ## 7. 報告格式
 
-輸出時引用本文件：`Per domain/beam-clear-height-check.md, step 3: ...`，至少包含要求值、檢討樓層、各樓層最小淨高、不合格清單（元素 ID、來源模型、梁類型、淨高、不足量、位置）。
+輸出時引用本文件：`Per domain/beam-clear-height-check.md, step 3: ...`，至少包含要求值、檢討樓層、各樓層最小淨高、不合格清單（元素 ID、來源模型、梁類型、淨高、不足量、位置），以及需人工確認的數量與清單（`needsReviewItems`）；若 `truncated=true`，須明講結果不完整。
