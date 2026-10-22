@@ -214,7 +214,7 @@ export const baseTools: Tool[] = [
                 category: { type: "string", description: "元素類別（如：Walls, Rooms, Doors, Windows, Floors, Columns）" },
                 family: { type: "string", description: "族群名稱（選填）" },
                 type: { type: "string", description: "類型名稱（選填）" },
-                level: { type: "string", description: "樓層名稱（選填）" },
+                level: { type: "string", description: "樓層名稱（選填）。須與 Revit 樓層名稱完全相符（不分大小寫），例如 \"1FL\" 不會比對到 \"11FL\"；名稱不存在時回傳錯誤並列出現有樓層" },
                 maxCount: { type: "number", description: "最大回傳數量（預設 100）", default: 100 },
             },
             required: ["category"],

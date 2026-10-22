@@ -2982,6 +2982,15 @@ namespace RevitMCP.Core
                     else throw new Exception($"無法辨識品類: {categoryName}。請使用英文名稱如 Walls, Rooms, Doors, Windows, Floors, Columns");
                 }
 
+                // 樓層名稱必須完全相符（不分大小寫）：子字串比對會讓 "1FL" 也撈到 "11FL"、"21FL"
+                if (!string.IsNullOrEmpty(levelFilter))
+                {
+                    levelFilter = levelFilter.Trim();
+                    var levelNames = new FilteredElementCollector(doc).OfClass(typeof(Level)).Select(l => l.Name).ToList();
+                    if (!levelNames.Any(n => string.Equals(n, levelFilter, StringComparison.OrdinalIgnoreCase)))
+                        throw new Exception($"找不到樓層: {levelFilter}（樓層名稱須完全相符；現有：{string.Join(", ", levelNames)}）");
+                }
+
                 var elements = collector.WhereElementIsNotElementType().ToElements();
                 var filteredList = new List<Element>();
 
@@ -3029,7 +3038,7 @@ namespace RevitMCP.Core
                     if (match && !string.IsNullOrEmpty(levelFilter))
                     {
                         string elemLevel = ResolveElementLevelName(doc, elem);
-                        if (!elemLevel.Contains(levelFilter))
+                        if (!string.Equals(elemLevel, levelFilter, StringComparison.OrdinalIgnoreCase))
                             match = false;
                     }
 
