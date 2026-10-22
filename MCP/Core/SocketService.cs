@@ -34,6 +34,11 @@ namespace RevitMCP.Core
         private DateTime _lastRejectLogUtc = DateTime.MinValue;
         private DateTime _lastRejectOriginLogUtc = DateTime.MinValue;
 
+        // WebSocket 同一時間只允許一個未完成的 SendAsync。ExternalEventManager 會在一次
+        // Execute 內連續跑完佇列中的多個命令，每個命令都 fire-and-forget 送回應，
+        // 不序列化就會拋「There is already one outstanding 'SendAsync' call」而遺失回應。
+        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
+
         public event EventHandler<RevitCommandRequest> CommandReceived;
         public bool IsRunning => _isRunning;
         public bool IsConnected
@@ -414,10 +419,12 @@ namespace RevitMCP.Core
                 throw new InvalidOperationException("WebSocket 未連線");
             }
 
+            string json = JsonConvert.SerializeObject(response);
+            byte[] bytes = Encoding.UTF8.GetBytes(json);
+
+            await _sendLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                string json = JsonConvert.SerializeObject(response);
-                byte[] bytes = Encoding.UTF8.GetBytes(json);
                 await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
                 Logger.Debug($"[Socket] 已發送回應 (RequestId: {response.RequestId})");
             }
@@ -425,6 +432,10 @@ namespace RevitMCP.Core
             {
                 Logger.Error($"[Socket] 發送回應失敗 (RequestId: {response.RequestId})", ex);
                 throw;
+            }
+            finally
+            {
+                _sendLock.Release();
             }
         }
 

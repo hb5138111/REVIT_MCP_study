@@ -112,13 +112,13 @@ If pulling the 2026-07-17 cleanup commit fails with "local changes would be over
 |---|---|
 | `MCP/Application.cs` | Revit `IExternalApplication` entry point and ribbon setup |
 | `MCP/Core/SocketService.cs` | Revit-side WebSocket server using `HttpListener` |
-| `MCP/Core/ExternalEventManager.cs` | Marshals work onto the Revit UI thread |
+| `MCP/Core/ExternalEventManager.cs` | Marshals WebSocket commands onto the Revit UI thread through a FIFO queue drained on each `Execute`, so parallel MCP tool calls each get their own response. It once held a single `_action` field, which silently dropped all but the last of concurrent calls (they surfaced as `Command timed out`) |
 | `MCP/Core/CommandExecutor.cs` | Main command dispatcher |
 | `MCP/Core/Commands/*.cs` | Command modules split by workflow area |
 | `MCP/Core/RevitCompatibility.cs` | Cross-version `ElementId` helpers |
 | `MCP/UI/CameraManagerPaneProvider.cs` | `IDockablePaneProvider` for the camera-manager pane. The pane's `FrameworkElement` must be constructed in `OnStartup` — Revit never rebuilds that instance after `RegisterDockablePane` |
 | `MCP/UI/CameraManagerPanelControl.cs` | The pane itself: WPF built in code, no XAML. Styling comes only from `MCP/UI/CameraManagerTheme.cs` (every container needs an explicit `Background`; the pane host paints black behind a transparent one) |
-| `MCP/Core/CameraManagerEventQueue.cs` | FIFO `ExternalEvent` queue used **only** by the pane. Deliberately separate from `ExternalEventManager`, whose single `_action` field would drop queued pane work |
+| `MCP/Core/CameraManagerEventQueue.cs` | FIFO `ExternalEvent` queue used **only** by the pane. Deliberately separate from `ExternalEventManager` (it was split off while that class still held a single `_action` field; both are FIFO queues now, but pane work and WebSocket commands keep their own `ExternalEvent`) |
 | `MCP/Core/CameraKeyPlanService.*.cs` | Key Plan generation, split across eight `partial` files by concern (Overview / Sheet / MarkerA / EyeRoom / LiveUpdate / Versions / ViewHygiene / core) |
 | `MCP/Resources/icon-32-{on,off}.png` | Ribbon toggle-button state icons, compiled as WPF `<Resource>` into `RevitMCP.g.resources`. Load them only through an explicit-assembly pack URI (`pack://application:,,,/RevitMCP;component/...`) — the assembly-less relative form needs `Application.ResourceAssembly`, which an add-in inside Revit.exe cannot rely on |
 | `MCP/RevitMCP.csproj` | Single multi-version build project |
@@ -145,7 +145,7 @@ If pulling the 2026-07-17 cleanup commit fails with "local changes would be over
 - C# namespace: `RevitMCP`.
 - Revit model changes must run inside `Transaction` and be reversible.
 - Revit API work must go through `ExternalEventManager` when called from the WebSocket flow.
-- Revit API work initiated by the dockable pane goes through `CameraManagerEventQueue`, not `ExternalEventManager`. Do not merge the two: the pane can have several operations in flight, and `ExternalEventManager` holds one `_action` at a time.
+- Revit API work initiated by the dockable pane goes through `CameraManagerEventQueue`, not `ExternalEventManager`. Do not merge the two: each owns its own `ExternalEvent` and handler, so pane operations and MCP tool calls never queue behind one another or share failure handling.
 - Work triggered by `DocumentChanged` / `ViewActivated` must only set a dirty flag; do the actual reading and redrawing on the next `Idling`. Those two events fire while a document is still opening, and heavy WPF or `ExportImage` work there crashed Revit (`0xe0434352`) — see `docs/camera-manager/adr.zh-TW.md` D-008.
 - C# command payloads use the existing `RevitCommandRequest` / `RevitCommandResponse` shape.
 - MCP tool names use snake_case.

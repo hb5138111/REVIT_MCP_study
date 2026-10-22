@@ -7,7 +7,10 @@ namespace RevitMCP.Core
     /// <summary>
     /// 相機管理面板專用的 ExternalEvent 佇列（2026-09-24 第二輪崩潰調查新增）。
     ///
-    /// 為什麼不再用共用的 <see cref="ExternalEventManager"/>：它只有「一個」_action 欄位——
+    /// （2026-10-22 起 <see cref="ExternalEventManager"/> 也已改為 FIFO 佇列，下面描述的
+    /// 覆寫問題在那裡已修正；兩者仍各自持有 ExternalEvent，刻意不合併。）
+    ///
+    /// 為什麼不再用共用的 <see cref="ExternalEventManager"/>：它當時只有「一個」_action 欄位——
     /// ExecuteCommand 是「覆寫 _action 再 Raise」，Execute 真正執行前如果又呼叫了一次，
     /// 前一個動作就被悄悄丟掉（讀碼證實）。面板一次刷新會連續排入「讀快照 → 匯出底圖 →
     /// 讀剖面線」三個動作，結果只有最後一個會跑，底圖匯出被吃掉、`_baseMapRefreshInFlight`

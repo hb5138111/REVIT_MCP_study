@@ -29,7 +29,7 @@ description: "族群盤點與清整編排:對指定 category 做雙軸盤點(載
 ### Phase 4:執行【G3 前置檢查 → 動作】
 動作前**逐項過 7 項強制前置檢查**(見 domain)。重點:
 - 刪類型前**驗 0 實例**;有實例先 `change_element_type` 轉移再刪。
-- **逐一執行,不並行**(ExternalEventManager 單一 action 會覆寫)。
+- **逐一執行,不並行**(並行指令現已排隊、不會遺失,但破壞性動作仍須逐筆驗證後再做下一筆)。
 - 列出 `delete_element` 的**連帶刪除**影響(工具不會自己報)。
 
 範式 A — Purge:驗 0 實例 → `delete_element` 逐一。
