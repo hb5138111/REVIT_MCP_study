@@ -8,11 +8,13 @@ jobs:
   check-files:
     runs-on: ubuntu-latest
     steps:
-      # 「只允許 domain/ 與 GEMINI.md」這條限制只套用在外部 fork PR。
+      # 「只允許 domain/ 與 GEMINI.md」這條限制只套用在 head 來自其他倉庫的 PR（外部 fork PR）。
+      # 以 head 倉庫的 full_name 與本倉庫比對，而不是看 head.repo.fork：
+      # 若本倉庫本身就是 GitHub fork，head.repo.fork 對倉庫內每個 PR 都是 true，維護者 PR 會被誤擋。
       # 同倉庫（維護者）PR 是受信任來源，允許觸及 MCP-Server/、MCP/、scripts/、docs/、.github/ 等程式碼與設定。
-      # fork PR 的知識限制維持不變（見下方 allowedPaths）。
-      - name: 檢查修改的檔案（僅限 fork PR）
-        if: github.event.pull_request.head.repo.fork == true
+      # 外部 PR 的知識限制維持不變（見下方 allowedPaths）。
+      - name: 檢查修改的檔案（僅限外部倉庫 PR）
+        if: github.event.pull_request.head.repo.full_name != github.repository
         uses: actions/github-script@v7
         with:
           script: |
@@ -45,5 +47,5 @@ jobs:
             }
 
       - name: 略過原因（同倉庫 / 維護者 PR）
-        if: github.event.pull_request.head.repo.fork != true
+        if: github.event.pull_request.head.repo.full_name == github.repository
         run: echo "✅ 同倉庫（維護者）PR，略過知識限定檢查，允許修改程式碼與設定檔。"
