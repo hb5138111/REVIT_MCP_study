@@ -131,8 +131,8 @@ namespace RevitMCP
 
                 // 初始化 ExternalEventManager (必須在 UI 執行緒建立)
                 _ = ExternalEventManager.Instance;
-                // 相機管理面板專用的 ExternalEvent FIFO 佇列（不再與 MCP 命令共用
-                // ExternalEventManager 的單一 _action 欄位，見 CameraManagerEventQueue 註解）。
+                // 相機管理面板專用的 ExternalEvent FIFO 佇列（不與 MCP 命令共用
+                // ExternalEventManager 的 ExternalEvent，見 CameraManagerEventQueue 註解）。
                 CameraManagerEventQueue.Initialize();
 
                 // 註冊相機管理停靠面板（固定 GUID，見 CameraManagerPaneProvider）。
