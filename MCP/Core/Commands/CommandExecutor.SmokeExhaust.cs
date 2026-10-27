@@ -25,6 +25,15 @@ namespace RevitMCP.Core
     {
         #region 排煙窗檢討
 
+        /// <summary>
+        /// 以專案基準點為 ±0 的樓層高程（feet）。Level.Elevation 依樓層類型的「高程基準」可能相對測量點，
+        /// 混用不同基準的樓層時不能直接比較；地下層判定一律用此值（見 domain/smoke-exhaust-review.md §8-2）。
+        /// </summary>
+        private static double ElevationFromProjectBasePoint(Level level)
+        {
+            double basePointZ = BasePoint.GetProjectBasePoint(level.Document)?.Position.Z ?? 0.0;
+            return level.ProjectElevation - basePointZ;
+        }
 
         /// <summary>
         /// 從族群名稱推斷窗戶開啟方式與有效面積折減係數
@@ -230,8 +239,8 @@ namespace RevitMCP.Core
             Level level = FindLevel(doc, levelName, false);
             double levelElevation = level.Elevation;
 
-            // 判定是否為地下室
-            bool isBasement = levelElevation < 0;
+            // 判定是否為地下室（以專案基準點為 ±0）
+            bool isBasement = ElevationFromProjectBasePoint(level) < 0;
 
             // 取得該樓層所有有面積的房間
             var rooms = new FilteredElementCollector(doc)
@@ -946,7 +955,7 @@ namespace RevitMCP.Core
             var allLevels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(l => l.Elevation)
+                .OrderBy(l => l.ProjectElevation)
                 .ToList();
             int floorNumber = allLevels.IndexOf(allLevels.First(l => l.Id == level.Id)) + 1;
             bool isAbove10F = floorNumber > 10;
@@ -1521,7 +1530,7 @@ namespace RevitMCP.Core
             var allLevels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(l => l.Elevation)
+                .OrderBy(l => l.ProjectElevation)
                 .ToList();
 
             if (allLevels.Count == 0)
@@ -1539,12 +1548,12 @@ namespace RevitMCP.Core
             }
 
             // 1. 計算建築物高度
-            double minElevation = allLevels.First().Elevation * FEET_TO_M;
-            double maxElevation = allLevels.Last().Elevation * FEET_TO_M;
+            double minElevation = allLevels.First().ProjectElevation * FEET_TO_M;
+            double maxElevation = allLevels.Last().ProjectElevation * FEET_TO_M;
             double buildingHeight = maxElevation - minElevation;
 
-            // 2. 計算地下層總面積（Elevation < 0 的樓層）
-            var basementLevels = allLevels.Where(l => l.Elevation < 0).ToList();
+            // 2. 計算地下層總面積（以專案基準點為 ±0，高程 < 0 的樓層）
+            var basementLevels = allLevels.Where(l => ElevationFromProjectBasePoint(l) < 0).ToList();
             double basementTotalArea = 0;
             var basementDetails = new List<object>();
 
@@ -1561,7 +1570,7 @@ namespace RevitMCP.Core
                 basementDetails.Add(new
                 {
                     LevelName = bLevel.Name,
-                    Elevation = Math.Round(bLevel.Elevation * FEET_TO_M, 2),
+                    Elevation = Math.Round(ElevationFromProjectBasePoint(bLevel) * FEET_TO_M, 2),
                     Area = Math.Round(levelArea, 2),
                     RoomCount = bRooms.Count
                 });
