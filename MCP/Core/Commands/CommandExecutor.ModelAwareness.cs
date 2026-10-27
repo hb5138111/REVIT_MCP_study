@@ -78,7 +78,11 @@ namespace RevitMCP.Core
             {
                 id = l.Id.GetIdValue(),
                 name = l.Name,
-                elevationMm = ReviewUtil.Mm(l.ProjectElevation)
+                // 內部原點基準，與元素幾何 Z 同座標（= get_all_levels.ProjectElevation）
+                elevationMm = ReviewUtil.Mm(l.ProjectElevation),
+                // 樓層類型高程基準下的值，同樓層標頭顯示（= get_all_levels.Elevation）
+                levelElevationMm = ReviewUtil.Mm(l.Elevation),
+                elevationBase = ReviewUtil.ElevationBaseName(l)
             }).ToList();
 
             var grids = new FilteredElementCollector(doc).OfClass(typeof(Grid)).Cast<Grid>().Select(g => g.Name).OrderBy(n => n).ToList();

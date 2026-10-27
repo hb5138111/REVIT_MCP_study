@@ -1034,12 +1034,16 @@ namespace RevitMCP.Core
             var levels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(l => l.Elevation)
+                .OrderBy(l => l.ProjectElevation)
                 .Select(l => new
                 {
                     ElementId = l.Id.GetIdValue(),
                     Name = l.Name,
-                    Elevation = Math.Round(l.Elevation * 304.8, 2) // 轉換為公釐
+                    // 相對樓層類型的高程基準（同樓層標頭顯示值）
+                    Elevation = Math.Round(l.Elevation * 304.8, 2), // 轉換為公釐
+                    ElevationBase = RevitMCP.Core.Review.ReviewUtil.ElevationBaseName(l),
+                    // 相對內部原點，與元素幾何 Z / get_model_snapshot.elevationMm 同基準
+                    ProjectElevation = Math.Round(l.ProjectElevation * 304.8, 2)
                 })
                 .ToList();
 

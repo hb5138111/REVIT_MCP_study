@@ -23,7 +23,9 @@ export const modelReviewTools: Tool[] = [
         title: "模型狀態快照",
         description:
             "一次取得 Revit 目前狀態，不需要截圖：文件、作用視圖（含平面視圖範圍）、目前選取、樓層與標高、軸網、連結模型、主要類別數量、警告總數、變更序號 changeSeq。" +
-            "開始任何建模或檢討前先呼叫，用來確認 AI 對模型的認知是最新的。長度值單位 mm。",
+            "開始任何建模或檢討前先呼叫，用來確認 AI 對模型的認知是最新的。長度值單位 mm。" +
+            "樓層 elevationMm＝Level.ProjectElevation（相對內部原點，與元素幾何 Z 同基準，等於 get_all_levels 的 ProjectElevation）；" +
+            "levelElevationMm＝Level.Elevation（相對 elevationBase，與樓層標頭及 get_all_levels 的 Elevation 一致）。",
         inputSchema: { type: "object", properties: {} },
     },
     {

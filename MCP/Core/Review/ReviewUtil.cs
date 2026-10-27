@@ -190,6 +190,22 @@ namespace RevitMCP.Core.Review
             new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>()
                 .OrderBy(l => l.ProjectElevation).ToList();
 
+        /// <summary>
+        /// 樓層類型的「高程基準」（Elevation Base）顯示值，例如「專案基準點」/「測量點」。
+        /// Level.Elevation 相對於此基準；Level.ProjectElevation 一律相對內部原點（與元素幾何 Z 同座標）。
+        /// 讀不到時回傳 null。
+        /// </summary>
+        public static string ElevationBaseName(Level l)
+        {
+            try
+            {
+                var p = l.Document.GetElement(l.GetTypeId())?.get_Parameter(BuiltInParameter.LEVEL_RELATIVE_BASE_TYPE);
+                if (p == null) return null;
+                return p.AsValueString() ?? p.AsInteger().ToString(CultureInfo.InvariantCulture);
+            }
+            catch { return null; }
+        }
+
         /// <summary>依 Z（主模型座標）找出所在樓層：最高且 elevation ≤ z + tol 的樓層。</summary>
         public static Level LevelAtZ(List<Level> sorted, double z, double tolFt = 0.1)
         {
