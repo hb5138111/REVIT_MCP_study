@@ -2,7 +2,7 @@
 name: cad-block-point-placement
 description: "CAD 圖塊（Block/INSERT）插入點批次放置 Revit 點位族群（FamilyInstance）的通用 SOP：適用灑水頭/閥件等重複設備圖塊。discover(get_dwg_block_instances)/preview(preview_family_instances_from_dwg_blocks)/create(create_family_instances_from_dwg_blocks) 三工具拆分，preview 唯讀回傳可檢查的座標鏈（Block insertion point → Block transform → ImportInstance TotalTransform → Revit model point）+ ready/duplicate/unsupported_family/review_required 狀態；**transform 不可信時停止建立、不猜 correction**。v1 僅支援已連結（Linked）DWG，Imported DWG 留待後續。與 dwg-column-import（矩形輪廓）、dwg-beam-import（雙線中心線）互補，非取代。觸發於 cad 圖塊放置、block 轉族群、灑水頭建模、閥件建模、point placement from CAD block、INSERT to FamilyInstance。"
 metadata:
-  version: "0.4"
+  version: "0.5"
   updated: "2026-10-27"
   created: "2026-07-28"
   contributors:
@@ -108,7 +108,7 @@ TODO 待補：待工具實作與參數定案後，用 `.claude/skills/domain-dia
 - 可信度判定（finite／可逆／等比例／鏡射）只檢查 `GeometryInstance.Transform` 本身。
 - 幾何樹最上層（depth 0）的 `GeometryInstance` 是**整份 DWG 的容器**，不是 Block，不列為候選；真正的 Block 從其下一層開始收集。
 - 回傳的 `totalTransformOriginMm` 保留為**對照用**（ImportInstance 本身的放置原點），不參與落點計算。
-- 待驗證：巢狀 Block（Block 內再含 Block）的 `GeometryInstance.Transform` 是否同樣已是模型座標，需以含巢狀 Block、放在非原點的連結 DWG 實測確認。
+- 待驗證：巢狀 Block（Block 內再含 Block）的 `GeometryInstance.Transform` 是否同樣已是模型座標，需以含巢狀 Block、放在非原點的連結 DWG 實測確認。上述更正本身也尚未以真實 Block 資料驗證：2026-10-27 在 Revit 2026 的測試 DWG 中，Block 被攤平、讀不到插入點（見 §6 第三輪）。
 
 **transform 可信度判定條件（依 issue #100 2026-08-05 留言補值）**：
 
@@ -172,7 +172,7 @@ TODO 待補：待工具實作與參數定案後，用 `.claude/skills/domain-dia
 
 ## 6. 已知限制與實機驗證
 
-本節數字均為 NicheSam 在 issue #100 提供的實測結果（Revit 2024）：
+第一、二輪數字為 NicheSam 在 issue #100 提供的實測結果（Revit 2024）；第三輪為 2026-10-27 維護端在 Revit 2026 的實測：
 
 **第一輪（2026-07-23，SC REVIT 現有人工工具，僅供確認人工流程哪些步驟不能沿用）**：
 - 測試模型：`20260520-水岸外掛測試_分離`。
@@ -188,6 +188,25 @@ TODO 待補：待工具實作與參數定案後，用 `.claude/skills/domain-dia
 - 試放：`DB-001` 至 `DB-020`（20 筆），`ElementId` `13729409`–`13729428`；獨立回查 requested 20／passed 20／failed 0；位置最大差約 `1.09 × 10⁻¹¹ mm`、旋轉最大差約 `3.41 × 10⁻¹³ 度`（浮點精度等級，非工程誤差）。
 - 回查後模型元素數 12,781 → 12,781，未啟動 Transaction、模型未變更。
 - 測試使用 `噴頭 - 直立型 : 25mm` 僅為讓結果在圖面中可辨識，**不代表** `A$C87ebd845` 已確認對應此族群（mapping 語意留待後續，不寫死）。
+
+**第三輪（2026-10-27，Revit 2026.5，連結 DWG 的圖塊被攤平——⚠️ 已知限制，版本差異待驗證）**：
+- 測試檔：兩份自製測試 DWG（單位 mm），內容相同：4 種 Block（SPRINKLER、VALVE、巢狀 PAIR、基準點不在原點的 OFFSETBASE）、8 個頂層插入點。
+  - 一份由 ASCII DXF 經 AutoCAD Core Console 轉存 DWG 2018。
+  - 一份直接以 AutoCAD 原生 `-BLOCK`／`-INSERT` 指令建立。
+  - 兩份在 AutoCAD 中都讀回 8 個 INSERT。
+- 操作：在 1FL 平面視圖以「連結 CAD」放在非原點，執行 `get_dwg_block_instances`。
+- 結果：兩份皆 `totalPoints = 0`。幾何樹診斷（`geometryDiagnostic`）顯示：
+  - depth 0 只有 1 個 `GeometryInstance`，即整份 DWG 的容器。
+  - depth 1 全是攤平後的 `Line`／`Arc`／`PolyLine`，沒有任何 `GeometryInstance`。
+  - Block 內容（7 個圓）都在，但已失去 Block 結構與插入點。
+- 已排除的原因：
+  - **`Options.View`**：讀幾何時帶 View 與不帶 View，結果完全相同。
+  - **DXF 轉檔來源**：原生建立的 DWG 結果相同。
+- 影響：在這個環境中，三支工具拿不到任何插入點。§3「實作對應（2026-10-27 更正）」的座標鏈修正，因此也**無法以真實 Block 資料驗證**。
+- **待驗證**：第一、二輪的成功紀錄來自 Revit 2024（SC REVIT 通道），第三輪是 Revit 2026。兩者差異是否來自 Revit 版本、連結選項或其他條件，目前**沒有證據可下結論**。
+  - 建議做法：用同一份測試 DWG，在 Revit 2024／2025 上以相同方式連結比對。
+  - 在比對完成前，不要宣稱本流程在 Revit 2026 可用，也不要宣稱 Revit 2026 一律攤平。
+- AutoCAD Core Console 備援（直接從 DWG 讀 INSERT）可繞過此限制，但仍屬 §5 明確排除於 v1 的項目，需維護者另行裁決。
 
 TODO 待補：目前實測紀錄中**沒有**具體的 `duplicate`（`duplicate_existing`／`duplicate_in_batch`）或 `unsupported_family` 失敗案例（兩輪測試都是全新插入點、且都用 `OneLevelBased` 族群，未觸發過這兩種狀態）；也沒有「transform 判定為不可信、`preview` 實際拒絕建立」的案例紀錄。issue #100 留言（含 2026-08-05 補值）未涵蓋這幾類具體案例，待後續實測補上（比照 `dwg-column-import.md` §6 的案例格式）。
 
