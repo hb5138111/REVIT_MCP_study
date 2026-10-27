@@ -295,7 +295,7 @@ namespace RevitMCP.Core
 
             // fallback: 房間底部 + 高度
             var levelElem = doc.GetElement(room.LevelId) as Level;
-            double levelZ  = levelElem?.Elevation ?? 0;
+            double levelZ  = levelElem?.ProjectElevation ?? 0;
             double roomH   = GetRoomHeight(room);
             return levelZ + roomH;
         }

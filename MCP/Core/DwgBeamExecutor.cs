@@ -491,8 +491,8 @@ namespace RevitMCP.Core
             if (!typeMapping.Contains(sym.Name) && typeMapping.Count < 10)
                 typeMapping.Add(sym.Name);
 
-            XYZ st = new XYZ(b.StartPoint.X, b.StartPoint.Y, bLv.Elevation);
-            XYZ en = new XYZ(b.EndPoint.X, b.EndPoint.Y, bLv.Elevation);
+            XYZ st = new XYZ(b.StartPoint.X, b.StartPoint.Y, bLv.ProjectElevation);
+            XYZ en = new XYZ(b.EndPoint.X, b.EndPoint.Y, bLv.ProjectElevation);
             var inst = doc.Create.NewFamilyInstance(Line.CreateBound(st, en), sym, bLv, StructuralType.Beam);
             if (inst == null) return;
 

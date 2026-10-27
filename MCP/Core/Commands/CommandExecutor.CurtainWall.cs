@@ -380,7 +380,7 @@ namespace RevitMCP.Core
                         CropBottomBoundarySource = level != null ? "planned_wall_level_or_geometry_min" : "visible_geometry_fallback",
                         CropBottomLevelId = level?.Id.GetIdValue(),
                         CropBottomLevelName = level?.Name,
-                        CropBottomLevelElevationMm = level != null ? Math.Round(level.Elevation * 304.8, 2) : (double?)null,
+                        CropBottomLevelElevationMm = level != null ? Math.Round(level.ProjectElevation * 304.8, 2) : (double?)null,
                         CropVerticalMarginMm = Math.Round(verticalMarginFt * 304.8, 2),
                         CropWarnings = level == null
                             ? new[] { "wall LevelId did not resolve to a Level; dry-run will use visible geometry bottom." }
@@ -2315,7 +2315,7 @@ namespace RevitMCP.Core
 
             result.CropBottomLevelId = level.Id;
             result.CropBottomLevelName = level.Name;
-            result.CropBottomLevelElevationFt = level.Elevation;
+            result.CropBottomLevelElevationFt = level.ProjectElevation;
 
             XYZ anchor = wallMidPoint;
             if (anchor == null)
@@ -2339,7 +2339,7 @@ namespace RevitMCP.Core
 
             try
             {
-                XYZ levelPoint = new XYZ(anchor.X, anchor.Y, level.Elevation);
+                XYZ levelPoint = new XYZ(anchor.X, anchor.Y, level.ProjectElevation);
                 double levelViewYFt = view2DFrame.Inverse.OfPoint(levelPoint).Y;
                 result.CropBottomLevelViewYFt = levelViewYFt;
                 result.CropBottomBeforeMarginYFt = Math.Min(levelViewYFt, curtainGeometryMinYFt);
@@ -4200,7 +4200,7 @@ namespace RevitMCP.Core
 
             // 取得牆的基準高程（Level 高程 + Base Offset）
             Level baseLevel = doc.GetElement(wall.LevelId) as Level;
-            double wallBaseZ = baseLevel != null ? baseLevel.Elevation : 0; // feet
+            double wallBaseZ = baseLevel != null ? baseLevel.ProjectElevation : 0; // feet
             Parameter baseOffsetParam = wall.get_Parameter(BuiltInParameter.WALL_BASE_OFFSET);
             double baseOffset = baseOffsetParam != null ? baseOffsetParam.AsDouble() : 0; // feet
             double wallBaseElevationMm = (wallBaseZ + baseOffset) * 304.8; // mm

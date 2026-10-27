@@ -1340,7 +1340,7 @@ namespace RevitMCP.Core
 
                 // 取得牆的樓層
                 Level level = doc.GetElement(wall.LevelId) as Level;
-                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, level?.Elevation ?? 0);
+                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, level?.ProjectElevation ?? 0);
 
                 FamilyInstance door = doc.Create.NewFamilyInstance(
                     location, doorSymbol, wall, level,
@@ -1443,7 +1443,7 @@ namespace RevitMCP.Core
 
                 // 取得牆的樓層
                 Level level = doc.GetElement(wall.LevelId) as Level;
-                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, (level?.Elevation ?? 0) + 3); // 窗戶高度 3 英尺
+                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, (level?.ProjectElevation ?? 0) + 3); // 窗戶高度 3 英尺
 
                 FamilyInstance window = doc.Create.NewFamilyInstance(
                     location, windowSymbol, wall, level,

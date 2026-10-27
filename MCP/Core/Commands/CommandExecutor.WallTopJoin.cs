@@ -28,7 +28,7 @@ namespace RevitMCP.Core
             List<Level> allLevels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(lv => lv.Elevation)
+                .OrderBy(lv => lv.ProjectElevation)
                 .ToList();
 
             if (allLevels.Count == 0)

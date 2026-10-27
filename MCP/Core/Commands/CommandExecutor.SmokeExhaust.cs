@@ -160,7 +160,7 @@ namespace RevitMCP.Core
                 Parameter upperOffsetParam = room.get_Parameter(BuiltInParameter.ROOM_UPPER_OFFSET);
 
                 Level roomLevel = doc.GetElement(room.LevelId) as Level;
-                double roomLevelElevation = roomLevel?.Elevation ?? 0;
+                double roomLevelElevation = roomLevel?.ProjectElevation ?? 0;
 
                 if (upperLimitParam != null && upperOffsetParam != null)
                 {
@@ -172,7 +172,7 @@ namespace RevitMCP.Core
                         Level upperLevel = doc.GetElement(upperLevelId) as Level;
                         if (upperLevel != null)
                         {
-                            double height = (upperLevel.Elevation - roomLevelElevation + upperOffset) * FEET_TO_MM;
+                            double height = (upperLevel.ProjectElevation - roomLevelElevation + upperOffset) * FEET_TO_MM;
                             return height;
                         }
                     }
@@ -746,8 +746,8 @@ namespace RevitMCP.Core
                             {
                                 double ceilingFeet = ceilingMM / FEET_TO_MM;
                                 double smokeBottomFeet = (ceilingMM - smokeZoneHeight) / FEET_TO_MM;
-                                double modelZ_ceiling = levelElevation + ceilingFeet;
-                                double modelZ_smokeBottom = levelElevation + smokeBottomFeet;
+                                double modelZ_ceiling = level.ProjectElevation + ceilingFeet;
+                                double modelZ_smokeBottom = level.ProjectElevation + smokeBottomFeet;
 
                                 // 將模型 Z 座標轉為視圖局部 Y 座標
                                 double localY_ceiling, localY_smokeBottom;

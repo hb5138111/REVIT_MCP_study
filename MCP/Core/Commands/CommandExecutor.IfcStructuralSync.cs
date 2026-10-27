@@ -58,7 +58,7 @@ namespace RevitMCP.Core
             List<Level> levels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(l => l.Elevation)
+                .OrderBy(l => l.ProjectElevation)
                 .ToList();
 
             if (levels.Count == 0)
@@ -527,8 +527,8 @@ namespace RevitMCP.Core
                 plan.TypeName = BuildIfcTypeName("IFC-COL", plan.DepthMm, plan.WidthMm, sMm, rMm);
                 plan.BaseLevel = FindNearestLevelAtOrBelow(levels, min.Z);
                 plan.TopLevel = FindNearestLevelAtOrBelow(levels, max.Z);
-                plan.BaseOffsetFeet = min.Z - plan.BaseLevel.Elevation;
-                plan.TopOffsetFeet = max.Z - plan.TopLevel.Elevation;
+                plan.BaseOffsetFeet = min.Z - plan.BaseLevel.ProjectElevation;
+                plan.TopOffsetFeet = max.Z - plan.TopLevel.ProjectElevation;
                 ResolveColumnTopToFloorBottom(hostDoc, levels, plan, max.Z, alignColumnTopsToFloorBottom, maxColumnTopSearchDistanceMm);
                 plan.CanCreate = heightMm >= 50;
                 if (!plan.CanCreate)
@@ -985,7 +985,7 @@ namespace RevitMCP.Core
 
             plan.TopZFeet = target.BottomZFeet;
             plan.TopLevel = FindNearestLevelAtOrBelow(levels, target.BottomZFeet);
-            plan.TopOffsetFeet = target.BottomZFeet - plan.TopLevel.Elevation;
+            plan.TopOffsetFeet = target.BottomZFeet - plan.TopLevel.ProjectElevation;
             plan.ColumnTopAlignedToFloorBottom = true;
             plan.TopFloorId = target.FloorId;
             plan.TopFloorName = target.FloorName;
@@ -1042,8 +1042,8 @@ namespace RevitMCP.Core
 
         private static void TrySetBeamEndpointOffsets(FamilyInstance beam, IfcNativeFramingPlan plan, Level level)
         {
-            double startOffset = plan.Start.Z - level.Elevation;
-            double endOffset = plan.End.Z - level.Elevation;
+            double startOffset = plan.Start.Z - level.ProjectElevation;
+            double endOffset = plan.End.Z - level.ProjectElevation;
             TrySetDoubleParameterFeet(beam, startOffset, "起始樓層偏移", "起點樓層偏移", "Start Level Offset");
             TrySetDoubleParameterFeet(beam, endOffset, "結束樓層偏移", "終點樓層偏移", "End Level Offset");
         }
@@ -1078,7 +1078,7 @@ namespace RevitMCP.Core
             Level result = levels.First();
             foreach (Level level in levels)
             {
-                if (level.Elevation <= zFeet + 1e-6)
+                if (level.ProjectElevation <= zFeet + 1e-6)
                     result = level;
                 else
                     break;

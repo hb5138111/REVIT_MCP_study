@@ -295,7 +295,7 @@ namespace RevitMCP
 
             foreach (var c in all)
             {
-                var finalPoint = new XYZ(c.ResolvedPoint.X, c.ResolvedPoint.Y, level.Elevation + offsetFt);
+                var finalPoint = new XYZ(c.ResolvedPoint.X, c.ResolvedPoint.Y, level.ProjectElevation + offsetFt);
                 bool mirrored;
                 string trustReason;
                 bool trustworthy = CheckTransformTrust(c.TotalTransform.Multiply(c.BlockTransform), out mirrored, out trustReason);
