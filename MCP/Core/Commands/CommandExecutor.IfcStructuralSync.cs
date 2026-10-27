@@ -656,8 +656,9 @@ namespace RevitMCP.Core
                     GeometryInstance instance = obj as GeometryInstance;
                     if (instance != null)
                     {
+                        // GetInstanceGeometry() 已套用 instance.Transform；搭配 Multiply 須讀 symbol 座標，否則轉換會套兩次
                         Transform nextTransform = transform.Multiply(instance.Transform);
-                        CollectIfcGeometry(instance.GetInstanceGeometry(), nextTransform, vertices, edges, ref solidVolumeFeet3);
+                        CollectIfcGeometry(instance.GetSymbolGeometry(), nextTransform, vertices, edges, ref solidVolumeFeet3);
                     }
                 }
             }
