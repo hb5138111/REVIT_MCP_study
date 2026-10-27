@@ -95,12 +95,20 @@ namespace RevitMCP
             List<BlockCandidate> result,
             int depth)
         {
-            if (depth > 5) return;
+            if (geomElem == null || depth > 5) return;
 
             foreach (var obj in geomElem)
             {
                 var gi = obj as GeometryInstance;
                 if (gi == null) continue;
+
+                // depth 0 的 GeometryInstance 是 ImportInstance 本身（整份 DWG 的容器），不是 Block；
+                // 只往下走，不列為候選。
+                if (depth == 0)
+                {
+                    WalkGeometry(doc, gi.GetInstanceGeometry(), importInstanceUniqueId, totalTransform, ref pathIndex, result, depth + 1);
+                    continue;
+                }
 
                 string blockName = TryGetBlockDisplayName(doc, gi, pathIndex);
                 var candidate = new BlockCandidate
@@ -112,7 +120,9 @@ namespace RevitMCP
                     TotalTransform = totalTransform,
                     RotationRadians = Math.Atan2(gi.Transform.BasisX.Y, gi.Transform.BasisX.X),
                 };
-                candidate.ResolvedPoint = totalTransform.OfPoint(gi.Transform.Origin);
+                // get_Geometry / GetInstanceGeometry 取得的 GeometryInstance.Transform 已含 ImportInstance
+                // 的放置轉換（模型座標）；再套 totalTransform 會重複位移（DWG 不在原點時 X/Y 變兩倍）。
+                candidate.ResolvedPoint = gi.Transform.Origin;
                 result.Add(candidate);
                 pathIndex++;
 
@@ -298,7 +308,8 @@ namespace RevitMCP
                 var finalPoint = new XYZ(c.ResolvedPoint.X, c.ResolvedPoint.Y, level.ProjectElevation + offsetFt);
                 bool mirrored;
                 string trustReason;
-                bool trustworthy = CheckTransformTrust(c.TotalTransform.Multiply(c.BlockTransform), out mirrored, out trustReason);
+                // BlockTransform 已是模型座標的完整轉換（含 ImportInstance 放置），不再乘 TotalTransform
+                bool trustworthy = CheckTransformTrust(c.BlockTransform, out mirrored, out trustReason);
 
                 string status;
                 string statusReason = "";

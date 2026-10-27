@@ -2,8 +2,8 @@
 name: cad-block-point-placement
 description: "CAD 圖塊（Block/INSERT）插入點批次放置 Revit 點位族群（FamilyInstance）的通用 SOP：適用灑水頭/閥件等重複設備圖塊。discover(get_dwg_block_instances)/preview(preview_family_instances_from_dwg_blocks)/create(create_family_instances_from_dwg_blocks) 三工具拆分，preview 唯讀回傳可檢查的座標鏈（Block insertion point → Block transform → ImportInstance TotalTransform → Revit model point）+ ready/duplicate/unsupported_family/review_required 狀態；**transform 不可信時停止建立、不猜 correction**。v1 僅支援已連結（Linked）DWG，Imported DWG 留待後續。與 dwg-column-import（矩形輪廓）、dwg-beam-import（雙線中心線）互補，非取代。觸發於 cad 圖塊放置、block 轉族群、灑水頭建模、閥件建模、point placement from CAD block、INSERT to FamilyInstance。"
 metadata:
-  version: "0.3"
-  updated: "2026-08-28"
+  version: "0.4"
+  updated: "2026-10-27"
   created: "2026-07-28"
   contributors:
     - "NicheSam (SC REVIT, 待確認真名) —— issue #100 規格與實測資料提供者"
@@ -102,11 +102,19 @@ TODO 待補：待工具實作與參數定案後，用 `.claude/skills/domain-dia
 
 最終落點 = Block insertion point 依序套用「Block transform」再套用「ImportInstance TotalTransform」後，落在 Revit 模型座標系的結果。preview 回傳的座標鏈必須是**可查驗的四點鏈**：Block insertion point → Block Transform → ImportInstance TotalTransform → Revit model point，每一層的中間值都要能被使用者或後續工具獨立核對，不能只給最終結果。
 
+**實作對應（2026-10-27 更正）**：上面是概念上的三層。Revit API 的實際行為是：`ImportInstance.get_Geometry()` 與 `GeometryInstance.GetInstanceGeometry()` 取得的 `GeometryInstance.Transform` **已經是模型座標的完整轉換**（已含 ImportInstance 的放置），因此：
+
+- 實作上 Revit model point **直接取 `GeometryInstance.Transform.Origin`**，**不可再套一次 `ImportInstance.GetTotalTransform()`**。重複套用時，只要 DWG 不在原點，落點 X/Y（及 Z）就會變成兩倍——2026-10-27 實測（DWG 以「連結 CAD」放在非原點）即出現此現象；2026-08-05 的 0 mm 殘差無法排除此問題，因當時 DWG 的放置位移可能為零。
+- 可信度判定（finite／可逆／等比例／鏡射）只檢查 `GeometryInstance.Transform` 本身。
+- 幾何樹最上層（depth 0）的 `GeometryInstance` 是**整份 DWG 的容器**，不是 Block，不列為候選；真正的 Block 從其下一層開始收集。
+- 回傳的 `totalTransformOriginMm` 保留為**對照用**（ImportInstance 本身的放置原點），不參與落點計算。
+- 待驗證：巢狀 Block（Block 內再含 Block）的 `GeometryInstance.Transform` 是否同樣已是模型座標，需以含巢狀 Block、放在非原點的連結 DWG 實測確認。
+
 **transform 可信度判定條件（依 issue #100 2026-08-05 留言補值）**：
 
 1. Transform 必須 **finite**（無 NaN/Infinity）、**可逆**（determinant ≠ 0）、**conformal**（角度保持，不做非等比例的剪切/扭曲）、**等比例縮放**（X/Y/Z 縮放係數一致）。
 2. **鏡射（negative scale／reflection）可以繼續，但必須警告**；**非等比例縮放（non-uniform scale）判定不可信、必須停止**。
-3. 可信度判定至少需要 **3 個分散且不共線（non-collinear）的 anchor 點**，每個 anchor 點的**殘差必須 ≤ 1 mm**（比較「Block insertion point 依序套用 Block Transform → ImportInstance TotalTransform」算出的模型座標，與該 anchor 在 Revit 模型中的獨立量測座標）。
+3. 可信度判定至少需要 **3 個分散且不共線（non-collinear）的 anchor 點**，每個 anchor 點的**殘差必須 ≤ 1 mm**（比較工具算出的模型座標——即上述實作對應中的 `GeometryInstance.Transform.Origin`——與該 anchor 在 Revit 模型中的獨立量測座標）。
 4. **anchor 點少於 3 個**：不得判定可信，回傳狀態 `review_required` + 原因碼 `insufficient_anchor_points`。
 
 一旦判定不可信（含 anchor 不足、非等比例縮放、殘差超標任一項），`preview` 必須：
