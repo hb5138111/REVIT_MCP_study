@@ -31,14 +31,20 @@ namespace RevitMCP.Core
         }
 
         /// <summary>
-        /// 共用方法：查找樓層
+        /// 共用方法：查找樓層。
+        /// 依序：名稱完全相符 → 不分大小寫完全相符 → 子字串比對（舊行為，作後備）。
+        /// 完全相符優先，避免 "R3FL" 因包含 "3FL" 而被比對到 3FL。
         /// </summary>
         private Level FindLevel(Document doc, string levelName, bool useFirstIfNotFound = true)
         {
-            var level = new FilteredElementCollector(doc)
+            var allLevels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .FirstOrDefault(l => l.Name == levelName || l.Name.Contains(levelName) || levelName.Contains(l.Name));
+                .ToList();
+
+            var level = allLevels.FirstOrDefault(l => l.Name == levelName)
+                ?? allLevels.FirstOrDefault(l => string.Equals(l.Name, levelName, StringComparison.OrdinalIgnoreCase))
+                ?? allLevels.FirstOrDefault(l => l.Name.Contains(levelName) || levelName.Contains(l.Name));
 
             if (level == null && useFirstIfNotFound)
             {
