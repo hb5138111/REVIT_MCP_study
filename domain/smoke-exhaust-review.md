@@ -2,8 +2,8 @@
 name: smoke-exhaust-review
 description: "在 Revit 中自動檢討建築物排煙窗是否符合法規要求，涵蓋無開口樓層判定、無窗居室判定、排煙窗有效面積計算、改善建議、視覺化標註、Excel 報告匯出。"
 metadata:
-  version: "1.3"
-  updated: "2026-09-17"
+  version: "1.4"
+  updated: "2026-10-27"
   created: "2026-03-18"
   contributors:
     - "Alex Huang"
@@ -205,12 +205,23 @@ Step 2（無窗居室判定）與 Step 5（排煙窗計算）檢查的是同一�
 
 - **實作策略**：半自動偵測
 - **偵測邏輯**：
-  1. 計算建築物高度 = max(Level.Elevation) - min(Level.Elevation)
-  2. 計算地下層總面積 = Σ(Elevation < 0 的樓層 Room 面積)
+  1. 計算建築物高度 = max(Level.ProjectElevation) - min(Level.ProjectElevation)
+  2. 計算地下層總面積 = Σ(地下層的 Room 面積)；地下層 = 以專案基準點為 ±0 的高程 < 0 的樓層
   3. 觸發條件：高度 > 30m **或** 地下面積 > 1000m²
   4. 搜尋 Room Name 含「中央管理室」/「防災中心」/「中控室」/「監控室」
   5. 判定：找到 → PASS（附房間資訊），沒找到 → WARNING
 - **報告呈現**：Excel Sheet 5 含自動判定結果 + 房間資訊
+
+**樓層高程基準（2026-10-27 起）**：
+- `Level.Elevation` 依樓層類型的「高程基準」，可能相對專案基準點，也可能相對測量點。
+  - 同一專案混用兩種基準時，直接比較 `Level.Elevation` 會得到錯誤的高度與地下層判定。
+  - 2026-10-27 實測：專案基準點高於 1FL 30 m 的測試檔中，舊算法把建築高度算成 42 m（實際 16 m）；夾在地下層之間、以測量點為基準的樓層也沒被算入地下層。
+- 本流程統一採用：
+  - **地下層判定**：以專案基準點為 ±0 的高程 < 0，算法是 `Level.ProjectElevation − 專案基準點 Z`。
+  - **建築高度與樓層排序**：`Level.ProjectElevation`（內部座標，與基準無關）。
+- 所有樓層都以專案基準點為基準時，結果與舊算法完全相同。
+- 本 domain 目前**沒有**以「基地地面」定義地下層的法規條文。若需改以基地地面判定，須先補入可引用的法規依據，不得以常識代入。
+- `IsBasement`（`check_smoke_exhaust_windows`）與「十層以上」的層數判定（無開口樓層）採用同一基準。
 
 ## Excel 匯出
 
@@ -229,7 +240,7 @@ Step 2（無窗居室判定）與 Step 5（排煙窗計算）檢查的是同一�
 
 | 欄位 | 說明 |
 |------|------|
-| 建築物高度 | max(Level) - min(Level)，單位 m，> 30m 顯示 ⚠ |
+| 建築物高度 | max(Level.ProjectElevation) - min(Level.ProjectElevation)，單位 m，> 30m 顯示 ⚠ |
 | 地下層總面積 | Σ(地下樓層 Room 面積)，> 1000m² 顯示 ⚠ |
 
 **區塊二：地下層明細**（僅當有地下層時顯示）
@@ -237,7 +248,7 @@ Step 2（無窗居室判定）與 Step 5（排煙窗計算）檢查的是同一�
 | 欄位 | 說明 |
 |------|------|
 | 樓層 | 地下樓層名稱 |
-| 標高(m) | Level Elevation（負值） |
+| 標高(m) | 以專案基準點為 ±0 的高程（負值） |
 | 面積(m²) | 該樓層 Room 面積加總 |
 | 房間數 | 該樓層 Room 數量 |
 

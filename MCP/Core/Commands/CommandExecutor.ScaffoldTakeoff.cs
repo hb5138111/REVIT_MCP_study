@@ -858,7 +858,7 @@ namespace RevitMCP.Core
 
             Document doc = wall.Document;
             Level baseLevel = doc.GetElement(wall.LevelId) as Level;
-            double baseElevationFeet = baseLevel?.Elevation ?? 0.0;
+            double baseElevationFeet = baseLevel?.ProjectElevation ?? 0.0;
             double baseOffsetFeet = wall.get_Parameter(BuiltInParameter.WALL_BASE_OFFSET)?.AsDouble() ?? 0.0;
 
             ElementId topConstraintId = wall.get_Parameter(BuiltInParameter.WALL_HEIGHT_TYPE)?.AsElementId() ?? ElementId.InvalidElementId;
@@ -868,7 +868,7 @@ namespace RevitMCP.Core
                 if (topLevel != null)
                 {
                     double topOffsetFeet = wall.get_Parameter(BuiltInParameter.WALL_TOP_OFFSET)?.AsDouble() ?? 0.0;
-                    double heightFeet = (topLevel.Elevation + topOffsetFeet) - (baseElevationFeet + baseOffsetFeet);
+                    double heightFeet = (topLevel.ProjectElevation + topOffsetFeet) - (baseElevationFeet + baseOffsetFeet);
                     if (heightFeet > 0.0)
                         return heightFeet * FeetToMillimeters;
                 }

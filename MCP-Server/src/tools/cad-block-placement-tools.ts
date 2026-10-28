@@ -24,6 +24,12 @@ export const cadBlockPlacementTools: Tool[] = [
                     description:
                         "（選填）指定要掃描的 ImportInstance UniqueId；未指定時取視圖內第一個 Linked ImportInstance",
                 },
+                includeGeometryDiagnostic: {
+                    type: "boolean",
+                    description:
+                        "（選填）回傳 geometryDiagnostic：幾何樹各層的物件型別與 GeometryInstance 範例，" +
+                        "分別以帶 View 與不帶 View 的讀法列出。掃到 0 個圖塊時會自動附上",
+                },
             },
         },
     },

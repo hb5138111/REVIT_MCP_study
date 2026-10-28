@@ -31,14 +31,20 @@ namespace RevitMCP.Core
         }
 
         /// <summary>
-        /// 共用方法：查找樓層
+        /// 共用方法：查找樓層。
+        /// 依序：名稱完全相符 → 不分大小寫完全相符 → 子字串比對（舊行為，作後備）。
+        /// 完全相符優先，避免 "R3FL" 因包含 "3FL" 而被比對到 3FL。
         /// </summary>
         private Level FindLevel(Document doc, string levelName, bool useFirstIfNotFound = true)
         {
-            var level = new FilteredElementCollector(doc)
+            var allLevels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .FirstOrDefault(l => l.Name == levelName || l.Name.Contains(levelName) || levelName.Contains(l.Name));
+                .ToList();
+
+            var level = allLevels.FirstOrDefault(l => l.Name == levelName)
+                ?? allLevels.FirstOrDefault(l => string.Equals(l.Name, levelName, StringComparison.OrdinalIgnoreCase))
+                ?? allLevels.FirstOrDefault(l => l.Name.Contains(levelName) || levelName.Contains(l.Name));
 
             if (level == null && useFirstIfNotFound)
             {
@@ -1034,12 +1040,16 @@ namespace RevitMCP.Core
             var levels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(l => l.Elevation)
+                .OrderBy(l => l.ProjectElevation)
                 .Select(l => new
                 {
                     ElementId = l.Id.GetIdValue(),
                     Name = l.Name,
-                    Elevation = Math.Round(l.Elevation * 304.8, 2) // 轉換為公釐
+                    // 相對樓層類型的高程基準（同樓層標頭顯示值）
+                    Elevation = Math.Round(l.Elevation * 304.8, 2), // 轉換為公釐
+                    ElevationBase = RevitMCP.Core.Review.ReviewUtil.ElevationBaseName(l),
+                    // 相對內部原點，與元素幾何 Z / get_model_snapshot.elevationMm 同基準
+                    ProjectElevation = Math.Round(l.ProjectElevation * 304.8, 2)
                 })
                 .ToList();
 
@@ -1336,7 +1346,7 @@ namespace RevitMCP.Core
 
                 // 取得牆的樓層
                 Level level = doc.GetElement(wall.LevelId) as Level;
-                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, level?.Elevation ?? 0);
+                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, level?.ProjectElevation ?? 0);
 
                 FamilyInstance door = doc.Create.NewFamilyInstance(
                     location, doorSymbol, wall, level,
@@ -1439,7 +1449,7 @@ namespace RevitMCP.Core
 
                 // 取得牆的樓層
                 Level level = doc.GetElement(wall.LevelId) as Level;
-                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, (level?.Elevation ?? 0) + 3); // 窗戶高度 3 英尺
+                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, (level?.ProjectElevation ?? 0) + 3); // 窗戶高度 3 英尺
 
                 FamilyInstance window = doc.Create.NewFamilyInstance(
                     location, windowSymbol, wall, level,
