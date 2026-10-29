@@ -387,7 +387,7 @@ namespace RevitMCP.Core
         {
             BoundingBoxXYZ bbox = room.get_BoundingBox(null);
             Level level = doc.GetElement(room.LevelId) as Level;
-            double baseZFeet = bbox != null ? bbox.Min.Z : (level?.Elevation ?? 0);
+            double baseZFeet = bbox != null ? bbox.Min.Z : (level?.ProjectElevation ?? 0);
             List<XYZ> samples = BuildPartitionRoomSamplePoints(room, bbox, baseZFeet, sampleGrid);
 
             var sampleResults = new List<RoomClearHeightSample>();

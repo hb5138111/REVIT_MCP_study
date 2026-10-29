@@ -572,7 +572,7 @@ namespace RevitMCP.Core
             // 以當前視圖的關聯樓層高程決定 Z 範圍，避免收到相鄰樓層的牆
             // 平面視圖的 viewBb.Z 只是切面位置，不代表樓層高度範圍
             Level activeLevel = activeView.GenLevel;
-            double levelElev = activeLevel?.Elevation ?? viewBb.Min.Z;
+            double levelElev = activeLevel?.ProjectElevation ?? viewBb.Min.Z;
             // 往下 500mm（地板厚度緩衝）、往上 6000mm（涵蓋樓層高度）
             double zFloorMin = levelElev - 500 * _MM2FT;
             double zFloorMax = levelElev + 6000 * _MM2FT;
@@ -684,12 +684,12 @@ namespace RevitMCP.Core
             var allLevels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(lv => lv.Elevation)
+                .OrderBy(lv => lv.ProjectElevation)
                 .ToList();
 
-            Level nextLevel = allLevels.FirstOrDefault(lv => lv.Elevation > levelElev + 100 * _MM2FT);
+            Level nextLevel = allLevels.FirstOrDefault(lv => lv.ProjectElevation > levelElev + 100 * _MM2FT);
             double cropZTop = nextLevel != null
-                ? nextLevel.Elevation + levelOffMm
+                ? nextLevel.ProjectElevation + levelOffMm
                 : levelElev + 4000 * _MM2FT + levelOffMm;
 
             // ── 7. 取得剖面 ViewFamilyType ────────────────────────────

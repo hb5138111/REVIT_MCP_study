@@ -31,14 +31,20 @@ namespace RevitMCP.Core
         }
 
         /// <summary>
-        /// 共用方法：查找樓層
+        /// 共用方法：查找樓層。
+        /// 依序：名稱完全相符 → 不分大小寫完全相符 → 子字串比對（舊行為，作後備）。
+        /// 完全相符優先，避免 "R3FL" 因包含 "3FL" 而被比對到 3FL。
         /// </summary>
         private Level FindLevel(Document doc, string levelName, bool useFirstIfNotFound = true)
         {
-            var level = new FilteredElementCollector(doc)
+            var allLevels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .FirstOrDefault(l => l.Name == levelName || l.Name.Contains(levelName) || levelName.Contains(l.Name));
+                .ToList();
+
+            var level = allLevels.FirstOrDefault(l => l.Name == levelName)
+                ?? allLevels.FirstOrDefault(l => string.Equals(l.Name, levelName, StringComparison.OrdinalIgnoreCase))
+                ?? allLevels.FirstOrDefault(l => l.Name.Contains(levelName) || levelName.Contains(l.Name));
 
             if (level == null && useFirstIfNotFound)
             {
@@ -898,6 +904,32 @@ namespace RevitMCP.Core
                         result = CreateDuctSystem(parameters);
                         break;
 
+                    // ── 模型感知 / 安全編輯 / 淨高與管線間距檢討（Commands/*.ModelAwareness|SafeBatchEdit|BeamClearance|MepSpacing.cs）──
+                    case "get_model_snapshot":
+                        result = GetModelSnapshot(parameters);
+                        break;
+                    case "get_model_warnings":
+                        result = GetModelWarnings(parameters);
+                        break;
+                    case "get_recent_changes":
+                        result = GetRecentChanges(parameters);
+                        break;
+                    case "export_view_image":
+                        result = ExportViewImage(parameters);
+                        break;
+                    case "batch_modify_elements":
+                        result = BatchModifyElements(parameters);
+                        break;
+                    case "check_beam_clear_height":
+                        result = CheckBeamClearHeight(parameters);
+                        break;
+                    case "check_mep_spacing":
+                        result = CheckMepSpacing(parameters);
+                        break;
+                    case "clear_review_markers":
+                        result = ClearReviewMarkers(parameters);
+                        break;
+
                     default:
                         throw new NotImplementedException($"未實作的命令: {request.CommandName}");
                 }
@@ -1008,12 +1040,16 @@ namespace RevitMCP.Core
             var levels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(l => l.Elevation)
+                .OrderBy(l => l.ProjectElevation)
                 .Select(l => new
                 {
                     ElementId = l.Id.GetIdValue(),
                     Name = l.Name,
-                    Elevation = Math.Round(l.Elevation * 304.8, 2) // 轉換為公釐
+                    // 相對樓層類型的高程基準（同樓層標頭顯示值）
+                    Elevation = Math.Round(l.Elevation * 304.8, 2), // 轉換為公釐
+                    ElevationBase = RevitMCP.Core.Review.ReviewUtil.ElevationBaseName(l),
+                    // 相對內部原點，與元素幾何 Z / get_model_snapshot.elevationMm 同基準
+                    ProjectElevation = Math.Round(l.ProjectElevation * 304.8, 2)
                 })
                 .ToList();
 
@@ -1310,7 +1346,7 @@ namespace RevitMCP.Core
 
                 // 取得牆的樓層
                 Level level = doc.GetElement(wall.LevelId) as Level;
-                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, level?.Elevation ?? 0);
+                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, level?.ProjectElevation ?? 0);
 
                 FamilyInstance door = doc.Create.NewFamilyInstance(
                     location, doorSymbol, wall, level,
@@ -1413,7 +1449,7 @@ namespace RevitMCP.Core
 
                 // 取得牆的樓層
                 Level level = doc.GetElement(wall.LevelId) as Level;
-                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, (level?.Elevation ?? 0) + 3); // 窗戶高度 3 英尺
+                XYZ location = new XYZ(locationX / 304.8, locationY / 304.8, (level?.ProjectElevation ?? 0) + 3); // 窗戶高度 3 英尺
 
                 FamilyInstance window = doc.Create.NewFamilyInstance(
                     location, windowSymbol, wall, level,
@@ -3070,6 +3106,15 @@ namespace RevitMCP.Core
                     else throw new Exception($"無法辨識品類: {categoryName}。請使用英文名稱如 Walls, Rooms, Doors, Windows, Floors, Columns");
                 }
 
+                // 樓層名稱必須完全相符（不分大小寫）：子字串比對會讓 "1FL" 也撈到 "11FL"、"21FL"
+                if (!string.IsNullOrEmpty(levelFilter))
+                {
+                    levelFilter = levelFilter.Trim();
+                    var levelNames = new FilteredElementCollector(doc).OfClass(typeof(Level)).Select(l => l.Name).ToList();
+                    if (!levelNames.Any(n => string.Equals(n, levelFilter, StringComparison.OrdinalIgnoreCase)))
+                        throw new Exception($"找不到樓層: {levelFilter}（樓層名稱須完全相符；現有：{string.Join(", ", levelNames)}）");
+                }
+
                 var elements = collector.WhereElementIsNotElementType().ToElements();
                 var filteredList = new List<Element>();
 
@@ -3117,7 +3162,7 @@ namespace RevitMCP.Core
                     if (match && !string.IsNullOrEmpty(levelFilter))
                     {
                         string elemLevel = ResolveElementLevelName(doc, elem);
-                        if (!elemLevel.Contains(levelFilter))
+                        if (!string.Equals(elemLevel, levelFilter, StringComparison.OrdinalIgnoreCase))
                             match = false;
                     }
 

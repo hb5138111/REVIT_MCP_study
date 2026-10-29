@@ -89,20 +89,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     console.error(`[MCP Server] Tool executed successfully`);
 
-    // 影像結果（capture_view_image）改用 image content block 回傳。
+    // 影像結果（capture_view_image 用 ImageBase64/MimeType、export_view_image 用 imageBase64/mimeType）
+    // 改用 image content block 回傳。
     // 若照一般路徑塞進 JSON 字串，AI client 拿到的只是一長串 base64 文字，看不到圖 —— 工具等於白做。
     // base64 抽離後，其餘欄位仍以 text block 附上，讓視圖名稱、尺寸、Warnings 不會遺失。
-    if (result && typeof result === "object" && typeof (result as any).ImageBase64 === "string") {
-      const { ImageBase64, ...meta } = result as Record<string, any>;
+    const imageKey = result && typeof result === "object"
+      ? (["ImageBase64", "imageBase64"] as const).find((k) => typeof (result as any)[k] === "string")
+      : undefined;
+    if (imageKey) {
+      const { [imageKey]: imageData, ...meta } = result as Record<string, any>;
+      const mimeType = typeof meta.MimeType === "string" ? meta.MimeType
+        : typeof meta.mimeType === "string" ? meta.mimeType : "image/png";
       console.error(
-        `[MCP Server] Returning image content (${ImageBase64.length} base64 chars, ${meta.MimeType || "image/png"})`
+        `[MCP Server] Returning image content (${imageData.length} base64 chars, ${mimeType})`
       );
       return {
         content: [
           {
             type: "image",
-            data: ImageBase64,
-            mimeType: typeof meta.MimeType === "string" ? meta.MimeType : "image/png",
+            data: imageData,
+            mimeType,
           },
           {
             type: "text",

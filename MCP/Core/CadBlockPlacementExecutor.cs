@@ -95,12 +95,20 @@ namespace RevitMCP
             List<BlockCandidate> result,
             int depth)
         {
-            if (depth > 5) return;
+            if (geomElem == null || depth > 5) return;
 
             foreach (var obj in geomElem)
             {
                 var gi = obj as GeometryInstance;
                 if (gi == null) continue;
+
+                // depth 0 的 GeometryInstance 是 ImportInstance 本身（整份 DWG 的容器），不是 Block；
+                // 只往下走，不列為候選。
+                if (depth == 0)
+                {
+                    WalkGeometry(doc, gi.GetInstanceGeometry(), importInstanceUniqueId, totalTransform, ref pathIndex, result, depth + 1);
+                    continue;
+                }
 
                 string blockName = TryGetBlockDisplayName(doc, gi, pathIndex);
                 var candidate = new BlockCandidate
@@ -112,7 +120,9 @@ namespace RevitMCP
                     TotalTransform = totalTransform,
                     RotationRadians = Math.Atan2(gi.Transform.BasisX.Y, gi.Transform.BasisX.X),
                 };
-                candidate.ResolvedPoint = totalTransform.OfPoint(gi.Transform.Origin);
+                // get_Geometry / GetInstanceGeometry 取得的 GeometryInstance.Transform 已含 ImportInstance
+                // 的放置轉換（模型座標）；再套 totalTransform 會重複位移（DWG 不在原點時 X/Y 變兩倍）。
+                candidate.ResolvedPoint = gi.Transform.Origin;
                 result.Add(candidate);
                 pathIndex++;
 
@@ -171,13 +181,112 @@ namespace RevitMCP
                 })
                 .ToList();
 
-            return new JObject
+            var result = new JObject
             {
                 ["importInstanceUniqueId"] = cad.UniqueId,
                 ["totalPoints"] = all.Count,
                 ["blockTypes"] = grouped.Count,
                 ["blocks"] = new JArray(grouped),
             };
+
+            // 診斷：掃不到圖塊時（或明確要求時）列出幾何樹各層的物件型別與 GeometryInstance，
+            // 分別用「帶 View」與「不帶 View」的 Options 讀，用來判斷 Revit 是否把圖塊攤平成線條。
+            bool wantDiag = p != null && p["includeGeometryDiagnostic"] != null && (bool)p["includeGeometryDiagnostic"];
+            if (wantDiag || all.Count == 0)
+            {
+                result["geometryDiagnostic"] = new JObject
+                {
+                    ["withView"] = DescribeGeometryTree(cad, vp),
+                    ["withoutView"] = DescribeGeometryTree(cad, null),
+                };
+            }
+            return result;
+        }
+
+        const int DiagMaxInstanceSamplesPerDepth = 8;
+
+        sealed class GeometryDepthStats
+        {
+            public readonly Dictionary<string, int> Types = new Dictionary<string, int>();
+            public int Instances;
+            public readonly JArray Samples = new JArray();
+        }
+
+        static JObject DescribeGeometryTree(ImportInstance cad, View viewOrNull)
+        {
+            var opt = new Options { ComputeReferences = true, IncludeNonVisibleObjects = true };
+            if (viewOrNull != null) opt.View = viewOrNull;
+
+            var depths = new SortedDictionary<int, GeometryDepthStats>();
+            try
+            {
+                DescribeGeometryLevel(cad.Document, cad.get_Geometry(opt), 0, depths);
+            }
+            catch (Exception ex)
+            {
+                return new JObject { ["error"] = ex.Message };
+            }
+
+            var arr = new JArray();
+            foreach (var kv in depths)
+            {
+                arr.Add(new JObject
+                {
+                    ["depth"] = kv.Key,
+                    ["objectTypes"] = JObject.FromObject(kv.Value.Types),
+                    ["geometryInstanceCount"] = kv.Value.Instances,
+                    ["geometryInstanceSamples"] = kv.Value.Samples,
+                });
+            }
+            return new JObject { ["depths"] = arr };
+        }
+
+        static void DescribeGeometryLevel(Document doc, GeometryElement geomElem, int depth, SortedDictionary<int, GeometryDepthStats> depths)
+        {
+            if (geomElem == null || depth > 5) return;
+            if (!depths.TryGetValue(depth, out var stats))
+            {
+                stats = new GeometryDepthStats();
+                depths[depth] = stats;
+            }
+
+            foreach (var obj in geomElem)
+            {
+                string typeName = obj.GetType().Name;
+                stats.Types[typeName] = stats.Types.TryGetValue(typeName, out int n) ? n + 1 : 1;
+
+                var gi = obj as GeometryInstance;
+                if (gi == null) continue;
+
+                stats.Instances++;
+                if (stats.Samples.Count < DiagMaxInstanceSamplesPerDepth)
+                {
+                    string styleName = null, symbolName = null;
+                    try
+                    {
+                        if (gi.GraphicsStyleId != null && gi.GraphicsStyleId != ElementId.InvalidElementId)
+                            styleName = (doc.GetElement(gi.GraphicsStyleId) as GraphicsStyle)?.GraphicsStyleCategory?.Name;
+                    }
+                    catch { }
+                    try
+                    {
+#if REVIT2023_OR_GREATER
+                        symbolName = doc.GetElement(gi.GetSymbolGeometryId().SymbolId)?.Name;
+#else
+                        symbolName = gi.Symbol?.Name;
+#endif
+                    }
+                    catch { }
+                    stats.Samples.Add(new JObject
+                    {
+                        ["graphicsStyleCategory"] = styleName,
+                        ["symbolName"] = symbolName,
+                        ["originMm"] = PointToMmJson(gi.Transform.Origin),
+                        ["rotationDegrees"] = Math.Round(Math.Atan2(gi.Transform.BasisX.Y, gi.Transform.BasisX.X) * 180.0 / Math.PI, 2),
+                    });
+                }
+                DescribeGeometryLevel(doc, gi.GetInstanceGeometry(), depth + 1, depths);
+            }
         }
 
         static JObject PointToMmJson(XYZ pt) => new JObject
@@ -295,10 +404,11 @@ namespace RevitMCP
 
             foreach (var c in all)
             {
-                var finalPoint = new XYZ(c.ResolvedPoint.X, c.ResolvedPoint.Y, level.Elevation + offsetFt);
+                var finalPoint = new XYZ(c.ResolvedPoint.X, c.ResolvedPoint.Y, level.ProjectElevation + offsetFt);
                 bool mirrored;
                 string trustReason;
-                bool trustworthy = CheckTransformTrust(c.TotalTransform.Multiply(c.BlockTransform), out mirrored, out trustReason);
+                // BlockTransform 已是模型座標的完整轉換（含 ImportInstance 放置），不再乘 TotalTransform
+                bool trustworthy = CheckTransformTrust(c.BlockTransform, out mirrored, out trustReason);
 
                 string status;
                 string statusReason = "";

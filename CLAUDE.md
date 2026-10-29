@@ -37,8 +37,8 @@ These counts must be derived from source, not copied by memory.
 
 | Item | Current Count | Source of Truth |
 |---|---:|---|
-| Runtime MCP tools | 221 | `registerRevitTools()` from `MCP-Server/src/tools/index.ts` |
-| Domain SOP files | 83 | `domain/*.md` except `domain/README.md`, plus `domain/references/*.md` |
+| Runtime MCP tools | 229 | `registerRevitTools()` from `MCP-Server/src/tools/index.ts` |
+| Domain SOP files | 85 | `domain/*.md` except `domain/README.md`, plus `domain/references/*.md` |
 | Claude skills | 61 | `.claude/skills/*/SKILL.md` |
 
 When these numbers change, update `CLAUDE.md`, `README.md`, `README.zh-TW.md`, `docs/DOCUMENT_AUDIENCE_INVENTORY.md`, and any public site copy that makes grand-total claims. Then run `scripts/verify-qaqc.ps1 -SkipBuild -SkipDeploy`.
@@ -112,13 +112,13 @@ If pulling the 2026-07-17 cleanup commit fails with "local changes would be over
 |---|---|
 | `MCP/Application.cs` | Revit `IExternalApplication` entry point and ribbon setup |
 | `MCP/Core/SocketService.cs` | Revit-side WebSocket server using `HttpListener` |
-| `MCP/Core/ExternalEventManager.cs` | Marshals work onto the Revit UI thread |
+| `MCP/Core/ExternalEventManager.cs` | Marshals WebSocket commands onto the Revit UI thread through a FIFO `ConcurrentQueue`; one `Execute` drains the whole queue, so commands arriving before the event fires are run in order, never dropped. `SocketService.SendResponseAsync` serializes replies with a `SemaphoreSlim` because one WebSocket cannot take concurrent `SendAsync` calls |
 | `MCP/Core/CommandExecutor.cs` | Main command dispatcher |
 | `MCP/Core/Commands/*.cs` | Command modules split by workflow area |
 | `MCP/Core/RevitCompatibility.cs` | Cross-version `ElementId` helpers |
 | `MCP/UI/CameraManagerPaneProvider.cs` | `IDockablePaneProvider` for the camera-manager pane. The pane's `FrameworkElement` must be constructed in `OnStartup` — Revit never rebuilds that instance after `RegisterDockablePane` |
 | `MCP/UI/CameraManagerPanelControl.cs` | The pane itself: WPF built in code, no XAML. Styling comes only from `MCP/UI/CameraManagerTheme.cs` (every container needs an explicit `Background`; the pane host paints black behind a transparent one) |
-| `MCP/Core/CameraManagerEventQueue.cs` | FIFO `ExternalEvent` queue used **only** by the pane. Deliberately separate from `ExternalEventManager`, whose single `_action` field would drop queued pane work |
+| `MCP/Core/CameraManagerEventQueue.cs` | FIFO `ExternalEvent` queue used **only** by the pane. Deliberately separate from `ExternalEventManager`: it adds a priority lane, processes only the actions present when `Execute` starts (yielding to Revit's message loop between heavy steps), wraps each action in `CameraManagerDiagnostics`, and never shows a `TaskDialog` |
 | `MCP/Core/CameraKeyPlanService.*.cs` | Key Plan generation, split across eight `partial` files by concern (Overview / Sheet / MarkerA / EyeRoom / LiveUpdate / Versions / ViewHygiene / core) |
 | `MCP/Resources/icon-32-{on,off}.png` | Ribbon toggle-button state icons, compiled as WPF `<Resource>` into `RevitMCP.g.resources`. Load them only through an explicit-assembly pack URI (`pack://application:,,,/RevitMCP;component/...`) — the assembly-less relative form needs `Application.ResourceAssembly`, which an add-in inside Revit.exe cannot rely on |
 | `MCP/RevitMCP.csproj` | Single multi-version build project |
@@ -145,7 +145,7 @@ If pulling the 2026-07-17 cleanup commit fails with "local changes would be over
 - C# namespace: `RevitMCP`.
 - Revit model changes must run inside `Transaction` and be reversible.
 - Revit API work must go through `ExternalEventManager` when called from the WebSocket flow.
-- Revit API work initiated by the dockable pane goes through `CameraManagerEventQueue`, not `ExternalEventManager`. Do not merge the two: the pane can have several operations in flight, and `ExternalEventManager` holds one `_action` at a time.
+- Revit API work initiated by the dockable pane goes through `CameraManagerEventQueue`, not `ExternalEventManager`. Do not merge the two: both are FIFO queues now, but the pane needs its priority lane, per-batch yielding and no-`TaskDialog` error handling, while MCP commands must drain in one pass so that concurrent tool calls are not delayed behind pane work.
 - Work triggered by `DocumentChanged` / `ViewActivated` must only set a dirty flag; do the actual reading and redrawing on the next `Idling`. Those two events fire while a document is still opening, and heavy WPF or `ExportImage` work there crashed Revit (`0xe0434352`) — see `docs/camera-manager/adr.zh-TW.md` D-008.
 - C# command payloads use the existing `RevitCommandRequest` / `RevitCommandResponse` shape.
 - MCP tool names use snake_case.
@@ -239,6 +239,15 @@ Use `get_active_view` before the dependent operation; if it is unavailable, call
 
 If the anchor tool times out, retry once. If it still fails, stop and report the limitation.
 
+### Model Awareness and Safe Edits
+
+- Prefer `get_model_snapshot` over screenshots to anchor document, active view, selection, levels and loaded links. Keep its `changeSeq` and call `get_recent_changes(sinceSeq)` before acting on an earlier picture of the model — the user may have edited Revit in between.
+- Use `export_view_image` (optionally `focusElementIds`) when a visual check is genuinely needed; it returns an image, not a file path.
+- For edits to existing elements, use `batch_modify_elements` with the default `dryRun=true` first, report the per-element before/after values and any warnings, and only then re-run with `dryRun=false` after the user agrees. Numeric parameter values are in project display units; offsets and rotation centers are always mm.
+- Read the `warnings` / `errors` arrays that `batch_modify_elements` returns — they are the only record of warnings raised by that edit (they are dismissed to avoid dialogs and do not persist in the model). Use `get_model_warnings(elementIds)` for pre-existing model warnings on the touched elements.
+- `check_beam_clear_height.requiredClearHeightMm` and `check_mep_spacing.clearanceMm` have no defaults by design. Ask the user; never substitute a "typical" value (same rule as `domain/mep-opening-candidate-scan.md`).
+- Review markers placed by these checks are Generic Model DirectShapes tagged `RevitMCP.Review`; remove them with `clear_review_markers` when the review is done.
+
 ### Subagent Delegation Boundaries
 
 **A constraint you are operating under does not propagate to a subagent unless you write it into the delegation message.** The subagent cannot see your system prompt, this file, or the earlier conversation. It sees only what you send.
@@ -316,6 +325,8 @@ Read the matching file before applying a workflow or calculation.
 | space demand matrix, 空間需求矩陣, MEP tag, 容量包絡, 機房面積反算, 前期容量, 基本設計容量, programming, SMP, concept design, Space 明細表, 逐空間通風檢核, FUM | `domain/mep-space-demand-matrix.md` |
 | parking numbering, auto parking numbering | `domain/parking-auto-numbering.md` |
 | parking clearance, vehicle clearance, 210cm | `domain/parking-clearance-check.md` |
+| beam clear height, 梁下淨高, 樑下淨高, headroom under beam, 天花內空間, plenum space, check_beam_clear_height | `domain/beam-clear-height-check.md` |
+| MEP spacing, 管線間距, 管線淨距, 管線預留, 維修空間, 保溫間距, check_mep_spacing | `domain/mep-spacing-clearance-check.md` |
 | parking count, parking space review | `domain/parking-space-review.md` |
 | PDF export, DCC, PDFExportOptions | `domain/pdf-export-comparison.md` |
 | fill pattern, Revit fill pattern conversion | `domain/revit-fill-pattern-conversion.md` |

@@ -79,7 +79,7 @@ namespace RevitMCP.Core
             var projectLevels = new FilteredElementCollector(projectDoc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(level => level.Elevation)
+                .OrderBy(level => level.ProjectElevation)
                 .ToList();
 
             var candidates = new JArray();
@@ -306,7 +306,7 @@ namespace RevitMCP.Core
                 ? center.Z * MmPerFoot - openingHeightMm.Value / 2.0
                 : (double?)null;
             Level level = bottomMm.HasValue
-                ? levels.LastOrDefault(item => item.Elevation * MmPerFoot <= bottomMm.Value + 0.01)
+                ? levels.LastOrDefault(item => item.ProjectElevation * MmPerFoot <= bottomMm.Value + 0.01)
                 : null;
 
             return new JObject
@@ -315,7 +315,7 @@ namespace RevitMCP.Core
                 ["projectLevelName"] = level != null ? new JValue(level.Name) : JValue.CreateNull(),
                 ["projectElevationMm"] = bottomMm.HasValue ? new JValue(Math.Round(bottomMm.Value, 2)) : JValue.CreateNull(),
                 ["offsetFromLevelMm"] = bottomMm.HasValue && level != null
-                    ? new JValue(Math.Round(bottomMm.Value - level.Elevation * MmPerFoot, 2))
+                    ? new JValue(Math.Round(bottomMm.Value - level.ProjectElevation * MmPerFoot, 2))
                     : JValue.CreateNull()
             };
         }

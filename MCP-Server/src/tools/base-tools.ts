@@ -35,7 +35,11 @@ export const baseTools: Tool[] = [
     },
     {
         name: "get_all_levels",
-        description: "取得專案中所有樓層的清單，包括樓層名稱和標高。",
+        description:
+            "取得專案中所有樓層的清單，包括樓層名稱和標高（mm，依 ProjectElevation 由低到高排序）。" +
+            "Elevation＝Level.Elevation，相對樓層類型的高程基準 ElevationBase（專案基準點或測量點），與樓層標頭顯示一致；" +
+            "ProjectElevation＝相對內部原點，與元素幾何 Z 及 get_model_snapshot 的 elevationMm 同基準。" +
+            "兩者可能差一個固定值；與元素座標比較或計算淨高時一律用 ProjectElevation。",
         inputSchema: { type: "object", properties: {} },
     },
     {
@@ -214,7 +218,7 @@ export const baseTools: Tool[] = [
                 category: { type: "string", description: "元素類別（如：Walls, Rooms, Doors, Windows, Floors, Columns）" },
                 family: { type: "string", description: "族群名稱（選填）" },
                 type: { type: "string", description: "類型名稱（選填）" },
-                level: { type: "string", description: "樓層名稱（選填）" },
+                level: { type: "string", description: "樓層名稱（選填）。須與 Revit 樓層名稱完全相符（不分大小寫），例如 \"1FL\" 不會比對到 \"11FL\"；名稱不存在時回傳錯誤並列出現有樓層" },
                 maxCount: { type: "number", description: "最大回傳數量（預設 100）", default: 100 },
             },
             required: ["category"],

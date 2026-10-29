@@ -169,7 +169,7 @@ export const wallTools: Tool[] = [
                 levels: {
                     type: "array",
                     items: { type: "string" },
-                    description: "要處理的樓層名稱列表，例如 [\"2F\", \"3F\"]。省略或空陣列代表處理全部樓層。",
+                    description: "要處理的樓層名稱列表，例如 [\"2F\", \"3F\"]。每個名稱以完全相符優先，其次不分大小寫相符，都沒有才退回部分比對（可能一次選到多個樓層）。省略或空陣列代表處理全部樓層。",
                 },
             },
         },

@@ -183,8 +183,8 @@ namespace RevitMCP.Core
 
             var tLv = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level)).Cast<Level>()
-                .Where(l => l.Elevation > bLv.Elevation + 0.001)
-                .OrderBy(l => l.Elevation).FirstOrDefault();
+                .Where(l => l.ProjectElevation > bLv.ProjectElevation + 0.001)
+                .OrderBy(l => l.ProjectElevation).FirstOrDefault();
             if (tLv == null) throw new Exception($"找不到高於「{bLv.Name}」的樓層");
 
             var geoms = CollectLayerGeometry(doc, vp, layerName);
@@ -295,7 +295,7 @@ namespace RevitMCP.Core
                         }
                         if (!sym.IsActive) { sym.Activate(); doc.Regenerate(); }
 
-                        var loc = new XYZ(c.X, c.Y, bLv.Elevation);
+                        var loc = new XYZ(c.X, c.Y, bLv.ProjectElevation);
                         var inst = doc.Create.NewFamilyInstance(loc, sym, bLv, stype);
                         if (inst != null)
                         {

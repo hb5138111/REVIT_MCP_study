@@ -28,7 +28,7 @@ namespace RevitMCP.Core
             List<Level> allLevels = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .OrderBy(lv => lv.Elevation)
+                .OrderBy(lv => lv.ProjectElevation)
                 .ToList();
 
             if (allLevels.Count == 0)
@@ -48,8 +48,22 @@ namespace RevitMCP.Core
                     .Where(s => !string.IsNullOrWhiteSpace(s))
                     .ToList();
 
+                // 每個名稱：完全相符優先，其次不分大小寫相符，都沒有才退回舊的包含比對
+                // （否則 "1FL" 會連 "R1FL"、"11FL" 一起選到）
+                var matchedIds = new HashSet<ElementId>();
+                foreach (string n in names)
+                {
+                    var matches = allLevels.Where(lv => lv.Name == n).ToList();
+                    if (matches.Count == 0)
+                        matches = allLevels.Where(lv => string.Equals(lv.Name, n, StringComparison.OrdinalIgnoreCase)).ToList();
+                    if (matches.Count == 0)
+                        matches = allLevels.Where(lv => lv.Name.Contains(n) || n.Contains(lv.Name)).ToList();
+                    foreach (Level lv in matches)
+                        matchedIds.Add(lv.Id);
+                }
+
                 selectedLevels = allLevels
-                    .Where(lv => names.Any(n => lv.Name == n || lv.Name.Contains(n) || n.Contains(lv.Name)))
+                    .Where(lv => matchedIds.Contains(lv.Id))
                     .ToList();
 
                 if (selectedLevels.Count == 0)
